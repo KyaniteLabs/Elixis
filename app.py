@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 
 from soulcraft.entities import extract_entities
 from soulcraft.patterns import build_pattern_graph
@@ -89,6 +90,10 @@ class Handler(BaseHTTPRequestHandler):
         pass  # suppress per-request logging
 
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    daemon_threads = True
+
+
 def main():
     port = PORT
     if "--port" in sys.argv:
@@ -96,7 +101,7 @@ def main():
         if idx + 1 < len(sys.argv):
             port = int(sys.argv[idx + 1])
 
-    server = HTTPServer(("0.0.0.0", port), Handler)
+    server = ThreadedHTTPServer(("0.0.0.0", port), Handler)
     print(f"Soulcraft running on http://localhost:{port}")
     try:
         server.serve_forever()
