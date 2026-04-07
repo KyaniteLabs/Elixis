@@ -165,6 +165,65 @@ def _classify_entity(name, context=""):
     return "concept"
 
 
+def _parse_line_entity(line):
+    """Parse a single brain-dump line into an entity.
+
+    Handles formats like:
+      Tony Montana (Scarface)
+      Tony Montana - Scarface
+      Tony Montana / Scarface
+      "Tyler Durden" from Fight Club
+      The Godfather
+      Walter White, Breaking Bad
+    """
+    line = line.strip()
+    if not line or len(line) < 2:
+        return None
+
+    # Strip leading markers (-, *, •, numbers)
+    line = re.sub(r'^[\s*\-•]*(?:\d+[.\):]\s*)?', '', line).strip()
+    if not line:
+        return None
+
+    # Extract the main name and optional source/context
+    name = line
+    source = ""
+
+    # "Name" from Source / Name (Source) / Name - Source / Name, Source
+    paren_match = re.match(r'^(.+?)\s*\(([^)]+)\)\s*$', line)
+    dash_match = re.match(r'^(.+?)\s*[-–—]\s*(.+)$', line)
+    comma_match = re.match(r'^(.+?)\s*,\s*(.+)$', line)
+    from_match = re.match(r'^(.+?)\s+(?:from|via|in)\s+(.+)$', line, re.IGNORECASE)
+    slash_match = re.match(r'^(.+?)\s*/\s*(.+)$', line)
+
+    if paren_match:
+        name, source = paren_match.group(1).strip(), paren_match.group(2).strip()
+    elif from_match:
+        name, source = from_match.group(1).strip(), from_match.group(2).strip()
+    elif dash_match:
+        name, source = dash_match.group(1).strip(), dash_match.group(2).strip()
+    elif slash_match:
+        name, source = slash_match.group(1).strip(), slash_match.group(2).strip()
+    elif comma_match and len(comma_match.group(1).strip().split()) <= 4:
+        name, source = comma_match.group(1).strip(), comma_match.group(2).strip()
+
+    # Strip quotes around name
+    name = re.sub(r'^["\'](.+)["\']$', r'\1', name).strip()
+    if not name or len(name) < 2:
+        return None
+
+    # Classify
+    etype = _classify_entity(name, line)
+
+    return {
+        "original": line,
+        "canonical": name,
+        "source": source,
+        "type": etype,
+        "confidence": 0.85 if source else 0.7,
+    }
+
+
 def extract_entities(text):
     """Main extraction pipeline. Returns list of entity dicts."""
     if not text or not text.strip():
@@ -173,33 +232,48 @@ def extract_entities(text):
     entities = []
     seen = set()
 
-    # 1. Quoted entities (high confidence)
-    for name in _extract_quoted_entities(text):
-        key = name.lower()
-        if key not in seen and len(key) > 2:
-            seen.add(key)
-            etype = _classify_entity(name, text)
-            entities.append({
-                "original": name,
-                "canonical": name.strip(),
-                "type": etype,
-                "confidence": 0.9,
-            })
+    # 0. Line-by-line extraction (primary strategy for brain dumps)
+    lines = re.split(r'[\n\r]+', text)
+    line_entities = []
+    for line in lines:
+        entity = _parse_line_entity(line)
+        if entity:
+            key = entity["canonical"].lower()
+            if key not in seen and len(key) > 2:
+                seen.add(key)
+                line_entities.append(entity)
 
-    # 2. Capitalized phrases
-    for name in _extract_capitalized_phrases(text):
-        key = name.lower()
-        if key not in seen and len(key) > 2:
-            seen.add(key)
-            etype = _classify_entity(name, text)
-            entities.append({
-                "original": name,
-                "canonical": name.strip(),
-                "type": etype,
-                "confidence": 0.7,
-            })
+    # If line parsing found entities, use those as the primary set
+    if line_entities:
+        entities.extend(line_entities)
+    else:
+        # Fallback: treat as prose and extract capitalized phrases
+        for name in _extract_capitalized_phrases(text):
+            key = name.lower()
+            if key not in seen and len(key) > 2:
+                seen.add(key)
+                etype = _classify_entity(name, text)
+                entities.append({
+                    "original": name,
+                    "canonical": name.strip(),
+                    "type": etype,
+                    "confidence": 0.7,
+                })
 
-    # 3. Known works/characters mentioned in lowercase
+        # Quoted entities
+        for name in _extract_quoted_entities(text):
+            key = name.lower()
+            if key not in seen and len(key) > 2:
+                seen.add(key)
+                etype = _classify_entity(name, text)
+                entities.append({
+                    "original": name,
+                    "canonical": name.strip(),
+                    "type": etype,
+                    "confidence": 0.9,
+                })
+
+    # Known works/characters mentioned anywhere (supplementary)
     text_lower = text.lower()
     for work in _KNOWN_WORKS:
         if work in text_lower and work not in seen:
@@ -220,7 +294,7 @@ def extract_entities(text):
                 "confidence": 0.85,
             })
 
-    # 4. Emotions
+    # Emotions
     for emo in _extract_emotion_entities(text):
         key = f"emotion:{emo}"
         if key not in seen:
@@ -232,7 +306,7 @@ def extract_entities(text):
                 "confidence": 0.8,
             })
 
-    # 5. Skills
+    # Skills
     for skill in _extract_skill_entities(text):
         key = f"skill:{skill}"
         if key not in seen:
