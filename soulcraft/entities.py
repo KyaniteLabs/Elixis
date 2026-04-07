@@ -199,19 +199,19 @@ def _heuristic_extract(text):
 
 
 def extract_entities(text):
-    """Main extraction pipeline.
+    """Main extraction pipeline. Requires LLM.
 
-    Tries LLM extraction first (rich themes/traits),
-    falls back to heuristic line-by-line parsing.
+    Raises RuntimeError if LLM is unavailable.
     """
     if not text or not text.strip():
         return []
 
-    # Try LLM extraction first
     entities = _llm_extract_entities(text)
 
-    # Fallback to heuristic
     if not entities:
-        entities = _heuristic_extract(text)
+        raise RuntimeError(
+            "LLM entity extraction failed. Ensure Ollama is running with a model loaded. "
+            "Run: ollama serve && ollama pull gemma4"
+        )
 
     return entities

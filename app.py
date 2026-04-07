@@ -27,9 +27,12 @@ def run_pipeline(brain_dump):
 
     timings = {}
 
-    t0 = time.time()
-    entities = extract_entities(brain_dump)
-    timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+    try:
+        t0 = time.time()
+        entities = extract_entities(brain_dump)
+        timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+    except RuntimeError as e:
+        return {"error": str(e)}
 
     t0 = time.time()
     enrich_entities(entities)
@@ -106,7 +109,13 @@ class Handler(BaseHTTPRequestHandler):
         from soulcraft.patterns import build_pattern_graph
         from soulcraft.research import enrich_entities
 
-        entities = extract_entities(brain_dump)
+        try:
+            entities = extract_entities(brain_dump)
+        except RuntimeError as e:
+            self._json_response({"error": str(e)}, 503)
+            self._log("POST", "/api/extract", 503, start, extra={"error": str(e)})
+            return
+
         enrich_entities(entities)
         graph = build_pattern_graph(entities, brain_dump)
 
