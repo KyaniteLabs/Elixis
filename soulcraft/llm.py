@@ -10,6 +10,7 @@ Configurable via environment variables:
 
 import json
 import os
+import time
 import urllib.request
 import urllib.error
 
@@ -21,6 +22,8 @@ API_KEY = os.environ.get("LLM_API_KEY", "")
 
 def _call_ollama(messages, model=None):
     """Call Ollama's chat API."""
+    from .traces import save_trace
+
     url = f"{OLLAMA_BASE}/api/chat"
     payload = json.dumps({
         "model": model or DEFAULT_MODEL,
@@ -29,10 +32,20 @@ def _call_ollama(messages, model=None):
     }).encode()
 
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+    start = time.time()
     try:
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read())
-            return data.get("message", {}).get("content", "").strip()
+            content = data.get("message", {}).get("content", "").strip()
+            latency_ms = int((time.time() - start) * 1000)
+            prompt_text = messages[-1].get("content", "") if messages else ""
+            save_trace(
+                prompt=prompt_text,
+                response=content,
+                latency_ms=latency_ms,
+                model=model or DEFAULT_MODEL,
+            )
+            return content
     except urllib.error.URLError:
         return ""
 

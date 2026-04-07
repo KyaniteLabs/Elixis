@@ -6,12 +6,14 @@ Usage: python app.py [--port PORT]
 import json
 import os
 import sys
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 
 from soulcraft.entities import extract_entities
 from soulcraft.patterns import build_pattern_graph
 from soulcraft.synthesis import synthesize_soulmd
+from soulcraft.traces import save_run, log_request, get_diagnostics, get_recent_runs
 
 PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "soulcraft", "templates")
@@ -22,38 +24,78 @@ def run_pipeline(brain_dump):
     if not brain_dump or len(brain_dump.strip()) < 3:
         return {"error": "Brain dump is empty or too short"}
 
+    timings = {}
+
+    t0 = time.time()
     entities = extract_entities(brain_dump)
+    timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+
+    t0 = time.time()
     graph = build_pattern_graph(entities, brain_dump)
+    timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
+
+    t0 = time.time()
     soulmd = synthesize_soulmd(entities, graph)
+    timings["stage3_synthesis_ms"] = int((time.time() - t0) * 1000)
+
+    save_run(brain_dump, entities, graph, soulmd, stage_timings=timings)
 
     return {
         "stage1_entities": entities,
         "stage2_graph": graph,
         "stage3_soulmd": soulmd,
+        "timings": timings,
     }
 
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        start = time.time()
         if self.path in ("", "/"):
             self._serve_file("landing.html", "text/html")
+            self._log("GET", self.path, 200, start)
+        elif self.path == "/api/diagnostics":
+            self._json_response(get_diagnostics())
+            self._log("GET", self.path, 200, start)
+        elif self.path == "/api/runs":
+            self._json_response({"runs": get_recent_runs(50)})
+            self._log("GET", self.path, 200, start)
         else:
             self._serve_static(self.path)
+            self._log("GET", self.path, 200, start)
 
     def do_POST(self):
+        start = time.time()
         if self.path == "/api/extract":
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length).decode("utf-8")
             data = json.loads(body)
             result = run_pipeline(data.get("brain_dump", ""))
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
+            status = 200 if "error" not in result else 400
+            self._json_response(result, status)
+            self._log("POST", self.path, status, start, extra={
+                "entity_count": len(result.get("stage1_entities", [])),
+                "emergent": result.get("stage2_graph", {}).get("emergent_topic"),
+                "soulmd_length": len(result.get("stage3_soulmd", "")),
+                "timings": result.get("timings"),
+            })
         else:
             self.send_response(404)
             self.end_headers()
+            self._log("POST", self.path, 404, start)
+
+    def _json_response(self, data, status=200):
+        body = json.dumps(data).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _log(self, method, path, status, start, extra=None):
+        duration_ms = (time.time() - start) * 1000
+        log_request(method, path, status, duration_ms, extra)
 
     def _serve_file(self, filename, content_type):
         filepath = os.path.join(TEMPLATE_DIR, filename)
@@ -70,8 +112,6 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def _serve_static(self, path):
-        """Serve static files from templates dir (css, js, images)."""
-        # Strip leading slash
         filename = path.lstrip("/")
         content_types = {
             ".css": "text/css",
@@ -85,9 +125,6 @@ class Handler(BaseHTTPRequestHandler):
         _, ext = os.path.splitext(filename)
         content_type = content_types.get(ext, "application/octet-stream")
         self._serve_file(filename, content_type)
-
-    def log_message(self, format, *args):
-        pass  # suppress per-request logging
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
