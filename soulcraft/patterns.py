@@ -133,20 +133,43 @@ _TYPE_AFFINITIES = {
 
 
 def _score_entity_pattern(entity, pattern, full_text=""):
-    """Score how strongly an entity supports a pattern."""
+    """Score how strongly an entity supports a pattern.
+
+    Uses entity name keywords, themes, traits, and type affinity.
+    """
     score = 0.0
     name_lower = entity["canonical"].lower()
     text_lower = full_text.lower()
+    pattern_id = pattern["id"]
 
     # Direct keyword match in entity name
     for kw in pattern["keywords"]:
         if kw in name_lower:
             score += 0.4
 
-    # Keyword proximity in text
+    # Theme match — strongest signal from LLM/Wikipedia research
+    themes = entity.get("themes", [])
+    if pattern_id in themes:
+        score += 0.5
+
+    # Trait keyword match
+    traits = entity.get("traits", [])
+    traits_text = " ".join(traits).lower()
+    for kw in pattern["keywords"][:5]:
+        if kw in traits_text:
+            score += 0.25
+            break  # one trait match is enough
+
+    # Description keyword match (from Wikipedia)
+    desc = entity.get("description", "").lower()
+    if desc:
+        desc_hits = sum(1 for kw in pattern["keywords"][:8] if kw in desc)
+        if desc_hits > 0:
+            score += min(desc_hits * 0.1, 0.3)
+
+    # Keyword proximity in surrounding text
     for kw in pattern["keywords"][:5]:
         if kw in text_lower:
-            # Find distance between entity mention and keyword
             e_idx = text_lower.find(name_lower)
             k_idx = text_lower.find(kw)
             if e_idx >= 0 and k_idx >= 0:
@@ -157,7 +180,7 @@ def _score_entity_pattern(entity, pattern, full_text=""):
     # Type affinity
     etype = entity.get("type", "concept")
     affinity = _TYPE_AFFINITIES.get(etype, {})
-    score += affinity.get(pattern["id"], 0.05)
+    score += affinity.get(pattern_id, 0.05)
 
     return min(score, 1.0)
 

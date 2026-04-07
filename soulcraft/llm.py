@@ -29,6 +29,7 @@ def _call_ollama(messages, model=None):
         "model": model or DEFAULT_MODEL,
         "messages": messages,
         "stream": False,
+        "options": {"num_predict": 4096},
     }).encode()
 
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})

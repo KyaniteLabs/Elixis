@@ -12,6 +12,7 @@ from socketserver import ThreadingMixIn
 
 from soulcraft.entities import extract_entities
 from soulcraft.patterns import build_pattern_graph
+from soulcraft.research import enrich_entities
 from soulcraft.synthesis import synthesize_soulmd, synthesize_soulmd_stream
 from soulcraft.traces import save_run, log_request, get_diagnostics, get_recent_runs
 
@@ -29,6 +30,10 @@ def run_pipeline(brain_dump):
     t0 = time.time()
     entities = extract_entities(brain_dump)
     timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+
+    t0 = time.time()
+    enrich_entities(entities)
+    timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
 
     t0 = time.time()
     graph = build_pattern_graph(entities, brain_dump)
@@ -99,8 +104,10 @@ class Handler(BaseHTTPRequestHandler):
         """Handle a streaming SSE response."""
         from soulcraft.entities import extract_entities
         from soulcraft.patterns import build_pattern_graph
+        from soulcraft.research import enrich_entities
 
         entities = extract_entities(brain_dump)
+        enrich_entities(entities)
         graph = build_pattern_graph(entities, brain_dump)
 
         self.send_response(200)

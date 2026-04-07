@@ -1,197 +1,130 @@
 """Stage 1: Entity Extraction Engine.
 
-Extracts named entities from raw brain dump text.
-Entity types: person, place, concept, work, event, emotion, skill
+Extracts named entities from raw brain dump text using LLM (primary)
+with heuristic line-by-line parsing as fallback.
 """
 
+import json
 import re
-from collections import Counter
-
-# Known cultural references for classification
-_KNOWN_PEOPLE = {
-    "gandhi", "einstein", "tesla", "socrates", "plato", "aristotle", "nietzsche",
-    "camus", "sartre", "jung", "freud", "marcus aurelius", "sun tzu", "machiavelli",
-    "buddha", "jesus", "muhammad", "moses", "david", "goliath", "odysseus",
-    "hamlet", "macbeth", "romeo", "juliet", "holmes", "watson", "gollum",
-    "frodo", "gandalf", "vader", "yoda", "morpheus", "neo", "trinity",
-    "miyagi", "rocky", "terminator", "batman", "superman", "spiderman",
-    "wolverine", "magneto", "professor x", "stark", "iron man", "thor",
-    "loki", "hulk", "black panther", "wonder woman", "harley quinn",
-    "joker", "pennywise", "freddy", "jason", "michael myers",
-    "job", "abraham", "solomon", "david", "noah", "adam", "eve",
-    "sappho", "medusa", "athena", "zeus", "poseidon", "hades", "apollo",
-    "artemis", "aphrodite", "hermes", "ares", "dionysus", "hephaestus",
-    "persephone", "demeter", "hera", "hestia",
-}
-
-_KNOWN_WORKS = {
-    "the matrix", "star wars", "lord of the rings", "harry potter",
-    "game of thrones", "breaking bad", "the wire", "stranger things",
-    "dark knight", "inception", "interstellar", "blade runner",
-    "ghost in the shell", "akira", "evangelion", "cowboy bebop",
-    "attack on titan", "one piece", "naruto", "dragon ball",
-    "fullmetal alchemist", "death note", "hunter x hunter",
-    "jojo", "mob psycho", "one punch man",
-    "the republic", "the prince", "meditations", "thus spoke zarathustra",
-    "the stranger", "being and nothingness", "beyond good and evil",
-    "critique of pure reason", "phenomenology of spirit",
-    "the art of war", "the book of five rings", "hagakure",
-    "tao te ching", "i ching", "bhagavad gita", "upanishads",
-    "dune", "foundation", "neuromancer", "snow crash",
-    "1984", "brave new world", "fahrenheit 451",
-    "catcher in the rye", "the great gatsby", "moby dick",
-    "crime and punishment", "the brothers karamazov", "war and peace",
-}
-
-_EMOTION_WORDS = {
-    "love", "hate", "fear", "anger", "joy", "sadness", "grief", "hope",
-    "despair", "rage", "fury", "bliss", "ecstasy", "agony", "torment",
-    "passion", "desire", "longing", "nostalgia", "melancholy", "anguish",
-    "terror", "horror", "dread", "anxiety", "serenity", "peace", "calm",
-    "euphoria", "elation", "sorrow", "misery", "suffering", "pain",
-    "pleasure", "excitement", "thrill", "awe", "wonder", "curiosity",
-    "boredom", "apathy", "indifference", "contempt", "disgust",
-    "shame", "guilt", "pride", "arrogance", "humility", "gratitude",
-    "forgiveness", "resentment", "bitterness", "jealousy", "envy",
-    "admiration", "respect", "loyalty", "betrayal", "trust",
-    "determination", "resilience", "courage", "bravery", "cowardice",
-}
-
-_SKILL_PATTERNS = [
-    r'\b(programming|coding|development|engineering)\b',
-    r'\b(writing|poetry|storytelling|narrative)\b',
-    r'\b(design|art|illustration|painting|drawing)\b',
-    r'\b(music|guitar|piano|drums|singing|composition)\b',
-    r'\b(cooking|baking|chef|recipe)\b',
-    r'\b(martial arts|karate|jiu.?jitsu|boxing|mma)\b',
-    r'\b(meditation|mindfulness|yoga|breathwork)\b',
-    r'\b(mathematics|physics|chemistry|biology|science)\b',
-    r'\b(philosophy|ethics|logic|reasoning)\b',
-    r'\b(strategy|tactics|chess|go)\b',
-    r'\b(teaching|mentoring|coaching)\b',
-    r'\b(leadership|management|negotiation)\b',
-    r'\b(analysis|research|investigation)\b',
-    r'\b(healing|therapy|medicine|nursing)\b',
-    r'\b(fighting|combat|warfare|survival)\b',
-]
 
 
-def _extract_capitalized_phrases(text):
-    """Extract capitalized phrases that are likely proper nouns."""
-    # Match sequences of capitalized words
-    pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
-    matches = re.findall(pattern, text)
-    # Filter out common sentence starters
-    starters = {
-        "The", "This", "That", "These", "Those", "It", "Its", "He", "She",
-        "His", "Her", "They", "Their", "We", "Our", "My", "Your", "I", "Me",
-        "And", "But", "Or", "So", "If", "When", "While", "After", "Before",
-        "In", "On", "At", "To", "For", "With", "From", "By", "About",
-        "Not", "No", "Yes", "All", "Some", "Most", "Many", "Few",
-        "Just", "Only", "Even", "Still", "Also", "Very", "Really",
-        "There", "Here", "Where", "What", "How", "Why", "Who", "Which",
-        "Every", "Each", "Both", "Either", "Neither", "None",
-        "First", "Second", "Third", "Last", "Next", "Then", "Now",
-    }
-    return [m for m in matches if m not in starters and len(m) > 2]
+def _llm_extract_entities(text):
+    """Use the LLM to extract and classify entities from a brain dump.
 
+    Returns a list of entity dicts with name, type, source, themes, traits,
+    or empty list if LLM is unavailable or fails.
+    """
+    from .llm import chat, is_available
 
-def _extract_quoted_entities(text):
-    """Extract entities from quotes, italics, or emphasis."""
-    patterns = [
-        r'"([^"]+)"',
-        r"'([^']+)'",
-        r'\*\*([^*]+)\*\*',
-        r'\*([^*]+)\*',
-        r'_([^_]+)_',
-    ]
-    results = []
-    for p in patterns:
-        results.extend(re.findall(p, text))
-    return [r for r in results if len(r) > 2 and len(r) < 80]
+    if not is_available():
+        return []
 
+    system = (
+        "You are a cultural reference analyzer. You receive a brain dump of references "
+        "(characters, films, books, figures, etc.) and extract each one as structured data. "
+        "You respond ONLY with a JSON array. No explanation, no markdown, no code fences."
+    )
 
-def _extract_skill_entities(text):
-    """Extract skill-related entities."""
-    found = []
-    text_lower = text.lower()
-    for pattern in _SKILL_PATTERNS:
-        match = re.search(pattern, text_lower)
+    user = f"""Analyze these references and extract EVERY SINGLE ONE as a separate entry. Do not stop until you have extracted all of them.
+
+For each reference provide:
+- name: the character or entity name
+- type: one of character, person, work, concept, historical_figure
+- source: what work/media it comes from (empty string if not applicable)
+- themes: 3-5 thematic keywords (e.g. ambition, power, rebellion)
+- traits: 2-4 personality trait adjectives
+
+References:
+{text.strip()}
+
+IMPORTANT: You MUST extract ALL references listed above. Output ONLY a JSON array, no other text:
+[{{"name": "...", "type": "...", "source": "...", "themes": [...], "traits": [...]}}]"""
+
+    try:
+        response = chat(
+            [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            model=None,
+        )
+    except Exception:
+        return []
+
+    if not response or len(response) < 10:
+        return []
+
+    # Extract JSON from the response (may be wrapped in code fences)
+    json_str = response.strip()
+    if "```" in json_str:
+        match = re.search(r"```(?:json)?\s*\n?(.*?)```", json_str, re.DOTALL)
         if match:
-            found.append(match.group(1))
-    return found
+            json_str = match.group(1).strip()
 
+    # Find the array bounds
+    start = json_str.find("[")
+    end = json_str.rfind("]")
+    if start == -1 or end == -1 or end <= start:
+        return []
 
-def _extract_emotion_entities(text):
-    """Extract emotion-related entities."""
-    text_lower = text.lower()
-    words = re.findall(r'\b\w+\b', text_lower)
-    found = [w for w in words if w in _EMOTION_WORDS]
-    return list(dict.fromkeys(found))[:15]
+    try:
+        data = json.loads(json_str[start:end + 1])
+    except json.JSONDecodeError:
+        return []
 
+    if not isinstance(data, list):
+        return []
 
-def _classify_entity(name, context=""):
-    """Classify an entity into a type."""
-    name_lower = name.lower()
-    context_lower = context.lower()
+    entities = []
+    seen = set()
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name", "").strip()
+        if not name or len(name) < 2:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
 
-    if name_lower in _KNOWN_PEOPLE:
-        return "person"
-    if name_lower in _KNOWN_WORKS:
-        return "work"
+        themes = item.get("themes", [])
+        if isinstance(themes, str):
+            themes = [t.strip() for t in themes.split(",")]
+        traits = item.get("traits", [])
+        if isinstance(traits, str):
+            traits = [t.strip() for t in traits.split(",")]
 
-    # Check context clues
-    person_clues = ["he ", "she ", "his ", "her ", "him ", "told", "said", "met", "friend", "mentor", "teacher", "father", "mother", "brother", "sister", "uncle", "aunt"]
-    work_clues = ["read", "watched", "played", "listened", "book", "movie", "film", "show", "series", "album", "song", "game", "novel", "story", "anime", "manga"]
-    place_clues = ["visited", "lived in", "from", "city", "country", "mountain", "river", "ocean", "forest", "island", "country"]
+        entities.append({
+            "original": name,
+            "canonical": name,
+            "source": item.get("source", ""),
+            "type": item.get("type", "concept"),
+            "description": item.get("description", ""),
+            "themes": [t.lower().strip() for t in themes if t.strip()],
+            "traits": [t.lower().strip() for t in traits if t.strip()],
+            "confidence": 0.95,
+        })
 
-    for clue in person_clues:
-        if clue in context_lower and name_lower in context_lower:
-            return "person"
-    for clue in work_clues:
-        if clue in context_lower and name_lower in context_lower:
-            return "work"
-    for clue in place_clues:
-        if clue in context_lower and name_lower in context_lower:
-            return "place"
-
-    # Heuristic: short capitalized words are likely people
-    if len(name.split()) == 1 and name[0].isupper():
-        return "person"
-    # Longer phrases tend to be works or concepts
-    if len(name.split()) >= 3:
-        return "work"
-
-    return "concept"
+    return entities
 
 
 def _parse_line_entity(line):
-    """Parse a single brain-dump line into an entity.
-
-    Handles formats like:
-      Tony Montana (Scarface)
-      Tony Montana - Scarface
-      Tony Montana / Scarface
-      "Tyler Durden" from Fight Club
-      The Godfather
-      Walter White, Breaking Bad
-    """
+    """Parse a single brain-dump line into a basic entity dict."""
     line = line.strip()
     if not line or len(line) < 2:
         return None
 
-    # Strip leading markers (-, *, •, numbers)
+    # Strip leading markers (-, *, bullet, numbers)
     line = re.sub(r'^[\s*\-•]*(?:\d+[.\):]\s*)?', '', line).strip()
     if not line:
         return None
 
-    # Extract the main name and optional source/context
     name = line
     source = ""
 
-    # "Name" from Source / Name (Source) / Name - Source / Name, Source
     paren_match = re.match(r'^(.+?)\s*\(([^)]+)\)\s*$', line)
-    dash_match = re.match(r'^(.+?)\s*[-–—]\s*(.+)$', line)
+    dash_match = re.match(r'^(.+?)\s*[-\u2013\u2014]\s*(.+)$', line)
     comma_match = re.match(r'^(.+?)\s*,\s*(.+)$', line)
     from_match = re.match(r'^(.+?)\s+(?:from|via|in)\s+(.+)$', line, re.IGNORECASE)
     slash_match = re.match(r'^(.+?)\s*/\s*(.+)$', line)
@@ -207,115 +140,78 @@ def _parse_line_entity(line):
     elif comma_match and len(comma_match.group(1).strip().split()) <= 4:
         name, source = comma_match.group(1).strip(), comma_match.group(2).strip()
 
-    # Strip quotes around name
     name = re.sub(r'^["\'](.+)["\']$', r'\1', name).strip()
     if not name or len(name) < 2:
         return None
-
-    # Classify
-    etype = _classify_entity(name, line)
 
     return {
         "original": line,
         "canonical": name,
         "source": source,
-        "type": etype,
-        "confidence": 0.85 if source else 0.7,
+        "type": "character" if source else "concept",
+        "description": "",
+        "themes": [],
+        "traits": [],
+        "confidence": 0.7,
     }
 
 
-def extract_entities(text):
-    """Main extraction pipeline. Returns list of entity dicts."""
-    if not text or not text.strip():
-        return []
-
+def _heuristic_extract(text):
+    """Fallback: line-by-line + capitalized phrase extraction."""
     entities = []
     seen = set()
 
-    # 0. Line-by-line extraction (primary strategy for brain dumps)
+    # Line-by-line first
     lines = re.split(r'[\n\r]+', text)
-    line_entities = []
     for line in lines:
         entity = _parse_line_entity(line)
         if entity:
             key = entity["canonical"].lower()
             if key not in seen and len(key) > 2:
                 seen.add(key)
-                line_entities.append(entity)
+                entities.append(entity)
 
-    # If line parsing found entities, use those as the primary set
-    if line_entities:
-        entities.extend(line_entities)
-    else:
-        # Fallback: treat as prose and extract capitalized phrases
-        for name in _extract_capitalized_phrases(text):
-            key = name.lower()
-            if key not in seen and len(key) > 2:
+    # If no line entities found, try capitalized phrases
+    if not entities:
+        pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
+        matches = re.findall(pattern, text)
+        starters = {
+            "The", "This", "That", "These", "Those", "It", "He", "She",
+            "His", "Her", "They", "Their", "We", "Our", "My", "Your",
+            "And", "But", "Or", "So", "If", "When", "While", "Not",
+        }
+        for m in matches:
+            key = m.lower()
+            if m not in starters and len(m) > 2 and key not in seen:
                 seen.add(key)
-                etype = _classify_entity(name, text)
                 entities.append({
-                    "original": name,
-                    "canonical": name.strip(),
-                    "type": etype,
-                    "confidence": 0.7,
+                    "original": m,
+                    "canonical": m.strip(),
+                    "source": "",
+                    "type": "concept",
+                    "description": "",
+                    "themes": [],
+                    "traits": [],
+                    "confidence": 0.6,
                 })
 
-        # Quoted entities
-        for name in _extract_quoted_entities(text):
-            key = name.lower()
-            if key not in seen and len(key) > 2:
-                seen.add(key)
-                etype = _classify_entity(name, text)
-                entities.append({
-                    "original": name,
-                    "canonical": name.strip(),
-                    "type": etype,
-                    "confidence": 0.9,
-                })
+    return entities
 
-    # Known works/characters mentioned anywhere (supplementary)
-    text_lower = text.lower()
-    for work in _KNOWN_WORKS:
-        if work in text_lower and work not in seen:
-            seen.add(work)
-            entities.append({
-                "original": work.title(),
-                "canonical": work.title(),
-                "type": "work",
-                "confidence": 0.85,
-            })
-    for person in _KNOWN_PEOPLE:
-        if person in text_lower and person not in seen:
-            seen.add(person)
-            entities.append({
-                "original": person.title(),
-                "canonical": person.title(),
-                "type": "person",
-                "confidence": 0.85,
-            })
 
-    # Emotions
-    for emo in _extract_emotion_entities(text):
-        key = f"emotion:{emo}"
-        if key not in seen:
-            seen.add(key)
-            entities.append({
-                "original": emo,
-                "canonical": emo.capitalize(),
-                "type": "emotion",
-                "confidence": 0.8,
-            })
+def extract_entities(text):
+    """Main extraction pipeline.
 
-    # Skills
-    for skill in _extract_skill_entities(text):
-        key = f"skill:{skill}"
-        if key not in seen:
-            seen.add(key)
-            entities.append({
-                "original": skill,
-                "canonical": skill.capitalize(),
-                "type": "skill",
-                "confidence": 0.75,
-            })
+    Tries LLM extraction first (rich themes/traits),
+    falls back to heuristic line-by-line parsing.
+    """
+    if not text or not text.strip():
+        return []
+
+    # Try LLM extraction first
+    entities = _llm_extract_entities(text)
+
+    # Fallback to heuristic
+    if not entities:
+        entities = _heuristic_extract(text)
 
     return entities
