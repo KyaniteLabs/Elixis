@@ -172,9 +172,8 @@ nav {
 /* ── LIVE DEMO ── */
 .demo-section { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .demo-header { text-align: center; padding: 5rem 3rem 3rem; }
-.demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 600px; }
-.demo-input-panel { padding: 3rem; border-right: 1px solid var(--border); }
-.demo-output-panel { padding: 3rem; background: var(--surface); overflow-y: auto; max-height: 80vh; }
+.demo-input-panel { padding: 3rem; max-width: 800px; margin: 0 auto; }
+.demo-output-panel { padding: 3rem; max-width: 1200px; margin: 0 auto; min-height: 200px; }
 
 /* ── INPUT FORM ── */
 .input-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: block; }
@@ -228,6 +227,30 @@ nav {
 
 /* ── ANALYSIS DASHBOARD ── */
 .analysis-dashboard { display: none; }
+
+/* ── THINKING / REASONING ── */
+.thinking-section { display: none; margin-bottom: 2rem; }
+.thinking-toggle {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 0.4rem 1rem; font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 3px;
+  display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem;
+  transition: all 0.2s;
+}
+.thinking-toggle:hover { border-color: var(--accent2); color: var(--accent2); }
+.thinking-toggle .arrow { transition: transform 0.2s; }
+.thinking-toggle.open .arrow { transform: rotate(90deg); }
+.thinking-content {
+  background: #0a0a12; border: 1px solid #1a1a2e; border-left: 3px solid var(--accent2);
+  padding: 1.2rem; border-radius: 4px; font-size: 0.78rem; line-height: 1.7;
+  color: #888; max-height: 300px; overflow-y: auto; display: none;
+  font-family: 'Inter', sans-serif;
+}
+.thinking-content.visible { display: block; }
+
+/* ── STREAMING CURSOR ── */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.streaming-cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); animation: blink 0.8s infinite; vertical-align: text-bottom; margin-left: 2px; }
 
 .analysis-section { margin-bottom: 2.5rem; }
 .analysis-section:last-child { margin-bottom: 0; }
@@ -417,7 +440,6 @@ footer a:hover { color: var(--accent); }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .demo-layout { grid-template-columns: 1fr; }
   .pipeline-steps { grid-template-columns: 1fr; }
   .soul-file-grid { grid-template-columns: 1fr; }
   nav { padding: 1rem 1.5rem; }
@@ -556,11 +578,10 @@ footer a:hover { color: var(--accent); }
     <div class="section-title" style="margin-bottom:0">FIND THE THREAD.</div>
   </div>
 
-  <div class="demo-layout">
-    <!-- Input -->
-    <div class="demo-input-panel">
-      <label class="input-label" for="brainDump">Your brain dump</label>
-      <textarea class="brain-dump" id="brainDump" placeholder="Drop your references here. One per line.
+  <!-- Input (centered, max-width) -->
+  <div class="demo-input-panel">
+    <label class="input-label" for="brainDump">Your brain dump</label>
+    <textarea class="brain-dump" id="brainDump" placeholder="Drop your references here. One per line.
 
 Tony Montana (Scarface)
 Hannah Montana
@@ -573,95 +594,102 @@ Patrick Bateman (American Psycho)
 Jesse Pinkman (Breaking Bad)
 Fleabag"></textarea>
 
-      <button class="run-btn" id="runBtn" onclick="runPipeline()">
-        <span class="btn-text">Find the Thread →</span>
-        <span class="spinner"></span>
-      </button>
+    <button class="run-btn" id="runBtn" onclick="runPipeline()">
+      <span class="btn-text">Find the Thread →</span>
+      <span class="spinner"></span>
+    </button>
 
-      <div class="demo-error" id="demoError"></div>
+    <div class="demo-error" id="demoError"></div>
 
-      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-        <div class="input-label" style="margin-bottom: 0.8rem;">Examples</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-          <button class="soulmd-btn" onclick="loadExample('standard')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Standard</button>
-          <button class="soulmd-btn" onclick="loadExample('power')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Power Players</button>
-          <button class="soulmd-btn" onclick="loadExample('outsider')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Outsiders</button>
-          <button class="soulmd-btn" onclick="loadExample('intellectual')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Intellectuals</button>
-        </div>
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+      <div class="input-label" style="margin-bottom: 0.8rem;">Examples</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+        <button class="soulmd-btn" onclick="loadExample('standard')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Standard</button>
+        <button class="soulmd-btn" onclick="loadExample('power')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Power Players</button>
+        <button class="soulmd-btn" onclick="loadExample('outsider')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Outsiders</button>
+        <button class="soulmd-btn" onclick="loadExample('intellectual')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Intellectuals</button>
       </div>
     </div>
+  </div>
 
-    <!-- Output -->
-    <div class="demo-output-panel">
-      <div class="output-placeholder" id="outputPlaceholder">
-        <div class="placeholder-icon">◉</div>
-        <p>Run the pipeline to see the pattern graph analysis and generated SOUL.md</p>
+  <!-- Output (full-width, below input) -->
+  <div class="demo-output-panel">
+    <div class="output-placeholder" id="outputPlaceholder">
+      <div class="placeholder-icon">◉</div>
+      <p>Run the pipeline to see the pattern graph analysis and generated SOUL.md</p>
+    </div>
+
+    <!-- ANALYSIS DASHBOARD -->
+    <div class="analysis-dashboard" id="analysisDashboard">
+      <!-- Stage 1: Entities -->
+      <div class="analysis-section">
+        <div class="analysis-label">Stage 01 — Entities Extracted</div>
+        <div class="entity-cards" id="entityCards"></div>
       </div>
 
-      <!-- ANALYSIS DASHBOARD -->
-      <div class="analysis-dashboard" id="analysisDashboard">
-        <!-- Stage 1: Entities -->
-        <div class="analysis-section">
-          <div class="analysis-label">Stage 01 — Entities Extracted</div>
-          <div class="entity-cards" id="entityCards"></div>
-        </div>
+      <!-- Stage 2: Pattern Graph -->
+      <div class="analysis-section">
+        <div class="analysis-label">Stage 02 — Pattern Probability Graph</div>
 
-        <!-- Stage 2: Pattern Graph -->
-        <div class="analysis-section">
-          <div class="analysis-label">Stage 02 — Pattern Probability Graph</div>
-
-          <div class="emergent-box" style="margin-bottom: 1.5rem;">
-            <div class="emergent-label">Emergent Identity</div>
-            <div class="emergent-topic" id="emergentTopic" style="color: var(--accent);">—</div>
-            <div class="emergent-theme" id="emergentTheme">—</div>
-            <div class="consensus-bar">
-              <span style="font-size:0.65rem; color: var(--muted); font-family: 'Space Mono', monospace; flex-shrink:0;">Consensus</span>
-              <div class="consensus-track">
-                <div class="consensus-fill" id="consensusFill" style="width: 0%"></div>
-              </div>
-              <span class="consensus-pct" id="consensusPct">0%</span>
+        <div class="emergent-box" style="margin-bottom: 1.5rem;">
+          <div class="emergent-label">Emergent Identity</div>
+          <div class="emergent-topic" id="emergentTopic" style="color: var(--accent);">—</div>
+          <div class="emergent-theme" id="emergentTheme">—</div>
+          <div class="consensus-bar">
+            <span style="font-size:0.65rem; color: var(--muted); font-family: 'Space Mono', monospace; flex-shrink:0;">Consensus</span>
+            <div class="consensus-track">
+              <div class="consensus-fill" id="consensusFill" style="width: 0%"></div>
             </div>
+            <span class="consensus-pct" id="consensusPct">0%</span>
           </div>
-
-          <div class="pattern-graph" id="patternGraph"></div>
         </div>
 
-        <!-- Bridges -->
-        <div class="analysis-section" id="bridgesSection" style="display:none;">
-          <div class="analysis-label">Pattern Bridges</div>
-          <div class="bridges-label">Entities connecting two patterns</div>
-          <div id="bridgesList"></div>
-        </div>
+        <div class="pattern-graph" id="patternGraph"></div>
+      </div>
 
-        <!-- Entity Pattern Matrix -->
-        <div class="analysis-section" id="matrixSection" style="display:none;">
-          <div class="analysis-label">Entity × Pattern Matrix</div>
-          <div class="matrix-label">How each entity votes across patterns</div>
-          <div class="entity-matrix" id="entityMatrix"></div>
-        </div>
+      <!-- Bridges -->
+      <div class="analysis-section" id="bridgesSection" style="display:none;">
+        <div class="analysis-label">Pattern Bridges</div>
+        <div class="bridges-label">Entities connecting two patterns</div>
+        <div id="bridgesList"></div>
+      </div>
 
-        <!-- Analysis Notes -->
-        <div class="analysis-section" id="notesSection" style="display:none;">
-          <div class="analysis-label">Interpretation</div>
-          <div class="analysis-notes" id="analysisNotes"></div>
-        </div>
+      <!-- Entity Pattern Matrix -->
+      <div class="analysis-section" id="matrixSection" style="display:none;">
+        <div class="analysis-label">Entity × Pattern Matrix</div>
+        <div class="matrix-label">How each entity votes across patterns</div>
+        <div class="entity-matrix" id="entityMatrix"></div>
+      </div>
 
-        <!-- Stage 3: SOUL.md -->
-        <div class="soulmd-section" id="soulmdSection">
-          <div class="soulmd-header">
-            <div class="soulmd-title">SOUL.md — OpenClaw Compatible</div>
-            <div class="soulmd-actions">
-              <button class="soulmd-btn" onclick="copySoulmd()">
-                <span>⎘</span> Copy
-              </button>
-              <button class="soulmd-btn" onclick="downloadSoulmd()">
-                <span>↓</span> Download
-              </button>
-            </div>
+      <!-- Analysis Notes -->
+      <div class="analysis-section" id="notesSection" style="display:none;">
+        <div class="analysis-label">Interpretation</div>
+        <div class="analysis-notes" id="analysisNotes"></div>
+      </div>
+
+      <!-- Thinking / Reasoning -->
+      <div class="thinking-section" id="thinkingSection">
+        <button class="thinking-toggle" id="thinkingToggle" onclick="toggleThinking()">
+          <span class="arrow">▸</span> Model Reasoning
+        </button>
+        <div class="thinking-content" id="thinkingContent"></div>
+      </div>
+
+      <!-- Stage 3: SOUL.md -->
+      <div class="soulmd-section" id="soulmdSection">
+        <div class="soulmd-header">
+          <div class="soulmd-title">SOUL.md — OpenClaw Compatible</div>
+          <div class="soulmd-actions" id="soulmdActions" style="display:none;">
+            <button class="soulmd-btn" onclick="copySoulmd()">
+              <span>⎘</span> Copy
+            </button>
+            <button class="soulmd-btn" onclick="downloadSoulmd()">
+              <span>↓</span> Download
+            </button>
           </div>
-          <pre class="soulmd-output" id="soulmdOutput"></pre>
-          <div class="copied-toast" id="copiedToast">Copied to clipboard</div>
         </div>
+        <pre class="soulmd-output" id="soulmdOutput"><span class="streaming-cursor" id="streamingCursor"></span></pre>
+        <div class="copied-toast" id="copiedToast">Copied to clipboard</div>
       </div>
     </div>
   </div>
@@ -727,7 +755,55 @@ function loadExample(key) {
   document.getElementById('brainDump').value = EXAMPLES[key];
 }
 
-// ── PIPELINE ──────────────────────────────────────────────────────────────
+// ── SSE HANDLER ───────────────────────────────────────────────────────────
+let _thinkingText = '';
+
+function handleSSE(line, outputEl) {
+  if (!line.startsWith('data: ')) return;
+  const payload = line.slice(6);
+  if (!payload) return;
+
+  let event;
+  try { event = JSON.parse(payload); } catch { return; }
+
+  switch (event.type) {
+    case 'entities':
+      renderEntities(event.data);
+      break;
+
+    case 'graph':
+      renderGraph(event.data);
+      break;
+
+    case 'thinking':
+      _thinkingText += event.content;
+      document.getElementById('thinkingSection').style.display = 'block';
+      document.getElementById('thinkingContent').textContent = _thinkingText;
+      break;
+
+    case 'soulmd_token':
+      if (document.getElementById('soulmdSection').style.display === 'none') {
+        document.getElementById('soulmdSection').style.display = 'block';
+      }
+      const cursor = document.getElementById('streamingCursor');
+      if (cursor) cursor.remove();
+      outputEl.appendChild(document.createTextNode(event.content));
+      const newCursor = document.createElement('span');
+      newCursor.className = 'streaming-cursor';
+      newCursor.id = 'streamingCursor';
+      outputEl.appendChild(newCursor);
+      outputEl.scrollTop = outputEl.scrollHeight;
+      break;
+
+    case 'soulmd_done':
+      const c = document.getElementById('streamingCursor');
+      if (c) c.remove();
+      document.getElementById('soulmdActions').style.display = 'flex';
+      break;
+  }
+}
+
+// ── PIPELINE (streaming) ──────────────────────────────────────────────────
 async function runPipeline() {
   const dump = document.getElementById('brainDump').value.trim();
   const btn = document.getElementById('runBtn');
@@ -739,67 +815,89 @@ async function runPipeline() {
     return;
   }
 
+  // Reset UI
   errorEl.style.display = 'none';
+  document.getElementById('outputPlaceholder').style.display = 'none';
+  document.getElementById('analysisDashboard').style.display = 'block';
+  document.getElementById('bridgesSection').style.display = 'none';
+  document.getElementById('matrixSection').style.display = 'none';
+  document.getElementById('notesSection').style.display = 'none';
+  document.getElementById('thinkingSection').style.display = 'none';
+  document.getElementById('thinkingContent').classList.remove('visible');
+  document.getElementById('thinkingToggle').classList.remove('open');
+  document.getElementById('soulmdSection').style.display = 'none';
+  document.getElementById('soulmdActions').style.display = 'none';
+  document.getElementById('entityCards').innerHTML = '';
+  document.getElementById('patternGraph').innerHTML = '';
+  document.getElementById('bridgesList').innerHTML = '';
+  document.getElementById('entityMatrix').innerHTML = '';
+  document.getElementById('analysisNotes').innerHTML = '';
+  document.getElementById('thinkingContent').textContent = '';
+  document.getElementById('soulmdOutput').innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
+
   btn.classList.add('loading');
   btn.querySelector('.btn-text').textContent = 'Analyzing...';
   btn.disabled = true;
+
+  const outputEl = document.getElementById('soulmdOutput');
+  _thinkingText = '';
 
   try {
     const resp = await fetch('/api/extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brain_dump: dump })
+      body: JSON.stringify({ brain_dump: dump, stream: true })
     });
-    const data = await resp.json();
 
-    if (data.error) {
-      errorEl.textContent = 'Error: ' + data.error;
-      errorEl.style.display = 'block';
-      return;
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: resp.statusText }));
+      throw new Error(err.error || 'Pipeline failed');
     }
 
-    renderDashboard(data);
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        handleSSE(line, outputEl);
+      }
+    }
+    // Process any remaining buffer
+    if (buffer.trim()) handleSSE(buffer, outputEl);
+
+    // Ensure final state
+    const cursor = document.getElementById('streamingCursor');
+    if (cursor) cursor.remove();
+    document.getElementById('soulmdActions').style.display = 'flex';
   } catch(e) {
     errorEl.textContent = 'Pipeline error: ' + e.message;
     errorEl.style.display = 'block';
   } finally {
     btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent = 'Find the Thread →';
+    btn.querySelector('.btn-text').textContent = 'Find the Thread \u2192';
     btn.disabled = false;
   }
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────
-function renderDashboard(data) {
-  document.getElementById('outputPlaceholder').style.display = 'none';
-  document.getElementById('analysisDashboard').style.display = 'block';
-
-  const graph = data.stage2_graph;
-  const entities = data.stage1_entities;
-
-  // Entities
-  const typeColors = {
-    character: 'var(--accent)',
-    movie: '#4ecdc4',
-    book: '#ffe66d',
-    tv_show: '#a855f7',
-    historical_figure: '#38bdf8',
-    music: '#22d3ee',
-    person: '#f97316',
-    place: '#84cc16',
-    concept: '#eab308',
-    work: '#4ecdc4',
-    event: '#c084fc',
-    emotion: '#f43f5e',
-    skill: '#38bdf8',
-  };
+// ── RENDER STAGES ─────────────────────────────────────────────────────────
+function renderEntities(entities) {
   document.getElementById('entityCards').innerHTML = entities.map(e =>
     `<span class="entity-chip type-${e.type}">
       <span class="type-dot"></span>
       ${e.original}
     </span>`
   ).join('');
+}
 
+function renderGraph(graph) {
   // Emergent topic
   const topic = document.getElementById('emergentTopic');
   topic.textContent = graph.emergent_topic;
@@ -813,8 +911,7 @@ function renderDashboard(data) {
 
   // Pattern graph bars
   const topPatterns = graph.patterns.filter(p => p.probability > 0.01);
-  const pgEl = document.getElementById('patternGraph');
-  pgEl.innerHTML = topPatterns.map((p, i) => `
+  document.getElementById('patternGraph').innerHTML = topPatterns.map((p, i) => `
     <div class="pattern-row">
       <div class="pattern-rank">${i + 1}</div>
       <div class="pattern-bar-wrap">
@@ -823,7 +920,7 @@ function renderDashboard(data) {
         </div>
         <div class="pattern-name" title="${p.name}">${p.name}</div>
         <div class="pattern-prob">${Math.round(p.probability * 100)}%</div>
-        <div class="pattern-confidence" title="${p.supporting_entities} entities">${p.supporting_entities}↓</div>
+        <div class="pattern-confidence" title="${p.supporting_entities} entities">${p.supporting_entities}\u2193</div>
       </div>
     </div>
   `).join('');
@@ -836,7 +933,7 @@ function renderDashboard(data) {
         <div class="bridge-entity">${b.entity}</div>
         <div class="bridge-connection">
           <span class="bridge-pill" style="background: ${b.color_a}22; color: ${b.color_a}; border: 1px solid ${b.color_a};">${b.pattern_a}</span>
-          <span class="bridge-arrow">↔</span>
+          <span class="bridge-arrow">\u2194</span>
           <span class="bridge-pill" style="background: ${b.color_b}22; color: ${b.color_b}; border: 1px solid ${b.color_b};">${b.pattern_b}</span>
           <span style="margin-left: auto; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted);">
             ${Math.round(b.score_a * 100)}% / ${Math.round(b.score_b * 100)}%
@@ -851,8 +948,7 @@ function renderDashboard(data) {
     const relevantPatterns = graph.patterns.filter(p => p.probability > 0.05);
     if (relevantPatterns.length > 1) {
       document.getElementById('matrixSection').style.display = 'block';
-      const matrixEl = document.getElementById('entityMatrix');
-      matrixEl.innerHTML = graph.entity_scores.slice(0, 8).map(eps => {
+      document.getElementById('entityMatrix').innerHTML = graph.entity_scores.slice(0, 8).map(eps => {
         const bars = relevantPatterns.map(p => {
           const score = eps.votes[p.id] || 0;
           const width = Math.round(score * 100);
@@ -875,10 +971,14 @@ function renderDashboard(data) {
       `<div class="analysis-note">${n}</div>`
     ).join('');
   }
+}
 
-  // SOUL.md
-  document.getElementById('soulmdSection').style.display = 'block';
-  document.getElementById('soulmdOutput').textContent = data.stage3_soulmd;
+// ── THINKING TOGGLE ───────────────────────────────────────────────────────
+function toggleThinking() {
+  const toggle = document.getElementById('thinkingToggle');
+  const content = document.getElementById('thinkingContent');
+  toggle.classList.toggle('open');
+  content.classList.toggle('visible');
 }
 
 // ── COPY & DOWNLOAD ───────────────────────────────────────────────────────

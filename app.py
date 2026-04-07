@@ -12,7 +12,7 @@ from socketserver import ThreadingMixIn
 
 from soulcraft.entities import extract_entities
 from soulcraft.patterns import build_pattern_graph
-from soulcraft.synthesis import synthesize_soulmd
+from soulcraft.synthesis import synthesize_soulmd, synthesize_soulmd_stream
 from soulcraft.traces import save_run, log_request, get_diagnostics, get_recent_runs
 
 PORT = 3110
@@ -70,20 +70,56 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length).decode("utf-8")
             data = json.loads(body)
-            result = run_pipeline(data.get("brain_dump", ""))
+            brain_dump = data.get("brain_dump", "")
 
-            status = 200 if "error" not in result else 400
-            self._json_response(result, status)
-            self._log("POST", self.path, status, start, extra={
-                "entity_count": len(result.get("stage1_entities", [])),
-                "emergent": result.get("stage2_graph", {}).get("emergent_topic"),
-                "soulmd_length": len(result.get("stage3_soulmd", "")),
-                "timings": result.get("timings"),
-            })
+            if not brain_dump or len(brain_dump.strip()) < 3:
+                self._json_response({"error": "Brain dump is empty or too short"}, 400)
+                return
+
+            # Check if client wants streaming
+            accept = self.headers.get("Accept", "")
+            if "text/event-stream" in accept or data.get("stream"):
+                self._handle_stream(brain_dump, start)
+            else:
+                result = run_pipeline(brain_dump)
+                status = 200 if "error" not in result else 400
+                self._json_response(result, status)
+                self._log("POST", self.path, status, start, extra={
+                    "entity_count": len(result.get("stage1_entities", [])),
+                    "emergent": result.get("stage2_graph", {}).get("emergent_topic"),
+                    "soulmd_length": len(result.get("stage3_soulmd", "")),
+                    "timings": result.get("timings"),
+                })
         else:
             self.send_response(404)
             self.end_headers()
             self._log("POST", self.path, 404, start)
+
+    def _handle_stream(self, brain_dump, start):
+        """Handle a streaming SSE response."""
+        from soulcraft.entities import extract_entities
+        from soulcraft.patterns import build_pattern_graph
+
+        entities = extract_entities(brain_dump)
+        graph = build_pattern_graph(entities, brain_dump)
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        for event in synthesize_soulmd_stream(entities, graph):
+            payload = json.dumps(event)
+            self.wfile.write(f"data: {payload}\n\n".encode())
+            self.wfile.flush()
+
+        duration_ms = (time.time() - start) * 1000
+        self._log("POST", "/api/extract", 200, start, extra={
+            "streamed": True,
+            "entity_count": len(entities),
+            "emergent": graph.get("emergent_topic"),
+        })
 
     def _json_response(self, data, status=200):
         body = json.dumps(data).encode()

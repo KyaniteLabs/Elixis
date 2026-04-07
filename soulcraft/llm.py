@@ -99,3 +99,89 @@ def is_available():
             return resp.status == 200
     except Exception:
         return False
+
+
+def chat_stream(messages, model=None):
+    """Stream a chat completion from Ollama, yielding tokens as they arrive.
+
+    Yields dicts:
+      {"type": "token", "content": "..."} — each token
+      {"type": "thinking", "content": "..."} — model reasoning (if present)
+      {"type": "done", "latency_ms": N} — final event
+
+    If Ollama is unavailable, yields nothing.
+    """
+    url = f"{OLLAMA_BASE}/api/chat"
+    payload = json.dumps({
+        "model": model or DEFAULT_MODEL,
+        "messages": messages,
+        "stream": True,
+    }).encode()
+
+    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+    start = time.time()
+    full_response = []
+    in_thinking = False
+    thinking_buffer = []
+
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            for raw_line in resp:
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                content = chunk.get("message", {}).get("content", "")
+                done = chunk.get("done", False)
+
+                if not done and content:
+                    # Detect thinking tags
+                    if "<think" in content and ">" in content:
+                        in_thinking = True
+                        # Get content after the think tag
+                        after = content.split(">", 1)[-1]
+                        if after:
+                            thinking_buffer.append(after)
+                            yield {"type": "thinking", "content": after}
+                        continue
+
+                    if in_thinking:
+                        if "</think" in content:
+                            in_thinking = False
+                            before = content.split("</think", 1)[0]
+                            if before:
+                                thinking_buffer.append(before)
+                                yield {"type": "thinking", "content": before}
+                            after = content.split(">", 1)[-1] if ">" in content else ""
+                            if after:
+                                full_response.append(after)
+                                yield {"type": "token", "content": after}
+                            continue
+                        thinking_buffer.append(content)
+                        yield {"type": "thinking", "content": content}
+                        continue
+
+                    full_response.append(content)
+                    yield {"type": "token", "content": content}
+
+                if done:
+                    latency_ms = int((time.time() - start) * 1000)
+                    full_text = "".join(full_response)
+                    prompt_text = messages[-1].get("content", "") if messages else ""
+
+                    from .traces import save_trace
+                    save_trace(
+                        prompt=prompt_text,
+                        response=full_text,
+                        latency_ms=latency_ms,
+                        model=model or DEFAULT_MODEL,
+                        extra={"thinking": "".join(thinking_buffer)} if thinking_buffer else None,
+                    )
+                    yield {"type": "done", "latency_ms": latency_ms}
+
+    except (urllib.error.URLError, OSError):
+        return
