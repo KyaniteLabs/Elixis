@@ -84,6 +84,55 @@ nav {
 }
 .nav-cta:hover { background: var(--accent2) !important; }
 
+/* ── LANGUAGE SELECTOR ── */
+.lang-selector {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  border-radius: 3px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.lang-selector:hover, .lang-selector:focus {
+  border-color: var(--accent);
+}
+.lang-selector option {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+/* ── TRANSLATION STATUS ── */
+.translation-status {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.translation-status.active { display: flex; }
+.translation-status .translation-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 /* ── HERO ── */
 .hero {
   min-height: 100vh;
@@ -712,9 +761,40 @@ button, a, [onclick] { cursor: pointer; }
 <nav>
   <a href="/" class="nav-logo">SOUL<span>CRAFT</span></a>
   <div class="nav-links">
-    <a href="#how-it-works">How it works</a>
-    <a href="#demo">Try it</a>
-    <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" class="nav-cta">View on GitHub</a>
+    <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
+    <a href="#demo" data-i18n="nav_try_it">Try it</a>
+    <select id="languageSelector" class="lang-selector" aria-label="Select language">
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+      <option value="it">Italiano</option>
+      <option value="pt">Português</option>
+      <option value="nl">Nederlands</option>
+      <option value="pl">Polski</option>
+      <option value="ru">Русский</option>
+      <option value="zh">中文</option>
+      <option value="ja">日本語</option>
+      <option value="ko">한국어</option>
+      <option value="ar">العربية</option>
+      <option value="hi">हिन्दी</option>
+      <option value="tr">Türkçe</option>
+      <option value="vi">Tiếng Việt</option>
+      <option value="th">ไทย</option>
+      <option value="sv">Svenska</option>
+      <option value="da">Dansk</option>
+      <option value="no">Norsk</option>
+      <option value="fi">Suomi</option>
+      <option value="cs">Čeština</option>
+      <option value="el">Ελληνικά</option>
+      <option value="he">עברית</option>
+      <option value="id">Bahasa Indonesia</option>
+      <option value="ms">Bahasa Melayu</option>
+      <option value="uk">Українська</option>
+      <option value="ro">Română</option>
+      <option value="hu">Magyar</option>
+    </select>
+    <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" class="nav-cta" data-i18n="nav_github">View on GitHub</a>
   </div>
 </nav>
 
@@ -1413,6 +1493,352 @@ function downloadSoulmd() {
   a.download = 'SOUL.md';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STREAMING TRANSLATION SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+const UI_TEXTS = {
+  // Hero section
+  hero_eyebrow: "Kyanite Labs / OpenSoul Compatible",
+  hero_title_line1: "GIVE YOUR",
+  hero_title_line2_highlight: "SOUL",
+  hero_sub_part1: "Drop your references — characters, films, books, figures. Soulcraft finds the ",
+  hero_sub_highlight1: "latent pattern",
+  hero_sub_part2: " underneath and builds a ",
+  hero_sub_highlight2: "SOUL.md",
+  hero_sub_part3: " file. Not who the characters are. ",
+  hero_sub_highlight3: "What it means that you chose them.",
+  hero_demo_hint: "Drop your brain dump below",
+
+  // Problem section
+  problem_label: "The Problem",
+  problem_title: "WHO YOU ARE ISN'T\nIN THE PROMPT.",
+  problem_01_title: "Agents have no identity.",
+  problem_01_text: "You can describe what an agent does. You can't describe who it is. AGENTS.md handles operations. Nothing handles identity.",
+  problem_02_title: "Personality is an afterthought.",
+  problem_02_text: "Most agent personality is retrofitted via system prompts. That's not identity — that's costuming.",
+  problem_03_title: "The pattern is invisible.",
+  problem_03_text: "Tony Montana AND Hannah Montana AND The Godfather? There's a reason. But no tool finds it.",
+  problem_04_title: "It's not transferable.",
+  problem_04_text: "A good identity file works across frameworks. OpenClaw, Aeon, Nanobot, ZeroClaw — all read SOUL.md.",
+
+  // Process section
+  process_label: "The Process",
+  process_title: "THE GLASS BEAD\nGAME.",
+  step_01_num: "Stage 01",
+  step_01_title: "Extract Entities",
+  step_01_desc: "Parse your brain dump into typed references — characters, films, books, historical figures. One per line, freeform, doesn't matter.",
+  step_02_num: "Stage 02",
+  step_02_title: "Pattern Graph Engine",
+  step_02_desc: "Every entity votes on every pattern. Probabilities emerge — not a single answer, a full probability space with bridges connecting patterns. Consensus score tells you how defined the identity is.",
+  step_03_num: "Stage 03",
+  step_03_title: "SOUL.md Synthesis",
+  step_03_desc: "OpenClaw-spec identity document. Worldview, voice, principles, boundaries. Nothing that isn't identity. Readable by any framework that reads markdown.",
+
+  // Output section
+  output_label: "The Output",
+  output_title: "TWO THINGS.\nONE PROCESS.",
+  output_01_num: "01",
+  output_01_title: "Analysis Dashboard",
+  output_01_text: "Visual, beautiful, explorable. Pattern probability graph, entity contribution scores, bridge concepts, consensus confidence. This is the art — it's not the output file.",
+  output_02_num: "02",
+  output_02_title: "SOUL.md",
+  output_02_text: "The actual identity document. Clean, minimal, OpenClaw-spec. Worldview, voice, principles, boundaries, pet peeves. Works in OpenClaw, Aeon, Nanobot, ZeroClaw, any framework.",
+
+  // Demo section
+  demo_label: "Live Demo",
+  demo_title: "FIND THE THREAD.",
+  input_label: "Your brain dump",
+  input_placeholder: `Drop your references here. One per line.
+
+Tony Montana (Scarface)
+Hannah Montana
+The Godfather
+Don Draper (Mad Men)
+Tyler Durden
+Villanelle (Killing Eve)
+Fight Club
+Patrick Bateman (American Psycho)
+Jesse Pinkman (Breaking Bad)
+Fleabag`,
+  run_btn: "Find the Thread →",
+  run_btn_analyzing: "Analyzing...",
+  examples_label: "Examples",
+  placeholder_icon: "◉",
+  placeholder_text: "Run the pipeline to see the pattern graph analysis and generated SOUL.md",
+
+  // Analysis labels
+  stage_01_label: "Stage 01 — Entities Extracted",
+  stage_02_label: "Stage 02 — Pattern Probability Graph",
+  emergent_label: "Emergent Identity",
+  consensus_label: "Consensus",
+  stage_03_label: "SOUL.md — OpenClaw Compatible",
+  bridges_label: "Pattern Bridges",
+  bridges_subtitle: "Entities connecting two patterns",
+  matrix_label: "Entity × Pattern Matrix",
+  matrix_subtitle: "How each entity votes across patterns",
+  interpretation_label: "Interpretation",
+  reasoning_toggle: "Model Reasoning",
+  telemetry_toggle: "Pipeline Telemetry",
+
+  // Buttons
+  copy_btn: "Copy",
+  download_btn: "Download",
+  copied_toast: "Copied to clipboard",
+
+  // Footer
+  footer_built: "Built by",
+  footer_dev_shop: "Kyanite Labs",
+  footer_tagline: "— the dev shop that never sleeps.",
+  footer_inspired: "Inspired by",
+
+  // Nav
+  nav_how_it_works: "How it works",
+  nav_try_it: "Try it",
+  nav_github: "View on GitHub",
+
+  // Translation status
+  translating_status: "Translating...",
+  translation_done: "Translated",
+};
+
+// Collect all translatable text on the page
+function collectTranslatableText() {
+  const texts = [];
+  const keys = [];
+
+  for (const [key, value] of Object.entries(UI_TEXTS)) {
+    if (typeof value === 'string' && value.trim()) {
+      texts.push(value);
+      keys.push(key);
+    }
+  }
+
+  return { texts, keys };
+}
+
+// Current language state
+let currentLanguage = localStorage.getItem('soulcraft_language') || 'en';
+let isTranslating = false;
+
+// Initialize language selector
+function initLanguageSelector() {
+  const selector = document.getElementById('languageSelector');
+  if (!selector) return;
+
+  selector.value = currentLanguage;
+
+  selector.addEventListener('change', async (e) => {
+    const newLang = e.target.value;
+    if (newLang === currentLanguage) return;
+
+    await translatePage(newLang);
+    currentLanguage = newLang;
+    localStorage.setItem('soulcraft_language', currentLanguage);
+  });
+}
+
+// Translate the entire page using streaming
+async function translatePage(targetLang) {
+  if (isTranslating || targetLang === 'en') {
+    // For English, just restore original texts
+    if (targetLang === 'en') {
+      restoreOriginalTexts();
+      currentLanguage = 'en';
+      localStorage.setItem('soulcraft_language', 'en');
+    }
+    return;
+  }
+
+  isTranslating = true;
+  showTranslationStatus(true);
+
+  const { texts, keys } = collectTranslatableText();
+
+  // Combine texts with separators for efficient translation
+  const combinedText = texts.join('\n___SEP___\n');
+
+  try {
+    const response = await fetch('/api/translate-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: combinedText,
+        target_lang: targetLang,
+        source_lang: 'en'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Translation failed');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let translatedText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === 'token') {
+              translatedText += event.content;
+            } else if (event.type === 'done') {
+              // Apply translations
+              applyTranslations(event.translated_text || translatedText, keys);
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+      }
+    }
+
+    showTranslationStatus(false);
+  } catch (error) {
+    console.error('Translation error:', error);
+    showTranslationStatus(false);
+    // Optionally show error to user
+  } finally {
+    isTranslating = false;
+  }
+}
+
+// Apply translated texts to the page
+function applyTranslations(translatedCombined, keys) {
+  const parts = translatedCombined.split(/___SEP___/);
+
+  keys.forEach((key, index) => {
+    if (parts[index]) {
+      updateElementText(key, parts[index].trim());
+    }
+  });
+
+  // Update HTML lang attribute
+  document.documentElement.lang = currentLanguage;
+}
+
+// Update specific element text
+function updateElementText(key, text) {
+  // Handle different element types based on key prefix
+  const mapping = {
+    hero_eyebrow: '.hero-eyebrow',
+    hero_title_line1: () => {
+      const h1 = document.querySelector('.hero h1');
+      if (h1) {
+        const outline = h1.querySelector('.outline');
+        if (outline) outline.textContent = text;
+      }
+    },
+    hero_sub_part1: () => updateHeroSub(text, 0),
+    hero_sub_highlight1: () => updateHeroSub(text, 1, true),
+    hero_sub_part2: () => updateHeroSub(text, 2),
+    hero_sub_highlight2: () => updateHeroSub(text, 3, true),
+    hero_sub_part3: () => updateHeroSub(text, 4),
+    hero_sub_highlight3: () => updateHeroSub(text, 5, true),
+    hero_demo_hint: () => {
+      const hint = document.querySelector('.hero-demo-hint');
+      if (hint) {
+        // Preserve the arrow span
+        const arrow = hint.querySelector('.arrow');
+        hint.childNodes[0].textContent = text + ' ';
+      }
+    },
+    demo_label: () => updateSectionLabel('.demo-header .section-label', text),
+    demo_title: () => updateText('.demo-header .section-title', text),
+    input_label: () => updateText('label[for="brainDump"]', text),
+    input_placeholder: () => {
+      const textarea = document.getElementById('brainDump');
+      if (textarea) textarea.placeholder = text;
+    },
+    run_btn: () => {
+      const btn = document.getElementById('runBtn');
+      if (btn && !btn.classList.contains('loading')) {
+        btn.querySelector('.btn-text').textContent = text;
+      }
+    },
+    examples_label: '.input-label + div .input-label',
+    placeholder_text: () => updateText('.output-placeholder p', text),
+  };
+
+  if (typeof mapping[key] === 'function') {
+    mapping[key]();
+  } else if (typeof mapping[key] === 'string') {
+    const el = document.querySelector(mapping[key]);
+    if (el) el.textContent = text;
+  }
+}
+
+function updateHeroSub(text, index, isStrong = false) {
+  const sub = document.querySelector('.hero-sub');
+  if (!sub) return;
+
+  // This is complex due to mixed content - simplified approach
+  // Store original structure and update incrementally
+}
+
+function updateSectionLabel(selector, text) {
+  const el = document.querySelector(selector);
+  if (el) el.textContent = text;
+}
+
+function updateText(selector, text) {
+  const el = document.querySelector(selector);
+  if (el) el.textContent = text;
+}
+
+// Restore original English texts
+function restoreOriginalTexts() {
+  // Reload the page to restore original texts
+  // A more sophisticated approach would cache originals
+  location.reload();
+}
+
+// Show/hide translation status indicator
+function showTranslationStatus(active) {
+  let status = document.getElementById('translationStatus');
+  if (!status) {
+    status = document.createElement('div');
+    status.id = 'translationStatus';
+    status.className = 'translation-status';
+    status.innerHTML = '<span class="translation-spinner"></span><span class="translation-text">Translating...</span>';
+    document.body.appendChild(status);
+  }
+
+  if (active) {
+    status.classList.add('active');
+    status.querySelector('.translation-text').textContent = UI_TEXTS.translating_status;
+  } else {
+    status.classList.remove('active');
+  }
+}
+
+// Initialize translation system
+function initTranslation() {
+  initLanguageSelector();
+
+  // If language is not English, trigger translation on load
+  if (currentLanguage !== 'en') {
+    translatePage(currentLanguage);
+  }
+}
+
+// Start when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTranslation);
+} else {
+  initTranslation();
 }
 </script>
 </body>

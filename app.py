@@ -17,6 +17,15 @@ from soulcraft.patterns import build_pattern_graph
 from soulcraft.research import enrich_entities
 from soulcraft.synthesis import synthesize_soulmd, synthesize_soulmd_stream
 from soulcraft.traces import save_run, log_request, get_diagnostics, get_recent_runs
+from soulcraft.translate import (
+    translate_text,
+    translate_soulmd,
+    get_supported_languages,
+    detect_language,
+    translate_text_stream,
+    get_cache_stats,
+    clear_cache,
+)
 
 PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "soulcraft", "templates")
@@ -72,6 +81,12 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/runs":
             self._json_response({"runs": get_recent_runs(50)})
             self._log("GET", self.path, 200, start)
+        elif self.path == "/api/languages":
+            self._json_response({"languages": get_supported_languages()})
+            self._log("GET", self.path, 200, start)
+        elif self.path == "/api/translation-cache":
+            self._json_response(get_cache_stats())
+            self._log("GET", self.path, 200, start)
         else:
             self._serve_static(self.path)
             self._log("GET", self.path, 200, start)
@@ -102,10 +117,104 @@ class Handler(BaseHTTPRequestHandler):
                     "soulmd_length": len(result.get("stage3_soulmd", "")),
                     "timings": result.get("timings"),
                 })
+        elif self.path == "/api/translate":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            data = json.loads(body)
+
+            text = data.get("text", "")
+            target_lang = data.get("target_lang", "")
+            source_lang = data.get("source_lang", "en")
+
+            if not text:
+                self._json_response({"error": "No text provided"}, 400)
+                return
+
+            if not target_lang:
+                self._json_response({"error": "No target_lang provided"}, 400)
+                return
+
+            # Check if this is a SOUL.md translation
+            is_soulmd = data.get("soulmd", False)
+
+            if is_soulmd:
+                result = translate_soulmd(text, target_lang)
+            else:
+                result = translate_text(text, target_lang, source_lang)
+
+            status = 200 if result.get("success") else 500
+            self._json_response(result, status)
+            self._log("POST", self.path, status, start, extra={
+                "target_lang": target_lang,
+                "source_lang": source_lang,
+                "text_length": len(text),
+                "success": result.get("success"),
+            })
+        elif self.path == "/api/detect-language":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            data = json.loads(body)
+
+            text = data.get("text", "")
+            if not text:
+                self._json_response({"error": "No text provided"}, 400)
+                return
+
+            detected = detect_language(text)
+            self._json_response({
+                "detected_language": detected,
+                "language_name": get_supported_languages().get(detected, "Unknown") if detected else None,
+            })
+            self._log("POST", self.path, 200, start)
+        elif self.path == "/api/translate-stream":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            data = json.loads(body)
+
+            text = data.get("text", "")
+            target_lang = data.get("target_lang", "")
+            source_lang = data.get("source_lang", "en")
+
+            if not text:
+                self._json_response({"error": "No text provided"}, 400)
+                return
+
+            if not target_lang:
+                self._json_response({"error": "No target_lang provided"}, 400)
+                return
+
+            # Send SSE response
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+
+            for event in translate_text_stream(text, target_lang, source_lang):
+                payload = json.dumps(event)
+                self.wfile.write(f"data: {payload}\n\n".encode())
+                self.wfile.flush()
+
+            self._log("POST", self.path, 200, start, extra={
+                "target_lang": target_lang,
+                "source_lang": source_lang,
+                "text_length": len(text),
+            })
         else:
             self.send_response(404)
             self.end_headers()
             self._log("POST", self.path, 404, start)
+
+    def do_DELETE(self):
+        start = time.time()
+        if self.path == "/api/translation-cache":
+            result = clear_cache()
+            self._json_response(result)
+            self._log("DELETE", self.path, 200, start)
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self._log("DELETE", self.path, 404, start)
 
     def _handle_stream(self, brain_dump, start):
         """Handle a streaming SSE response."""
