@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  soulcraft:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: soulcraft
+    restart: unless-stopped
+
+    # Environment configuration
+    environment:
+      # LLM Provider Settings
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://172.17.0.1:8085/v1}
+      - LLM_FALLBACK_URL=${LLM_FALLBACK_URL:-}
+      - LLM_MODEL=${LLM_MODEL:-gemma-4b}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+
+      # Application Settings
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+    # Port mapping (internal only - Traefik handles external)
+    expose:
+      - "3110"
+
+    # Persistent volume for data
+    volumes:
+      - soulcraft-data:/app/.soulcraft
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Network
+    networks:
+      - soulcraft-net
+
+    # Labels for Traefik routing (Tailscale-only)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soulcraft.rule=Host(`soulcraft.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.soulcraft.entrypoints=websecure"
+      - "traefik.http.routers.soulcraft.tls=true"
+      - "traefik.http.routers.soulcraft.tls.certresolver=tailscale"
+      - "traefik.http.routers.soulcraft.middlewares=tailscale-only@file"
+      - "traefik.http.services.soulcraft.loadbalancer.server.port=3110"
+
+      # Health check
+      - "traefik.http.services.soulcraft.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.soulcraft.loadbalancer.healthcheck.interval=10s"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for caching (if needed later)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: soulcraft-redis
+  #   restart: unless-stopped
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - soulcraft-net
+
+volumes:
+  soulcraft-data:
+    driver: local
+  # redis-data:
+  #   driver: local
+
+networks:
+  soulcraft-net:
+    driver: bridge

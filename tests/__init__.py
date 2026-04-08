@@ -1,0 +1,1 @@
+"""SoulCraft test suite."""

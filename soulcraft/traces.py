@@ -49,7 +49,7 @@ def save_trace(prompt, response, latency_ms, model="", extra=None):
         pass  # trace saving is best-effort
 
 
-def save_run(brain_dump, entities, graph, soulmd, stage_timings=None):
+def save_run(brain_dump, entities, graph, soulmd, stage_timings=None, telemetry=None):
     """Save a full pipeline run."""
     _ensure_dirs()
     ts = datetime.now(timezone.utc)
@@ -74,6 +74,15 @@ def save_run(brain_dump, entities, graph, soulmd, stage_timings=None):
     if stage_timings:
         entry["stage_timings_ms"] = stage_timings
         entry["total_ms"] = sum(stage_timings.values())
+    if telemetry:
+        entry["model"] = telemetry.get("model")
+        entry["provider"] = telemetry.get("provider")
+        entry["token_counts"] = {
+            "prompt": telemetry.get("tokens_in", 0),
+            "completion": telemetry.get("tokens_out", 0),
+            "total": telemetry.get("tokens_in", 0) + telemetry.get("tokens_out", 0),
+        }
+        entry["tokens_per_sec"] = telemetry.get("tokens_per_sec", 0)
 
     filepath = os.path.join(_RUNS_DIR, f"{ts.strftime('%Y%m%d_%H%M%S_%f')}.json")
     try:

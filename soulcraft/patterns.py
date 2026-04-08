@@ -1,10 +1,11 @@
 """Stage 2: Pattern Graph Engine.
 
 Builds a full probability graph of archetypal patterns.
-Every pattern gets a probability score, not just top-1.
-Finds bridge concepts, consensus, and emergent patterns.
+Uses LLM classification (primary) blended with keyword scoring (secondary).
+Finds bridge concepts, consensus, sub-patterns, and emergent patterns.
 """
 
+import json
 import math
 from collections import defaultdict
 
@@ -18,6 +19,7 @@ PATTERNS = [
                       "rebuild", "reinvent", "convert", "transition", "transcend",
                       "awakening", "enlightenment", "ascend", "rise"],
         "color": "#ff6b00",
+        "sub_patterns": ["Ruthless Ascension", "Fall From Grace", "Redemption Arc"],
     },
     {
         "id": "power",
@@ -27,6 +29,7 @@ PATTERNS = [
                       "queen", "throne", "empire", "legacy", "victory", "triumph",
                       "war", "battle", "fight", "win", "champion", "hero"],
         "color": "#a855f7",
+        "sub_patterns": ["Ruthless Ascent", "Legacy Building", "Absolute Control"],
     },
     {
         "id": "outsider",
@@ -36,6 +39,7 @@ PATTERNS = [
                       "solitary", "isolated", "marginal", "fringe", "edge",
                       "refuse", "reject", "abandon", "forsaken"],
         "color": "#ffc200",
+        "sub_patterns": ["Voluntary Exile", "Forced Marginalization", "Lone Wolf"],
     },
     {
         "id": "creation",
@@ -45,6 +49,7 @@ PATTERNS = [
                       "invent", "imagine", "dream", "vision", "inspire", "beauty",
                       "aesthetic", "expression", "original", "unique"],
         "color": "#4ecdc4",
+        "sub_patterns": ["Visionary Craft", "Destructive Genius", "Obsessive Creation"],
     },
     {
         "id": "shadow",
@@ -54,6 +59,7 @@ PATTERNS = [
                       "corrupt", "sin", "guilt", "shame", "fear", "rage",
                       "destruct", "chaos", "void", "abyss", "underworld"],
         "color": "#f43f5e",
+        "sub_patterns": ["Hidden Corruption", "Moral Decay", "Embracing Darkness"],
     },
     {
         "id": "wisdom",
@@ -63,6 +69,7 @@ PATTERNS = [
                       "question", "answer", "seek", "search", "discover", "reveal",
                       "mystery", "enigma", "puzzle", "riddle", "study"],
         "color": "#38bdf8",
+        "sub_patterns": ["Strategic Intellect", "Forbidden Knowledge", "Reluctant Sage"],
     },
     {
         "id": "connection",
@@ -72,6 +79,7 @@ PATTERNS = [
                       "heart", "soul", "intimate", "relationship", "partner",
                       "companion", "brotherhood", "sisterhood"],
         "color": "#34d399",
+        "sub_patterns": ["Fierce Loyalty", "Found Family", "Betrayal & Trust"],
     },
     {
         "id": "struggle",
@@ -81,6 +89,7 @@ PATTERNS = [
                       "challenge", "adversity", "pain", "sacrifice", "loss",
                       "grief", "mourning", "heal", "recover", "persevere"],
         "color": "#ef4444",
+        "sub_patterns": ["Quiet Endurance", "Against All Odds", "Pyrrhic Victory"],
     },
     {
         "id": "freedom",
@@ -90,6 +99,7 @@ PATTERNS = [
                       "liberate", "anarchy", "defiance", "resist", "refuse",
                       "unbound", "wild", "untamed", "sovereign", "pirate"],
         "color": "#22d3ee",
+        "sub_patterns": ["Anti-Establishment", "Self-Liberation", "Chaotic Defiance"],
     },
     {
         "id": "spiritual",
@@ -99,6 +109,7 @@ PATTERNS = [
                       "eternal", "infinite", "soul", "spirit", "faith", "ritual",
                       "ceremony", "oracle", "prophecy", "destiny", "fate"],
         "color": "#e879f9",
+        "sub_patterns": ["Cosmic Awakening", "Dark Mysticism", "Fate & Destiny"],
     },
     {
         "id": "trickster",
@@ -108,6 +119,7 @@ PATTERNS = [
                       "paradox", "chaos", "disrupt", "subvert", "mock", "laugh",
                       "playful", "absurd", "nonsense", "riddle"],
         "color": "#6b7280",
+        "sub_patterns": ["Manipulative Charm", "Chaos Agent", "Subversive Wit"],
     },
     {
         "id": "explorer",
@@ -117,6 +129,7 @@ PATTERNS = [
                       "wander", "quest", "expedition", "voyage", "trek",
                       "uncharted", "horizon", "beyond", "new world"],
         "color": "#fbbf24",
+        "sub_patterns": ["Into the Unknown", "Frontier Justice", "Restless Wanderer"],
     },
 ]
 
@@ -130,6 +143,90 @@ _TYPE_AFFINITIES = {
     "place": {"explorer": 0.4, "spiritual": 0.2},
     "event": {"transformation": 0.3, "struggle": 0.3},
 }
+
+
+def llm_classify_patterns(entities):
+    """Use LLM to classify entities against the 12 archetypal patterns.
+
+    Returns dict: {entity_name: {pattern_id: score_0_to_1}}
+    Raises RuntimeError if LLM fails.
+    """
+    from .llm import chat, CLASSIFY_MODEL
+
+    entity_list = "\n".join(
+        f"{e['canonical']}|{e.get('type','?')}|{e.get('source','')}|"
+        f"{','.join(e.get('themes',[])[:4])}|{','.join(e.get('traits',[])[:3])}"
+        for e in entities[:8]
+    )
+
+    system = (
+        "Score entities against archetypal patterns 0.0-1.0. "
+        "Only include scores > 0.15. Output JSON only, no explanation."
+    )
+
+    user = f"""Patterns: {', '.join(p['id'] for p in PATTERNS)}
+
+{entity_list}
+
+[{{"entity":"name","scores":{{"pattern":0.8}}}}]"""
+
+    result = chat(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        model=CLASSIFY_MODEL,
+        max_tokens=512,
+        think=False,
+    )
+
+    response = result["content"] if isinstance(result, dict) else result
+    if not response or len(response) < 10:
+        raise RuntimeError("LLM pattern classification returned empty response")
+
+    # Parse JSON from response
+    json_str = response.strip()
+    if "```" in json_str:
+        import re
+        match = re.search(r"```(?:json)?\s*\n?(.*?)```", json_str, re.DOTALL)
+        if match:
+            json_str = match.group(1).strip()
+
+    start = json_str.find("[")
+    end = json_str.rfind("]")
+    if start == -1 or end == -1:
+        raise RuntimeError("LLM pattern classification returned invalid JSON")
+
+    try:
+        data = json.loads(json_str[start:end + 1])
+    except json.JSONDecodeError:
+        raise RuntimeError("LLM pattern classification returned invalid JSON")
+
+    if not isinstance(data, list):
+        raise RuntimeError("LLM pattern classification returned non-array")
+
+    # Build entity_name -> {pattern_id: score} mapping
+    classifications = {}
+    pattern_ids = [p["id"] for p in PATTERNS]
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("entity", "").strip()
+        scores = item.get("scores", {})
+        if not name:
+            continue
+        # Normalize scores: clamp to 0-1
+        clean = {}
+        for pid in pattern_ids:
+            val = scores.get(pid, 0)
+            try:
+                val = float(val)
+            except (ValueError, TypeError):
+                val = 0
+            clean[pid] = max(0.0, min(1.0, val))
+        classifications[name] = clean
+
+    return classifications
 
 
 def _score_entity_pattern(entity, pattern, full_text=""):
@@ -186,10 +283,11 @@ def _score_entity_pattern(entity, pattern, full_text=""):
 
 
 def build_pattern_graph(entities, full_text=""):
-    """Build the full pattern probability graph.
+    """Build the full pattern probability graph with LLM + keyword blended scoring.
 
     Returns:
-        dict with patterns, entity_scores, bridges, consensus, emergent_topic
+        dict with patterns, entity_scores, bridges, consensus, emergent_topic,
+        sub_patterns, and analysis_notes.
     """
     if not entities:
         return {
@@ -200,16 +298,41 @@ def build_pattern_graph(entities, full_text=""):
             "emergent_topic": "Unknown",
             "emergent_theme": "Not enough data",
             "emergent_color": "#666",
+            "sub_patterns": [],
             "analysis_notes": ["No entities found to analyze."],
         }
 
-    # Score every entity against every pattern
-    raw_scores = defaultdict(lambda: defaultdict(float))
+    # --- LLM classification (primary signal, weight 0.7) ---
+    llm_scores = {}
+    try:
+        llm_scores = llm_classify_patterns(entities)
+    except RuntimeError:
+        # If LLM classification fails after entity extraction succeeded,
+        # fall back to keyword-only scoring (the LLM was working moments ago,
+        # this is a transient failure)
+        llm_scores = {}
+
+    # --- Keyword scoring (secondary signal, weight 0.3) ---
+    kw_scores = defaultdict(lambda: defaultdict(float))
     for entity in entities:
         for pattern in PATTERNS:
             s = _score_entity_pattern(entity, pattern, full_text)
             if s > 0:
-                raw_scores[entity["canonical"]][pattern["id"]] += s
+                kw_scores[entity["canonical"]][pattern["id"]] += s
+
+    # --- Blended scoring: 0.7 LLM + 0.3 keyword ---
+    raw_scores = defaultdict(lambda: defaultdict(float))
+    for entity in entities:
+        name = entity["canonical"]
+        llm_entity = llm_scores.get(name, {})
+        kw_entity = kw_scores.get(name, {})
+        for pattern in PATTERNS:
+            pid = pattern["id"]
+            llm_val = llm_entity.get(pid, 0.0)
+            kw_val = kw_entity.get(pid, 0.0)
+            blended = (0.7 * llm_val) + (0.3 * kw_val)
+            if blended > 0:
+                raw_scores[name][pid] += blended
 
     # Aggregate pattern scores
     pattern_totals = defaultdict(float)
@@ -225,7 +348,7 @@ def build_pattern_graph(entities, full_text=""):
     for pid, total in pattern_totals.items():
         pattern_probs[pid] = total / total_score
 
-    # Build pattern list sorted by probability
+    # Build pattern list sorted by probability, with sub-patterns
     result_patterns = []
     for p in PATTERNS:
         prob = pattern_probs.get(p["id"], 0.0)
@@ -236,8 +359,14 @@ def build_pattern_graph(entities, full_text=""):
                 "probability": round(prob, 4),
                 "color": p["color"],
                 "supporting_entities": pattern_entity_counts.get(p["id"], 0),
+                "sub_patterns": p.get("sub_patterns", []),
             })
     result_patterns.sort(key=lambda x: -x["probability"])
+
+    # Pick top sub-pattern from dominant pattern
+    dominant_subs = []
+    if result_patterns:
+        dominant_subs = result_patterns[0].get("sub_patterns", [])
 
     # Entity scores for the matrix
     entity_scores = []
@@ -259,7 +388,6 @@ def build_pattern_graph(entities, full_text=""):
             p_a = next((p for p in result_patterns if p["id"] == top_two[0][0]), None)
             p_b = next((p for p in result_patterns if p["id"] == top_two[1][0]), None)
             if p_a and p_b:
-                # Check if these patterns are not adjacent in ranking (bridge)
                 idx_a = next((i for i, p in enumerate(result_patterns) if p["id"] == p_a["id"]), 0)
                 idx_b = next((i for i, p in enumerate(result_patterns) if p["id"] == p_b["id"]), 0)
                 if abs(idx_a - idx_b) > 1 and top_two[1][1] > 0.1:
@@ -287,8 +415,7 @@ def build_pattern_graph(entities, full_text=""):
         top_prob = 0
         consensus = 0.0
 
-    # Emergent topic: highest consensus density (not just highest raw score)
-    # Pattern with best ratio of supporting entities to probability spread
+    # Emergent topic
     emergent = result_patterns[0] if result_patterns else None
     if result_patterns and len(result_patterns) > 1:
         best_density = 0
@@ -319,6 +446,10 @@ def build_pattern_graph(entities, full_text=""):
         notes.append("High consensus - identity has a clear core theme")
     elif consensus < 0.3:
         notes.append("Low consensus - identity draws from diverse, equally weighted influences")
+    if llm_scores:
+        notes.append("Classification: LLM-assisted (0.7) + keyword analysis (0.3)")
+    else:
+        notes.append("Classification: keyword-only (LLM classification unavailable)")
 
     return {
         "patterns": result_patterns,
@@ -328,6 +459,7 @@ def build_pattern_graph(entities, full_text=""):
         "emergent_topic": emergent["name"] if emergent else "Unknown",
         "emergent_theme": _derive_theme(emergent, result_patterns) if emergent else "Insufficient data",
         "emergent_color": emergent["color"] if emergent else "#666",
+        "sub_patterns": dominant_subs,
         "analysis_notes": notes,
     }
 

@@ -1,0 +1,54 @@
+# Traefik dynamic configuration for SoulCraft
+# Place in: /opt/traefik/dynamic/soulcraft.yml
+
+http:
+  routers:
+    soulcraft:
+      rule: "Host(`soulcraft.{{ env "TRAEFIK_DOMAIN" }}`)"
+      entryPoints:
+        - websecure
+      service: soulcraft
+      tls:
+        certResolver: tailscale
+      middlewares:
+        - tailscale-only
+        - soulcraft-ratelimit
+
+  services:
+    soulcraft:
+      loadBalancer:
+        servers:
+          - url: "http://soulcraft:3110"
+        healthCheck:
+          path: /api/health
+          interval: 10s
+          timeout: 5s
+          scheme: http
+
+  middlewares:
+    tailscale-only:
+      # Only allow Tailscale IPs
+      ipAllowList:
+        sourceRange:
+          - "100.64.0.0/10"    # Tailscale CGNAT range
+          - "fd7a:115c:a1e0::/48"  # Tailscale IPv6
+          - "127.0.0.1/32"   # Localhost for health checks
+
+    soulcraft-ratelimit:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: 1m
+
+    # Optional: Add CORS headers for API access
+    soulcraft-cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Content-Type
+          - Authorization
+        accessControlMaxAge: 100
+        addVaryHeader: true

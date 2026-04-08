@@ -20,28 +20,27 @@ def _llm_extract_entities(text):
         return []
 
     system = (
-        "You are a cultural reference analyzer. You receive a brain dump of references "
-        "(characters, films, books, figures, etc.) and extract each one as structured data. "
-        "You respond ONLY with a JSON array. No explanation, no markdown, no code fences."
+        "You are a cultural reference analyzer. Extract entities from text. "
+        "Respond with ONLY a JSON array. No markdown, no explanation."
     )
 
-    user = f"""Analyze these references and extract EVERY SINGLE ONE as a separate entry. Do not stop until you have extracted all of them.
+    user = f"""Extract all named references from this text. Fix any typos in names.
 
-For each reference provide:
-- name: the character or entity name
-- type: one of character, person, work, concept, historical_figure
-- source: what work/media it comes from (empty string if not applicable)
-- themes: 3-5 thematic keywords (e.g. ambition, power, rebellion)
-- traits: 2-4 personality trait adjectives
+For each entity, return:
+- name: canonical name (corrected if misspelled)
+- type: one of: character, person, work, concept, historical_figure
+- source: origin work/media (or "")
+- themes: 3-5 keywords from: transformation, power, outsider, creation, shadow, wisdom, connection, struggle, freedom, spiritual, trickster, explorer
+- traits: 2-4 specific personality phrases (e.g. "paranoid ambition", "cold calculation")
+- related: 2-3 similar characters/figures
 
-References:
-{text.strip()}
+Text: {text.strip()}
 
-IMPORTANT: You MUST extract ALL references listed above. Output ONLY a JSON array, no other text:
-[{{"name": "...", "type": "...", "source": "...", "themes": [...], "traits": [...]}}]"""
+Output JSON array only:
+[{{"name": "...", "type": "...", "source": "...", "themes": [...], "traits": [...], "related": [...]}}]"""
 
     try:
-        response = chat(
+        result = chat(
             [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -51,6 +50,7 @@ IMPORTANT: You MUST extract ALL references listed above. Output ONLY a JSON arra
     except Exception:
         return []
 
+    response = result["content"] if isinstance(result, dict) else result
     if not response or len(response) < 10:
         return []
 
@@ -78,9 +78,14 @@ IMPORTANT: You MUST extract ALL references listed above. Output ONLY a JSON arra
     entities = []
     seen = set()
     for item in data:
-        if not isinstance(item, dict):
+        # Handle both string items and dict items
+        if isinstance(item, str):
+            name = item.strip()
+            item = {}
+        elif isinstance(item, dict):
+            name = item.get("name", "").strip()
+        else:
             continue
-        name = item.get("name", "").strip()
         if not name or len(name) < 2:
             continue
         key = name.lower()
@@ -103,6 +108,7 @@ IMPORTANT: You MUST extract ALL references listed above. Output ONLY a JSON arra
             "description": item.get("description", ""),
             "themes": [t.lower().strip() for t in themes if t.strip()],
             "traits": [t.lower().strip() for t in traits if t.strip()],
+            "related": [r.strip() for r in item.get("related", []) if isinstance(r, str) and r.strip()],
             "confidence": 0.95,
         })
 
@@ -199,19 +205,17 @@ def _heuristic_extract(text):
 
 
 def extract_entities(text):
-    """Main extraction pipeline. Requires LLM.
+    """Main extraction pipeline. Uses LLM with heuristic fallback.
 
-    Raises RuntimeError if LLM is unavailable.
+    Falls back to heuristic parsing if LLM returns empty.
     """
     if not text or not text.strip():
         return []
 
     entities = _llm_extract_entities(text)
 
+    # Fallback to heuristic if LLM returns empty
     if not entities:
-        raise RuntimeError(
-            "LLM entity extraction failed. Ensure Ollama is running with a model loaded. "
-            "Run: ollama serve && ollama pull gemma4"
-        )
+        entities = _heuristic_extract(text)
 
     return entities

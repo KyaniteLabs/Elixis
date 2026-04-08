@@ -1,0 +1,91 @@
+# Traefik + SoulCraft stack
+# Usage: docker-compose -f docker-compose.traefik.yml up -d
+
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --api.insecure=false
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --certificatesresolvers.tailscale.tailscale=true
+      - --ping=true
+      - --log.level=INFO
+      - --accesslog=true
+      - --accesslog.format=json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/:/etc/traefik/dynamic/:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - soulcraft-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=tailscale"
+      - "traefik.http.routers.dashboard.middlewares=tailscale-only@file"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  soulcraft:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: soulcraft
+    restart: unless-stopped
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://172.17.0.1:8085/v1}
+      - LLM_FALLBACK_URL=${LLM_FALLBACK_URL:-}
+      - LLM_MODEL=${LLM_MODEL:-gemma-4b}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - soulcraft-data:/app/.soulcraft
+    networks:
+      - soulcraft-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.soulcraft.rule=Host(`soulcraft.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.soulcraft.entrypoints=websecure"
+      - "traefik.http.routers.soulcraft.tls=true"
+      - "traefik.http.routers.soulcraft.tls.certresolver=tailscale"
+      - "traefik.http.routers.soulcraft.middlewares=tailscale-only,soulcraft-ratelimit"
+      - "traefik.http.services.soulcraft.loadbalancer.server.port=3110"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3110/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  soulcraft-data:
+  traefik-certs:
+
+networks:
+  soulcraft-net:
+    driver: bridge

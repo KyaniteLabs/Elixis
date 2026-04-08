@@ -1,5 +1,21 @@
 __pycache__/
 *.pyc
+*.pyo
 .omc/
 .soulcraft/
 .playwright-mcp/
+
+# Personal/generated files
+archive/
+debug_*.py
+kyan-*.md
+portfolio-*.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

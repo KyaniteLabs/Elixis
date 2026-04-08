@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Soulcraft — The Glass Bead Game for AI Personas</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap');
 
 :root {
   --bg: #080808;
   --surface: #0f0f0f;
   --surface2: #161616;
-  --accent: #ff3d00;
-  --accent2: #ff6b00;
+  --accent: #00D4FF;
+  --accent2: #0A6E8A;
   --gold: #ffc200;
   --text: #f0ede8;
   --muted: #666;
@@ -100,11 +100,11 @@ nav {
   top: 30%; left: 50%;
   transform: translate(-50%, -50%);
   width: 800px; height: 800px;
-  background: radial-gradient(circle, rgba(255,61,0,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 .hero-eyebrow {
-  font-family: 'Space Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -144,20 +144,20 @@ nav {
 .bead-viz { display: flex; align-items: center; gap: 0; margin: 3rem 0; position: relative; }
 .bead { width: 18px; height: 18px; border-radius: 50%; position: relative; flex-shrink: 0; }
 .bead::after { content: ''; position: absolute; inset: 2px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 60%); }
-.bead-1 { background: var(--accent); box-shadow: 0 0 20px rgba(255,61,0,0.6); }
+.bead-1 { background: var(--accent); box-shadow: 0 0 20px rgba(0,212,255,0.6); }
 .bead-2 { background: var(--gold); box-shadow: 0 0 20px rgba(255,194,0,0.5); }
 .bead-3 { background: #4ecdc4; box-shadow: 0 0 20px rgba(78,205,196,0.5); }
 .bead-4 { background: #a855f7; box-shadow: 0 0 20px rgba(168,85,247,0.5); }
 .bead-5 { background: #f43f5e; box-shadow: 0 0 20px rgba(244,63,94,0.5); }
 .bead-thread { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border) 0%, var(--accent) 50%, var(--border) 100%); opacity: 0.5; }
-.bead-thread.active { background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--accent) 100%); opacity: 1; box-shadow: 0 0 8px rgba(255,61,0,0.4); }
-.bead-label { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: 'Space Mono', monospace; font-size: 0.55rem; letter-spacing: 1px; color: var(--muted); white-space: nowrap; text-transform: uppercase; }
+.bead-thread.active { background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--accent) 100%); opacity: 1; box-shadow: 0 0 8px rgba(0,212,255,0.4); }
+.bead-label { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; letter-spacing: 1px; color: var(--muted); white-space: nowrap; text-transform: uppercase; }
 .bead-wrap { position: relative; display: flex; align-items: center; }
 
 /* ── SECTIONS ── */
 .section { padding: 8rem 3rem; }
 .section-dark { background: var(--surface); }
-.section-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+.section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
 .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 6rem); letter-spacing: -1px; line-height: 0.9; color: var(--text); margin-bottom: 2rem; }
 
 /* ── PROBLEM GRID ── */
@@ -166,7 +166,7 @@ nav {
 .problem-cell .num { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; color: var(--border); line-height: 1; margin-bottom: 1rem; }
 .problem-cell h3 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.8rem; }
 .problem-cell p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
-.no-before { border-left: 3px solid var(--accent); background: linear-gradient(90deg, rgba(255,61,0,0.05) 0%, transparent 100%); }
+.no-before { border-left: 3px solid var(--accent); background: linear-gradient(90deg, rgba(0,212,255,0.05) 0%, transparent 100%); }
 .no-before h3 { color: var(--accent); }
 
 /* ── LIVE DEMO ── */
@@ -176,7 +176,7 @@ nav {
 .demo-output-panel { padding: 3rem; max-width: 1200px; margin: 0 auto; min-height: 200px; }
 
 /* ── INPUT FORM ── */
-.input-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: block; }
+.input-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: block; }
 .brain-dump {
   width: 100%; height: 280px;
   background: var(--surface2);
@@ -200,7 +200,7 @@ nav {
   border: none;
   padding: 0.9rem 2.5rem;
   font-size: 0.85rem;
-  font-family: 'Space Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -211,7 +211,7 @@ nav {
   align-items: center;
   gap: 0.6rem;
 }
-.run-btn:hover { background: var(--accent2); box-shadow: 0 0 20px rgba(255,61,0,0.4); }
+.run-btn:hover { background: var(--accent2); box-shadow: 0 0 20px rgba(0,212,255,0.4); }
 .run-btn:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
 .run-btn .spinner { display: none; width: 14px; height: 14px; border: 2px solid #000; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
 .run-btn.loading .spinner { display: block; }
@@ -219,6 +219,67 @@ nav {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .demo-error { background: #2a0a0a; border: 1px solid #ff4444; color: #ff6666; padding: 1rem; border-radius: 4px; margin-top: 1rem; display: none; font-size: 0.85rem; }
+
+/* ── PIPELINE PROGRESS ── */
+.pipeline-progress { display: none; margin-top: 1.5rem; }
+.pipeline-progress.active { display: block; }
+.pipeline-stages { display: flex; gap: 0; align-items: center; }
+.pipeline-stage-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: #444; transition: color 0.3s ease-out;
+}
+.pipeline-stage-item.active { color: var(--accent); }
+.pipeline-stage-item.done { color: #4ecdc4; }
+.pipeline-stage-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #333; transition: background 0.3s ease-out, box-shadow 0.3s ease-out;
+  flex-shrink: 0;
+}
+.pipeline-stage-item.active .pipeline-stage-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(0,212,255,0.6);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.pipeline-stage-item.done .pipeline-stage-dot { background: #4ecdc4; box-shadow: 0 0 6px rgba(78,205,196,0.4); }
+.pipeline-stage-connector { flex: 1; height: 1px; background: #222; margin: 0 0.5rem; transition: background 0.3s; }
+.pipeline-stage-connector.done { background: #4ecdc4; }
+
+/* ── AMBIENT DEPTH ── */
+.demo-section { position: relative; overflow: hidden; }
+.demo-section::before {
+  content: ''; position: absolute;
+  top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(255,107,0,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.demo-section::after {
+  content: ''; position: absolute;
+  bottom: -300px; left: -100px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(168,85,247,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── ACTIVE/PRESSED STATES ── */
+.run-btn:active:not(:disabled) { transform: scale(0.97); }
+.soulmd-btn:active { transform: scale(0.97); }
+.entity-chip:active { background: #2a2a2a; }
+
+/* ── HERO SCROLL HINT ── */
+.hero-demo-hint {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+  transition: color 0.2s ease-out;
+  margin-top: 1rem;
+}
+.hero-demo-hint:hover { color: var(--accent); }
+.hero-demo-hint .arrow { transition: transform 0.2s ease-out; }
+.hero-demo-hint:hover .arrow { transform: translateX(4px); }
 
 /* ── OUTPUT STATES ── */
 .output-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: var(--muted); gap: 1rem; padding-top: 4rem; }
@@ -232,7 +293,7 @@ nav {
 .thinking-section { display: none; margin-bottom: 2rem; }
 .thinking-toggle {
   background: none; border: 1px solid var(--border); color: var(--muted);
-  padding: 0.4rem 1rem; font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  padding: 0.4rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
   letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 3px;
   display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem;
   transition: all 0.2s;
@@ -256,7 +317,7 @@ nav {
 .analysis-section:last-child { margin-bottom: 0; }
 
 .analysis-label {
-  font-family: 'Space Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.6rem;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -325,13 +386,13 @@ nav {
   width: 3px; height: 100%;
   background: var(--accent);
 }
-.emergent-label { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
+.emergent-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
 .emergent-topic { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; margin-bottom: 0.4rem; }
 .emergent-theme { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
 .consensus-bar { display: flex; align-items: center; gap: 0.8rem; }
 .consensus-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .consensus-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
-.consensus-pct { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--accent); }
+.consensus-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); }
 
 /* Pattern Graph */
 .pattern-graph { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -343,16 +404,16 @@ nav {
   border-bottom: 1px solid #1a1a1a;
 }
 .pattern-row:last-child { border-bottom: none; }
-.pattern-rank { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 20px; flex-shrink: 0; }
+.pattern-rank { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 20px; flex-shrink: 0; }
 .pattern-bar-wrap { flex: 1; display: flex; align-items: center; gap: 0.6rem; }
 .pattern-bar-track { flex: 1; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; }
 .pattern-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
 .pattern-name { font-size: 0.78rem; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pattern-prob { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 36px; text-align: right; flex-shrink: 0; }
-.pattern-confidence { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: #444; width: 30px; text-align: right; flex-shrink: 0; }
+.pattern-prob { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 36px; text-align: right; flex-shrink: 0; }
+.pattern-confidence { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #444; width: 30px; text-align: right; flex-shrink: 0; }
 
 /* Bridge Concepts */
-.bridges-label { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+.bridges-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
 .bridge-item {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -371,24 +432,173 @@ nav {
 .analysis-note { font-size: 0.82rem; color: var(--muted); line-height: 1.6; padding-left: 1rem; border-left: 2px solid var(--border); }
 
 /* Entity Pattern Matrix */
-.matrix-label { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+.matrix-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
 .entity-matrix { display: flex; flex-direction: column; gap: 0.6rem; }
 .matrix-row { display: flex; align-items: center; gap: 0.6rem; }
 .matrix-entity { font-size: 0.75rem; color: var(--text); width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .matrix-bars { display: flex; gap: 3px; flex: 1; align-items: center; }
 .matrix-seg { height: 10px; border-radius: 2px; min-width: 4px; transition: width 0.5s ease; }
 
+/* ── TELEMETRY PANEL ── */
+.telemetry-section { display: none; margin-bottom: 2.5rem; }
+.telemetry-toggle {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 0.4rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 3px;
+  display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem;
+  transition: all 0.2s;
+}
+.telemetry-toggle:hover { border-color: #22d3ee; color: #22d3ee; }
+.telemetry-toggle .arrow { transition: transform 0.2s; }
+.telemetry-toggle.open .arrow { transform: rotate(90deg); }
+.telemetry-panel {
+  display: none;
+  background: #0a0a0f;
+  border: 1px solid #1a1a2e;
+  border-left: 3px solid #22d3ee;
+  border-radius: 4px;
+  padding: 1.2rem;
+}
+.telemetry-panel.visible { display: block; }
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.telemetry-metric {
+  background: #0d0d14;
+  border: 1px solid #1a1a2e;
+  border-radius: 3px;
+  padding: 0.8rem;
+}
+.telemetry-metric-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 0.3rem;
+}
+.telemetry-metric-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  color: #22d3ee;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+}
+.telemetry-metric-unit {
+  font-size: 0.6rem;
+  color: #555;
+  margin-left: 2px;
+}
+
+.telemetry-model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #0d0d14;
+  border: 1px solid #22d3ee33;
+  border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #22d3ee;
+  margin-bottom: 1rem;
+}
+.telemetry-model-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.telemetry-timings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.telemetry-stage {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+}
+.telemetry-stage-name {
+  color: #555;
+  width: 130px;
+  flex-shrink: 0;
+}
+.telemetry-stage-bar-track {
+  flex: 1;
+  height: 3px;
+  background: #1a1a2e;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.telemetry-stage-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+.telemetry-stage-ms {
+  color: #666;
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── SUB-PATTERNS ── */
+.sub-patterns {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+.sub-pattern-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 1px;
+  padding: 0.15rem 0.4rem;
+  border-radius: 2px;
+  background: #ffffff08;
+  border: 1px solid #ffffff15;
+  color: #888;
+}
+
+/* ── RELATED CHARACTERS ── */
+.related-section { margin-top: 0.4rem; }
+.related-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+.related-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  background: #ffffff06;
+  border: 1px solid #ffffff10;
+  color: #666;
+  cursor: default;
+}
+
 /* ── SOUL.MD OUTPUT ── */
 .soulmd-section { display: none; margin-top: 2.5rem; border-top: 1px solid var(--border); padding-top: 2rem; }
 .soulmd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-.soulmd-title { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+.soulmd-title { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
 .soulmd-actions { display: flex; gap: 0.5rem; }
 .soulmd-btn {
   background: transparent;
   border: 1px solid var(--gold);
   color: var(--gold);
   padding: 0.4rem 1rem;
-  font-family: 'Space Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -416,13 +626,13 @@ nav {
 }
 .soulmd-output::-webkit-scrollbar { width: 4px; }
 .soulmd-output::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
-.copied-toast { display: none; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: #4ecdc4; letter-spacing: 1px; }
+.copied-toast { display: none; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #4ecdc4; letter-spacing: 1px; }
 
 /* ── HOW IT WORKS ── */
 .pipeline-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin-top: 3rem; border: 1px solid var(--border); }
 .pipeline-step { background: var(--bg); padding: 2.5rem; position: relative; }
 .pipeline-step::before { content: attr(data-step); font-family: 'Bebas Neue', sans-serif; font-size: 6rem; color: var(--border); line-height: 1; position: absolute; top: 1rem; right: 1.5rem; }
-.step-num { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+.step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
 .step-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.8rem; }
 .step-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
 
@@ -446,10 +656,57 @@ footer a:hover { color: var(--accent); }
   .hero { padding: 7rem 1.5rem 3rem; }
   .section { padding: 5rem 1.5rem; }
   .problem-grid { grid-template-columns: 1fr; }
+  .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── ACCESSIBILITY ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .streaming-cursor { animation: none; opacity: 1; }
+  .telemetry-model-dot { animation: none; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button, a, [onclick] { cursor: pointer; }
+
+/* ── VISUAL POLISH ── */
+.nav-logo:hover { text-shadow: 0 0 20px rgba(0,212,255,0.4); transition: text-shadow 0.3s ease; }
+
+.emergent-topic { text-shadow: 0 0 30px currentColor; }
+
+.run-btn { min-height: 44px; min-width: 44px; }
+.soulmd-btn { min-height: 32px; }
+.thinking-toggle, .telemetry-toggle { min-height: 36px; }
+
+.hero h1 { text-shadow: 0 4px 40px rgba(255,61,0,0.08); }
+
+.bead { transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; }
+.bead-wrap:hover .bead { transform: scale(1.3); }
+
+.entity-chip { transition: border-color 0.2s ease-out, background 0.2s ease-out; }
+.entity-chip:hover { background: #1e1e1e; }
+
+/* Skip to content link */
+.skip-link {
+  position: absolute; top: -100%; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #000; padding: 0.5rem 1rem;
+  font-size: 0.8rem; z-index: 999; border-radius: 0 0 4px 4px;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
 </style>
 </head>
 <body>
+<a href="#demo" class="skip-link">Skip to demo</a>
 
 <!-- ── NAV ── -->
 <nav>
@@ -462,6 +719,7 @@ footer a:hover { color: var(--accent); }
 </nav>
 
 <!-- ── HERO ── -->
+<main>
 <section class="hero">
   <div class="hero-eyebrow">Kyanite Labs / OpenSoul Compatible</div>
   <h1>
@@ -581,7 +839,7 @@ footer a:hover { color: var(--accent); }
   <!-- Input (centered, max-width) -->
   <div class="demo-input-panel">
     <label class="input-label" for="brainDump">Your brain dump</label>
-    <textarea class="brain-dump" id="brainDump" placeholder="Drop your references here. One per line.
+    <textarea class="brain-dump" id="brainDump" aria-label="Enter your character and media references for analysis" placeholder="Drop your references here. One per line.
 
 Tony Montana (Scarface)
 Hannah Montana
@@ -594,20 +852,44 @@ Patrick Bateman (American Psycho)
 Jesse Pinkman (Breaking Bad)
 Fleabag"></textarea>
 
-    <button class="run-btn" id="runBtn" onclick="runPipeline()">
+    <button class="run-btn" id="runBtn" onclick="runPipeline()" aria-label="Run the SoulCraft analysis pipeline">
       <span class="btn-text">Find the Thread →</span>
       <span class="spinner"></span>
     </button>
+
+    <div class="pipeline-progress" id="pipelineProgress" role="status" aria-live="polite" aria-label="Pipeline progress">
+      <div class="pipeline-stages">
+        <div class="pipeline-stage-item" id="stage1Indicator">
+          <span class="pipeline-stage-dot"></span>
+          <span>Extract</span>
+        </div>
+        <div class="pipeline-stage-connector" id="conn1"></div>
+        <div class="pipeline-stage-item" id="stage2Indicator">
+          <span class="pipeline-stage-dot"></span>
+          <span>Graph</span>
+        </div>
+        <div class="pipeline-stage-connector" id="conn2"></div>
+        <div class="pipeline-stage-item" id="stage3Indicator">
+          <span class="pipeline-stage-dot"></span>
+          <span>Synthesize</span>
+        </div>
+        <div class="pipeline-stage-connector" id="conn3"></div>
+        <div class="pipeline-stage-item" id="stage4Indicator">
+          <span class="pipeline-stage-dot"></span>
+          <span>SOUL.md</span>
+        </div>
+      </div>
+    </div>
 
     <div class="demo-error" id="demoError"></div>
 
     <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
       <div class="input-label" style="margin-bottom: 0.8rem;">Examples</div>
       <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-        <button class="soulmd-btn" onclick="loadExample('standard')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Standard</button>
-        <button class="soulmd-btn" onclick="loadExample('power')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Power Players</button>
-        <button class="soulmd-btn" onclick="loadExample('outsider')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Outsiders</button>
-        <button class="soulmd-btn" onclick="loadExample('intellectual')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;">Intellectuals</button>
+        <button class="soulmd-btn" onclick="loadExample('standard')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load standard example references">Standard</button>
+        <button class="soulmd-btn" onclick="loadExample('power')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load power players example references">Power Players</button>
+        <button class="soulmd-btn" onclick="loadExample('outsider')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load outsiders example references">Outsiders</button>
+        <button class="soulmd-btn" onclick="loadExample('intellectual')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load intellectuals example references">Intellectuals</button>
       </div>
     </div>
   </div>
@@ -636,7 +918,7 @@ Fleabag"></textarea>
           <div class="emergent-topic" id="emergentTopic" style="color: var(--accent);">—</div>
           <div class="emergent-theme" id="emergentTheme">—</div>
           <div class="consensus-bar">
-            <span style="font-size:0.65rem; color: var(--muted); font-family: 'Space Mono', monospace; flex-shrink:0;">Consensus</span>
+            <span style="font-size:0.65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; flex-shrink:0;">Consensus</span>
             <div class="consensus-track">
               <div class="consensus-fill" id="consensusFill" style="width: 0%"></div>
             </div>
@@ -669,10 +951,26 @@ Fleabag"></textarea>
 
       <!-- Thinking / Reasoning -->
       <div class="thinking-section" id="thinkingSection">
-        <button class="thinking-toggle" id="thinkingToggle" onclick="toggleThinking()">
+        <button class="thinking-toggle" id="thinkingToggle" onclick="toggleThinking()" aria-label="Toggle model reasoning display" aria-expanded="false">
           <span class="arrow">▸</span> Model Reasoning
         </button>
         <div class="thinking-content" id="thinkingContent"></div>
+      </div>
+
+      <!-- Telemetry -->
+      <div class="telemetry-section" id="telemetrySection">
+        <button class="telemetry-toggle" id="telemetryToggle" onclick="toggleTelemetry()" aria-label="Toggle pipeline telemetry display" aria-expanded="false">
+          <span class="arrow">▸</span> Pipeline Telemetry
+        </button>
+        <div class="telemetry-panel" id="telemetryPanel">
+          <div class="telemetry-model-badge" id="telemetryModel">
+            <span class="telemetry-model-dot"></span>
+            <span id="telemetryModelText">—</span>
+          </div>
+          <div class="telemetry-grid" id="telemetryGrid"></div>
+          <div class="analysis-label" style="margin-top: 1rem; margin-bottom: 0.6rem;">Stage Timings</div>
+          <div class="telemetry-timings" id="telemetryTimings"></div>
+        </div>
       </div>
 
       <!-- Stage 3: SOUL.md -->
@@ -680,10 +978,10 @@ Fleabag"></textarea>
         <div class="soulmd-header">
           <div class="soulmd-title">SOUL.md — OpenClaw Compatible</div>
           <div class="soulmd-actions" id="soulmdActions" style="display:none;">
-            <button class="soulmd-btn" onclick="copySoulmd()">
+            <button class="soulmd-btn" onclick="copySoulmd()" aria-label="Copy SOUL.md to clipboard">
               <span>⎘</span> Copy
             </button>
-            <button class="soulmd-btn" onclick="downloadSoulmd()">
+            <button class="soulmd-btn" onclick="downloadSoulmd()" aria-label="Download SOUL.md file">
               <span>↓</span> Download
             </button>
           </div>
@@ -695,11 +993,13 @@ Fleabag"></textarea>
   </div>
 </section>
 
+</main>
+
 <!-- ── FOOTER ── -->
 <footer>
   <p>
     <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank">Soulcraft</a>
-    — Built by <a href="https://kyanitelabs.ai" target="_blank">Kyanite Labs</a>
+    — Built by <a href="https://kyanitelabs.tech" target="_blank">Kyanite Labs</a> — the dev shop that never sleeps.
     — Inspired by <a href="https://openclaw.ai" target="_blank">OpenClaw</a> &amp;
     <a href="https://github.com/aaronjmars/soul.md" target="_blank">aaronjmars/soul.md</a>
   </p>
@@ -769,10 +1069,12 @@ function handleSSE(line, outputEl) {
   switch (event.type) {
     case 'entities':
       renderEntities(event.data);
+      setStage(1);
       break;
 
     case 'graph':
       renderGraph(event.data);
+      setStage(2);
       break;
 
     case 'thinking':
@@ -784,6 +1086,7 @@ function handleSSE(line, outputEl) {
     case 'soulmd_token':
       if (document.getElementById('soulmdSection').style.display === 'none') {
         document.getElementById('soulmdSection').style.display = 'block';
+        setStage(3);
       }
       const cursor = document.getElementById('streamingCursor');
       if (cursor) cursor.remove();
@@ -799,8 +1102,29 @@ function handleSSE(line, outputEl) {
       const c = document.getElementById('streamingCursor');
       if (c) c.remove();
       document.getElementById('soulmdActions').style.display = 'flex';
+      setStage(4);
+      break;
+
+    case 'telemetry':
+      renderTelemetry(event.data);
       break;
   }
+}
+
+function setStage(stageNum) {
+  const stages = ['stage1Indicator', 'stage2Indicator', 'stage3Indicator', 'stage4Indicator'];
+  const conns = ['conn1', 'conn2', 'conn3'];
+  stages.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active', 'done');
+    if (i + 1 < stageNum) el.classList.add('done');
+    else if (i + 1 === stageNum) el.classList.add('active');
+  });
+  conns.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('done');
+    if (i + 1 < stageNum) el.classList.add('done');
+  });
 }
 
 // ── PIPELINE (streaming) ──────────────────────────────────────────────────
@@ -825,6 +1149,9 @@ async function runPipeline() {
   document.getElementById('thinkingSection').style.display = 'none';
   document.getElementById('thinkingContent').classList.remove('visible');
   document.getElementById('thinkingToggle').classList.remove('open');
+  document.getElementById('telemetrySection').style.display = 'none';
+  document.getElementById('telemetryPanel').classList.remove('visible');
+  document.getElementById('telemetryToggle').classList.remove('open');
   document.getElementById('soulmdSection').style.display = 'none';
   document.getElementById('soulmdActions').style.display = 'none';
   document.getElementById('entityCards').innerHTML = '';
@@ -834,6 +1161,11 @@ async function runPipeline() {
   document.getElementById('analysisNotes').innerHTML = '';
   document.getElementById('thinkingContent').textContent = '';
   document.getElementById('soulmdOutput').innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
+
+  // Show pipeline progress
+  const progress = document.getElementById('pipelineProgress');
+  progress.classList.add('active');
+  setStage(1);
 
   btn.classList.add('loading');
   btn.querySelector('.btn-text').textContent = 'Analyzing...';
@@ -889,12 +1221,20 @@ async function runPipeline() {
 
 // ── RENDER STAGES ─────────────────────────────────────────────────────────
 function renderEntities(entities) {
-  document.getElementById('entityCards').innerHTML = entities.map(e =>
-    `<span class="entity-chip type-${e.type}">
-      <span class="type-dot"></span>
-      ${e.original}
-    </span>`
-  ).join('');
+  document.getElementById('entityCards').innerHTML = entities.map(e => {
+    const related = (e.related && e.related.length > 0)
+      ? `<div class="related-section">
+           <div class="related-chars">${e.related.map(r => `<span class="related-chip">${r}</span>`).join('')}</div>
+         </div>`
+      : '';
+    return `<div class="entity-chip type-${e.type}" style="flex-direction:column; align-items:flex-start; gap:0.2rem; padding:0.5rem 0.8rem;">
+      <div style="display:flex; align-items:center; gap:0.4rem;">
+        <span class="type-dot"></span>
+        <span>${e.original}${e.source ? ' <span style="color:#555;font-size:0.65rem;">(' + e.source + ')</span>' : ''}</span>
+      </div>
+      ${related}
+    </div>`;
+  }).join('');
 }
 
 function renderGraph(graph) {
@@ -911,19 +1251,26 @@ function renderGraph(graph) {
 
   // Pattern graph bars
   const topPatterns = graph.patterns.filter(p => p.probability > 0.01);
-  document.getElementById('patternGraph').innerHTML = topPatterns.map((p, i) => `
-    <div class="pattern-row">
-      <div class="pattern-rank">${i + 1}</div>
-      <div class="pattern-bar-wrap">
-        <div class="pattern-bar-track">
-          <div class="pattern-bar-fill" style="width: ${p.probability * 100}%; background: ${p.color};"></div>
+  document.getElementById('patternGraph').innerHTML = topPatterns.map((p, i) => {
+    const subs = (p.sub_patterns && p.sub_patterns.length > 0)
+      ? `<div class="sub-patterns">${p.sub_patterns.map(s => `<span class="sub-pattern-pill">${s}</span>`).join('')}</div>`
+      : '';
+    return `
+    <div class="pattern-row" style="flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:0.8rem; flex:1; min-width:0;">
+        <div class="pattern-rank">${i + 1}</div>
+        <div class="pattern-bar-wrap">
+          <div class="pattern-bar-track">
+            <div class="pattern-bar-fill" style="width: ${p.probability * 100}%; background: ${p.color};"></div>
+          </div>
+          <div class="pattern-name" title="${p.name}">${p.name}</div>
+          <div class="pattern-prob">${Math.round(p.probability * 100)}%</div>
+          <div class="pattern-confidence" title="${p.supporting_entities} entities">${p.supporting_entities}\u2193</div>
         </div>
-        <div class="pattern-name" title="${p.name}">${p.name}</div>
-        <div class="pattern-prob">${Math.round(p.probability * 100)}%</div>
-        <div class="pattern-confidence" title="${p.supporting_entities} entities">${p.supporting_entities}\u2193</div>
       </div>
-    </div>
-  `).join('');
+      ${subs}
+    </div>`;
+  }).join('');
 
   // Bridges
   if (graph.bridges && graph.bridges.length > 0) {
@@ -935,7 +1282,7 @@ function renderGraph(graph) {
           <span class="bridge-pill" style="background: ${b.color_a}22; color: ${b.color_a}; border: 1px solid ${b.color_a};">${b.pattern_a}</span>
           <span class="bridge-arrow">\u2194</span>
           <span class="bridge-pill" style="background: ${b.color_b}22; color: ${b.color_b}; border: 1px solid ${b.color_b};">${b.pattern_b}</span>
-          <span style="margin-left: auto; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted);">
+          <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted);">
             ${Math.round(b.score_a * 100)}% / ${Math.round(b.score_b * 100)}%
           </span>
         </div>
@@ -977,8 +1324,74 @@ function renderGraph(graph) {
 function toggleThinking() {
   const toggle = document.getElementById('thinkingToggle');
   const content = document.getElementById('thinkingContent');
-  toggle.classList.toggle('open');
+  const isOpen = toggle.classList.toggle('open');
   content.classList.toggle('visible');
+  toggle.setAttribute('aria-expanded', isOpen);
+}
+
+// ── TELEMETRY ─────────────────────────────────────────────────────────────
+function renderTelemetry(data) {
+  const section = document.getElementById('telemetrySection');
+  section.style.display = 'block';
+
+  // Model badge
+  document.getElementById('telemetryModelText').textContent =
+    `${data.model || 'unknown'} / ${data.provider || 'ollama'}`;
+
+  // Metrics grid
+  const grid = document.getElementById('telemetryGrid');
+  grid.innerHTML = [
+    { label: 'Prompt Tokens', value: data.tokens_prompt || 0, unit: 'tok' },
+    { label: 'Completion Tokens', value: data.tokens_completion || 0, unit: 'tok' },
+    { label: 'Total Tokens', value: data.tokens_total || 0, unit: 'tok' },
+    { label: 'Speed', value: data.tokens_per_sec || 0, unit: 'tok/s' },
+    { label: 'Total Time', value: ((data.total_ms || 0) / 1000).toFixed(1), unit: 's' },
+    { label: 'Reasoning', value: ((data.thinking_length || 0) / 1024).toFixed(1), unit: 'KB' },
+  ].map(m => `
+    <div class="telemetry-metric">
+      <div class="telemetry-metric-label">${m.label}</div>
+      <div class="telemetry-metric-value">${m.value}<span class="telemetry-metric-unit">${m.unit}</span></div>
+    </div>
+  `).join('');
+
+  // Stage timings
+  const timings = data.stage_timings_ms || {};
+  const totalMs = data.total_ms || Object.values(timings).reduce((a, b) => a + b, 0) || 1;
+  const stageNames = {
+    stage1_extract_ms: 'Extract',
+    stage1b_research_ms: 'Research',
+    stage2_graph_ms: 'Classify',
+    stage3_synthesis_ms: 'Synthesize',
+  };
+  const stageColors = {
+    stage1_extract_ms: '#ff6b00',
+    stage1b_research_ms: '#4ecdc4',
+    stage2_graph_ms: '#a855f7',
+    stage3_synthesis_ms: '#ffc200',
+  };
+  const timingsEl = document.getElementById('telemetryTimings');
+  timingsEl.innerHTML = Object.entries(stageNames).map(([key, name]) => {
+    const ms = timings[key] || 0;
+    const pct = Math.round((ms / totalMs) * 100);
+    const color = stageColors[key] || '#22d3ee';
+    return `
+      <div class="telemetry-stage">
+        <div class="telemetry-stage-name">${name}</div>
+        <div class="telemetry-stage-bar-track">
+          <div class="telemetry-stage-bar-fill" style="width:${pct}%; background:${color};"></div>
+        </div>
+        <div class="telemetry-stage-ms">${ms > 1000 ? (ms/1000).toFixed(1) + 's' : ms + 'ms'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleTelemetry() {
+  const toggle = document.getElementById('telemetryToggle');
+  const panel = document.getElementById('telemetryPanel');
+  const isOpen = toggle.classList.toggle('open');
+  panel.classList.toggle('visible');
+  toggle.setAttribute('aria-expanded', isOpen);
 }
 
 // ── COPY & DOWNLOAD ───────────────────────────────────────────────────────

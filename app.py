@@ -5,7 +5,9 @@ Usage: python app.py [--port PORT]
 
 import json
 import os
+import signal
 import sys
+import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -65,6 +67,8 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/diagnostics":
             self._json_response(get_diagnostics())
             self._log("GET", self.path, 200, start)
+        elif self.path == "/api/health":
+            self._json_response({"status": "ok"})
         elif self.path == "/api/runs":
             self._json_response({"runs": get_recent_runs(50)})
             self._log("GET", self.path, 200, start)
@@ -109,15 +113,24 @@ class Handler(BaseHTTPRequestHandler):
         from soulcraft.patterns import build_pattern_graph
         from soulcraft.research import enrich_entities
 
+        timings = {}
+
         try:
+            t0 = time.time()
             entities = extract_entities(brain_dump)
+            timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
         except RuntimeError as e:
             self._json_response({"error": str(e)}, 503)
             self._log("POST", "/api/extract", 503, start, extra={"error": str(e)})
             return
 
+        t0 = time.time()
         enrich_entities(entities)
+        timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
+
+        t0 = time.time()
         graph = build_pattern_graph(entities, brain_dump)
+        timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
 
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
@@ -125,7 +138,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Connection", "keep-alive")
         self.end_headers()
 
-        for event in synthesize_soulmd_stream(entities, graph):
+        for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
             payload = json.dumps(event)
             self.wfile.write(f"data: {payload}\n\n".encode())
             self.wfile.flush()
@@ -135,6 +148,7 @@ class Handler(BaseHTTPRequestHandler):
             "streamed": True,
             "entity_count": len(entities),
             "emergent": graph.get("emergent_topic"),
+            "timings": timings,
         })
 
     def _json_response(self, data, status=200):
@@ -181,6 +195,7 @@ class Handler(BaseHTTPRequestHandler):
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
+    allow_reuse_address = True
 
 
 def main():
@@ -191,12 +206,37 @@ def main():
             port = int(sys.argv[idx + 1])
 
     server = ThreadedHTTPServer(("0.0.0.0", port), Handler)
+
+    # Graceful shutdown handler
+    shutdown_event = threading.Event()
+
+    def signal_handler(signum, frame):
+        print(f"\nReceived signal {signum}, initiating graceful shutdown...")
+        shutdown_event.set()
+        server.shutdown()
+
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
     print(f"Soulcraft running on http://localhost:{port}")
+    print(f"PID: {os.getpid()}")
+
+    # Start server in a thread so we can handle signals
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+
     try:
-        server.serve_forever()
+        # Wait for shutdown signal
+        while not shutdown_event.is_set():
+            shutdown_event.wait(1)
     except KeyboardInterrupt:
-        print("\nShutting down.")
+        print("\nShutting down...")
+    finally:
         server.server_close()
+        server_thread.join(timeout=5)
+        print("Shutdown complete.")
 
 
 if __name__ == "__main__":
