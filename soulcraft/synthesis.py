@@ -395,6 +395,7 @@ def _derive_who_i_am(entities, graph):
             f"You are drawn to the space where {theme.lower()}. "
             f"Your references — {primary}, {secondary}, and the others — "
             f"aren't random. They orbit the same symbolic core: {top_name}. "
+            f"The emergent identity is {topic.lower()}. "
             f"That's not coincidence. That's pattern."
         )
     else:
