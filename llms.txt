@@ -1,0 +1,23 @@
+# SoulCraft
+
+> Language, naming, and narrative synthesis workbench.
+
+SoulCraft helps transform research notes, cultural context, constraints, and creative intent into meaningful names, story patterns, and positioning language. It includes entity extraction, pattern analysis, LLM-assisted synthesis, translation checks, validation, trace logging, and backup utilities.
+
+## Use cases
+- Brand and product naming
+- Creative project naming
+- Symbolic research synthesis
+- Multilingual naming risk review
+- Narrative and positioning development
+- Meaning-centered language exploration
+
+## Key paths
+- `README.md`: public-facing overview
+- `soulcraft/`: core Python package
+- `tests/`: verification suite
+- `app.py`: Flask entry point
+- `traefik/`: deployment examples
+
+## Keywords
+AI naming tool, brand naming assistant, symbolic language synthesis, product naming research, multilingual naming validation, narrative synthesis, creative research assistant, meaning-centered brand strategy.
