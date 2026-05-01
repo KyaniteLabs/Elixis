@@ -100,6 +100,12 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
+          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ]; then
+            echo "VPS deploy secrets are not configured; skipping deploy."
+            exit 0
+          fi
+
+          trap 'rm -f deploy_key' EXIT
           echo "${VPS_SSH_KEY}" > deploy_key
           chmod 600 deploy_key
 
@@ -115,5 +121,3 @@ jobs:
             docker-compose up -d
             docker system prune -f
           EOF
-
-          rm -f deploy_key
