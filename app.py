@@ -3,6 +3,7 @@
 Usage: python app.py [--port PORT]
 """
 
+import hashlib
 import json
 import os
 import signal
@@ -169,6 +170,10 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/backups/status":
             self._json_response(get_backup_status())
             self._log("GET", self.path, 200, start)
+        elif self.path == "/robots.txt":
+            self._serve_robots(start)
+        elif self.path == "/sitemap.xml":
+            self._serve_sitemap(start)
         else:
             self._serve_static(self.path)
             self._log("GET", self.path, 200, start)
@@ -525,7 +530,7 @@ class Handler(BaseHTTPRequestHandler):
         log_request(method, path, status, duration_ms, extra)
         logger.info(f"[{rid}] {method} {path} {status} {duration_ms:.0f}ms")
 
-    def _serve_file(self, filename, content_type):
+    def _serve_file(self, filename, content_type, cache_max_age=0):
         filepath = filename if os.path.isabs(filename) else os.path.join(TEMPLATE_DIR, filename)
         if not os.path.isfile(filepath):
             self.send_response(404)
@@ -537,9 +542,26 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
+        if cache_max_age > 0:
+            self.send_header("Cache-Control", f"public, max-age={cache_max_age}")
+            etag = '"' + hashlib.md5(content).hexdigest()[:16] + '"'
+            self.send_header("ETag", etag)
+            if_none_match = self.headers.get("If-None-Match")
+            if if_none_match and if_none_match == etag:
+                self.send_response(304)
+                self.end_headers()
+                return
         self._send_cors_headers()
         self.end_headers()
         self.wfile.write(content)
+
+    # Cache TTL by content type (seconds)
+    _CACHE_TTL = {
+        ".css": 86400, ".js": 86400, ".png": 604800, ".jpg": 604800,
+        ".svg": 604800, ".ico": 604800, ".webp": 604800,
+        ".woff2": 2592000, ".woff": 2592000, ".webmanifest": 3600,
+        ".html": 0, ".json": 0,
+    }
 
     def _serve_static(self, path):
         filename = path.lstrip("/")
@@ -576,7 +598,47 @@ class Handler(BaseHTTPRequestHandler):
             self._send_cors_headers()
             self.end_headers()
             return
-        self._serve_file(resolved, content_type)
+        cache_ttl = self._CACHE_TTL.get(ext, 0)
+        self._serve_file(resolved, content_type, cache_max_age=cache_ttl)
+
+    def _serve_robots(self, start):
+        host = self.headers.get("Host", f"localhost:{PORT}")
+        proto = "https" if os.environ.get("HTTPS") else "http"
+        base_url = f"{proto}://{host}"
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            f"Sitemap: {base_url}/sitemap.xml\n"
+        ).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self._send_cors_headers()
+        self.end_headers()
+        self.wfile.write(body)
+        self._log("GET", "/robots.txt", 200, start)
+
+    def _serve_sitemap(self, start):
+        host = self.headers.get("Host", f"localhost:{PORT}")
+        proto = "https" if os.environ.get("HTTPS") else "http"
+        base_url = f"{proto}://{host}"
+        now = time.strftime("%Y-%m-%d")
+        body = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"  <url><loc>{base_url}/</loc><lastmod>{now}</lastmod>"
+            "<changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
+            "</urlset>\n"
+        ).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/xml")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self._send_cors_headers()
+        self.end_headers()
+        self.wfile.write(body)
+        self._log("GET", "/sitemap.xml", 200, start)
 
     def do_OPTIONS(self):
         self.send_response(204)

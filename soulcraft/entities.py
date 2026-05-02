@@ -174,6 +174,15 @@ def _heuristic_extract(text):
             "The", "This", "That", "These", "Those", "It", "He", "She",
             "His", "Her", "They", "Their", "We", "Our", "My", "Your",
             "And", "But", "Or", "So", "If", "When", "While", "Not",
+            "There", "Here", "What", "Which", "Who", "How", "Why",
+            "Where", "Each", "Every", "Some", "Any", "No", "All",
+            "Both", "Either", "Neither", "Such", "Than", "Too",
+            "Very", "Just", "Only", "Also", "Even", "Still",
+            "Already", "Yet", "Now", "Then", "Today", "Tomorrow",
+            "Yesterday", "Always", "Never", "Often", "Sometimes",
+            "Before", "After", "Since", "Until", "During",
+            "Between", "Among", "Through", "About", "Above",
+            "Below", "Under", "Over", "Into", "From", "With",
         }
         for m in matches:
             key = m.lower()

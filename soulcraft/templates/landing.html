@@ -36,6 +36,12 @@
   "operatingSystem": "Linux",
   "programmingLanguage": "Python",
   "license": "https://opensource.org/licenses/MIT",
+  "codeRepository": "https://github.com/KyaniteLabs/SoulCraft",
+  "installUrl": "https://github.com/KyaniteLabs/SoulCraft#installation",
+  "sameAs": [
+    "https://github.com/KyaniteLabs/SoulCraft",
+    "https://kyanitelabs.tech"
+  ],
   "author": {
     "@type": "Organization",
     "name": "Kyanite Labs",
@@ -1836,12 +1842,26 @@ function updateElementText(key, text) {
   }
 }
 
+// Track translated segments for hero-sub (6 slots: text/strong alternating)
+const _heroSubSegments = [null, null, null, null, null, null];
+
 function updateHeroSub(text, index, isStrong = false) {
   const sub = document.querySelector('.hero-sub');
   if (!sub) return;
-
-  // This is complex due to mixed content - simplified approach
-  // Store original structure and update incrementally
+  _heroSubSegments[index] = { text, isStrong };
+  // Rebuild from segments that have been set so far
+  sub.innerHTML = '';
+  for (let i = 0; i < _heroSubSegments.length; i++) {
+    const seg = _heroSubSegments[i];
+    if (seg === null) break;
+    if (seg.isStrong) {
+      const s = document.createElement('strong');
+      s.textContent = seg.text;
+      sub.appendChild(s);
+    } else {
+      sub.appendChild(document.createTextNode(seg.text));
+    }
+  }
 }
 
 function updateSectionLabel(selector, text) {
