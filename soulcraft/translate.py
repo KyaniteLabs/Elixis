@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import threading
 from typing import Optional, Dict, List, Generator
 from .llm import chat, chat_stream, is_available
 
@@ -18,6 +19,7 @@ CACHE_DIR = os.environ.get("SOULCRAFT_CACHE_DIR", os.path.join(_PROJECT_DIR, "tr
 CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
 CACHE_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB max total cache size
 MAX_TRANSLATE_TEXT_LENGTH = 50000  # 50K chars max for translation input
+_cache_lock = threading.Lock()
 
 
 def _get_cache_key(text: str, target_lang: str, source_lang: str) -> str:
@@ -79,38 +81,39 @@ def _save_to_cache(result: Dict, text: str, target_lang: str, source_lang: str):
 
 
 def _evict_cache_if_needed():
-    """Remove oldest cache entries if total size exceeds limit."""
+    """Remove oldest cache entries if total size exceeds limit. Thread-safe."""
     if not os.path.exists(CACHE_DIR):
         return
-    try:
-        entries = []
-        total_size = 0
-        for filename in os.listdir(CACHE_DIR):
-            if not filename.endswith(".json"):
-                continue
-            filepath = os.path.join(CACHE_DIR, filename)
-            try:
-                stat = os.stat(filepath)
-                entries.append((filepath, stat.st_mtime, stat.st_size))
-                total_size += stat.st_size
-            except OSError:
-                continue
+    with _cache_lock:
+        try:
+            entries = []
+            total_size = 0
+            for filename in os.listdir(CACHE_DIR):
+                if not filename.endswith(".json"):
+                    continue
+                filepath = os.path.join(CACHE_DIR, filename)
+                try:
+                    stat = os.stat(filepath)
+                    entries.append((filepath, stat.st_mtime, stat.st_size))
+                    total_size += stat.st_size
+                except OSError:
+                    continue
 
-        if total_size <= CACHE_MAX_SIZE_BYTES:
-            return
+            if total_size <= CACHE_MAX_SIZE_BYTES:
+                return
 
-        # Sort by modification time (oldest first) and evict until under limit
-        entries.sort(key=lambda e: e[1])
-        for filepath, _, size in entries:
-            if total_size <= CACHE_MAX_SIZE_BYTES * 0.8:  # Evict to 80% of limit
-                break
-            try:
-                os.remove(filepath)
-                total_size -= size
-            except OSError:
-                pass
-    except OSError:
-        pass
+            # Sort by modification time (oldest first) and evict until under limit
+            entries.sort(key=lambda e: e[1])
+            for filepath, _, size in entries:
+                if total_size <= CACHE_MAX_SIZE_BYTES * 0.8:  # Evict to 80% of limit
+                    break
+                try:
+                    os.remove(filepath)
+                    total_size -= size
+                except OSError:
+                    pass
+        except OSError:
+            pass
 
 
 def get_cache_stats() -> Dict:
