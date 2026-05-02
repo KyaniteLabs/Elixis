@@ -16,6 +16,7 @@ from .llm import chat, chat_stream, is_available
 _PROJECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".soulcraft")
 CACHE_DIR = os.environ.get("SOULCRAFT_CACHE_DIR", os.path.join(_PROJECT_DIR, "translations"))
 CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
+CACHE_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB max total cache size
 
 
 def _get_cache_key(text: str, target_lang: str, source_lang: str) -> str:
@@ -59,6 +60,7 @@ def _save_to_cache(result: Dict, text: str, target_lang: str, source_lang: str):
     """Save translation result to cache."""
     try:
         os.makedirs(CACHE_DIR, exist_ok=True)
+        _evict_cache_if_needed()
         cache_key = _get_cache_key(text, target_lang, source_lang)
         cache_path = _get_cache_path(cache_key)
 
@@ -72,7 +74,42 @@ def _save_to_cache(result: Dict, text: str, target_lang: str, source_lang: str):
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(cache_entry, f, ensure_ascii=False)
     except OSError:
-        pass  # Fail silently if cache can't be written
+        pass
+
+
+def _evict_cache_if_needed():
+    """Remove oldest cache entries if total size exceeds limit."""
+    if not os.path.exists(CACHE_DIR):
+        return
+    try:
+        entries = []
+        total_size = 0
+        for filename in os.listdir(CACHE_DIR):
+            if not filename.endswith(".json"):
+                continue
+            filepath = os.path.join(CACHE_DIR, filename)
+            try:
+                stat = os.stat(filepath)
+                entries.append((filepath, stat.st_mtime, stat.st_size))
+                total_size += stat.st_size
+            except OSError:
+                continue
+
+        if total_size <= CACHE_MAX_SIZE_BYTES:
+            return
+
+        # Sort by modification time (oldest first) and evict until under limit
+        entries.sort(key=lambda e: e[1])
+        for filepath, _, size in entries:
+            if total_size <= CACHE_MAX_SIZE_BYTES * 0.8:  # Evict to 80% of limit
+                break
+            try:
+                os.remove(filepath)
+                total_size -= size
+            except OSError:
+                pass
+    except OSError:
+        pass
 
 
 def get_cache_stats() -> Dict:

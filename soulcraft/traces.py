@@ -12,6 +12,7 @@ Structure:
 
 import json
 import os
+import threading
 import time
 from datetime import datetime, timezone
 
@@ -23,6 +24,8 @@ _REQUESTS_LOG = os.path.join(_BASE_DIR, "requests.log")
 _MAX_TRACE_FILES = 200
 _MAX_RUN_FILES = 100
 _MAX_REQUEST_LOG_BYTES = 5 * 1024 * 1024  # 5 MB
+
+_request_log_lock = threading.Lock()
 
 
 def _rotate_directory(directory, max_files):
@@ -43,19 +46,20 @@ def _rotate_directory(directory, max_files):
 
 def _rotate_request_log():
     """Truncate request log if it exceeds the size cap."""
-    try:
-        if not os.path.isfile(_REQUESTS_LOG):
-            return
-        size = os.path.getsize(_REQUESTS_LOG)
-        if size <= _MAX_REQUEST_LOG_BYTES:
-            return
-        with open(_REQUESTS_LOG) as f:
-            lines = f.readlines()
-        keep = lines[-10000:]
-        with open(_REQUESTS_LOG, "w") as f:
-            f.writelines(keep)
-    except OSError:
-        pass
+    with _request_log_lock:
+        try:
+            if not os.path.isfile(_REQUESTS_LOG):
+                return
+            size = os.path.getsize(_REQUESTS_LOG)
+            if size <= _MAX_REQUEST_LOG_BYTES:
+                return
+            with open(_REQUESTS_LOG) as f:
+                lines = f.readlines()
+            keep = lines[-10000:]
+            with open(_REQUESTS_LOG, "w") as f:
+                f.writelines(keep)
+        except OSError:
+            pass
 
 
 def _ensure_dirs():
@@ -145,8 +149,9 @@ def log_request(method, path, status, duration_ms, extra=None):
     if extra:
         entry.update(extra)
     try:
-        with open(_REQUESTS_LOG, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+        with _request_log_lock:
+            with open(_REQUESTS_LOG, "a") as f:
+                f.write(json.dumps(entry) + "\n")
     except OSError:
         pass
 

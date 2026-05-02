@@ -63,8 +63,10 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
                 "model": used_model,
                 "provider": PROVIDER,
             }
-    except (urllib.error.URLError, OSError, TimeoutError):
-        return {"content": "", "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": model or DEFAULT_MODEL, "provider": PROVIDER}
+    except (urllib.error.URLError, OSError, TimeoutError) as e:
+        import logging
+        logging.getLogger("soulcraft.llm").warning(f"Ollama call failed: {e}")
+        return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": model or DEFAULT_MODEL, "provider": PROVIDER}
 
 
 def _call_openai_compat_single(base_url, messages, model=None, max_tokens=2048):
@@ -127,7 +129,9 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
                 pass
         # Both failed or no fallback
         used_model = model or DEFAULT_MODEL
-        return {"content": "", "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": used_model, "provider": "openai"}
+        import logging
+        logging.getLogger("soulcraft.llm").warning(f"OpenAI-compatible call failed (primary): {e}")
+        return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": used_model, "provider": "openai"}
 
 
 def chat(messages, model=None, max_tokens=None, think=True):
