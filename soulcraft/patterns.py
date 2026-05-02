@@ -156,7 +156,7 @@ def llm_classify_patterns(entities):
     entity_list = "\n".join(
         f"{e['canonical']}|{e.get('type','?')}|{e.get('source','')}|"
         f"{','.join(e.get('themes',[])[:4])}|{','.join(e.get('traits',[])[:3])}"
-        for e in entities[:8]
+        for e in entities[:15]
     )
 
     system = (

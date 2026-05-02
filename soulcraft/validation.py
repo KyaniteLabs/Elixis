@@ -16,12 +16,19 @@ MAX_TRAIT_COUNT = 10
 
 # Patterns for detecting problematic content
 POTENTIAL_PROMPT_INJECTION = [
-    r"ignore\s+(?:all\s+)?(?:previous|above|prior)\s+(?:instructions|directives)",
+    r"ignore\s+(?:all\s+)?(?:previous|above|prior)\s+(?:instructions|directives|rules|prompts)",
     r"system\s*:\s*you\s+are\s+now",
     r"\{\{\s*SYSTEM\s*\}\}",
     r"<\s*system\s*>",
     r"user\s*:\s*ignore",
-    r"disregard\s+(?:all|previous)",
+    r"disregard\s+(?:all|previous|above|the)",
+    r"forget\s+(?:everything|all|your\s+instructions|what\s+you)",
+    r"new\s+(?:instructions?|directives?|rules?)\s*:",
+    r"you\s+are\s+(?:now\s+)?(?:DAN|jailbroken|unfiltered|uncensored)",
+    r"(?:pretend|act|roleplay)\s+(?:you\s+are|to\s+be|as)\s+(?!a\s+\w+\s+who)",
+    r"(?:override|bypass|skip|ignore)\s+(?:the\s+)?(?:safety|filter|guardrails?|boundaries?|restrictions?)",
+    r"reveal\s+(?:your\s+)?(?:initial\s+)?(?:instructions|prompt|system\s+prompt)",
+    r"(?:OVERRIDE|BYPASS|IGNORE)\s",
 ]
 
 SUSPICIOUS_PATTERNS = re.compile(
