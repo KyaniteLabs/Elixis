@@ -5,7 +5,6 @@ similarity analysis, and semantic clustering.
 """
 
 import json
-import re
 import urllib.request
 import urllib.error
 from typing import List, Dict, Optional
@@ -115,20 +114,9 @@ Output JSON object only:
         if not content:
             return _default_semantics()
 
-        # Extract JSON
-        json_str = content.strip()
-        if "```" in json_str:
-            match = re.search(r"```(?:json)?\s*\n?(.*?)```", json_str, re.DOTALL)
-            if match:
-                json_str = match.group(1).strip()
-
-        start = json_str.find("{")
-        end = json_str.rfind("}")
-        if start == -1 or end == -1:
-            return _default_semantics()
-
-        data = json.loads(json_str[start:end + 1])
-        if not isinstance(data, dict):
+        from .parsing import parse_llm_json_object
+        data = parse_llm_json_object(content)
+        if data is None:
             return _default_semantics()
 
         return {
