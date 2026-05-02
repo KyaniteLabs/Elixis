@@ -29,11 +29,14 @@ def _llm_extract_entities(text):
         "Respond with ONLY a JSON array. No markdown, no explanation."
     )
 
+    from .bead import VALID_TYPES
+    types_list = ", ".join(sorted(VALID_TYPES))
+
     user = f"""Extract all named references from this text. Fix any typos in names.
 
 For each entity, return:
 - name: canonical name (corrected if misspelled)
-- type: one of: character, person, work, concept, historical_figure
+- type: one of: {types_list}
 - source: origin work/media (or "")
 - themes: 3-5 keywords from: transformation, power, outsider, creation, shadow, wisdom, connection, struggle, freedom, spiritual, trickster, explorer
 - traits: 2-4 specific personality phrases (e.g. "paranoid ambition", "cold calculation")
@@ -104,6 +107,29 @@ Output JSON array only:
     return entities
 
 
+def _infer_type(name, source):
+    """Infer entity type from name patterns and source."""
+    name_lower = name.lower()
+    mythological_hints = ["zeus", "odin", "thor", "aphrodite", "apollo", "athena",
+                          "hercules", "achilles", "beowulf", "gandalf", "sauron",
+                          "voldemort", "yoda", "moriarty", "holmes"]
+    place_hints = ["city", "country", "kingdom", "realm", "island", "mount",
+                   "river", "forest", "valley", "planet", "world", "land"]
+    archetype_hints = ["hero", "villain", "mentor", "trickster", "sage",
+                       "warrior", "king", "queen", "wizard", "knight"]
+
+    for hint in mythological_hints:
+        if hint in name_lower:
+            return "mythological" if not source else "character"
+    for hint in place_hints:
+        if hint in name_lower and not source:
+            return "place"
+    for hint in archetype_hints:
+        if name_lower == hint or (hint in name_lower and len(name.split()) <= 2):
+            return "archetype"
+    return "character" if source else "concept"
+
+
 def _parse_line_entity(line):
     """Parse a single brain-dump line into a basic entity dict."""
     line = line.strip()
@@ -143,7 +169,7 @@ def _parse_line_entity(line):
         "original": line,
         "canonical": name,
         "source": source,
-        "type": "character" if source else "concept",
+        "type": _infer_type(name, source),
         "description": "",
         "themes": [],
         "traits": [],

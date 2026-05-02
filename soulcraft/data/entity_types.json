@@ -1,0 +1,92 @@
+{
+  "types": [
+    {
+      "id": "character",
+      "label": "Fictional Character",
+      "description": "A character from fiction, film, TV, games, or literature",
+      "domains": ["literature", "culture"],
+      "archetype_affinity": {
+        "power": 0.3, "transformation": 0.4, "outsider": 0.4, "creation": 0.2,
+        "shadow": 0.5, "wisdom": 0.2, "connection": 0.3, "struggle": 0.4,
+        "freedom": 0.3, "spiritual": 0.1, "trickster": 0.3, "explorer": 0.2
+      }
+    },
+    {
+      "id": "person",
+      "label": "Real Person (Living)",
+      "description": "A living public figure, celebrity, or known individual",
+      "domains": ["culture"],
+      "archetype_affinity": {
+        "power": 0.3, "transformation": 0.3, "outsider": 0.2, "creation": 0.3,
+        "shadow": 0.2, "wisdom": 0.3, "connection": 0.3, "struggle": 0.2,
+        "freedom": 0.2, "spiritual": 0.1, "trickster": 0.1, "explorer": 0.2
+      }
+    },
+    {
+      "id": "historical_figure",
+      "label": "Historical Figure",
+      "description": "A person from history, no longer living",
+      "domains": ["culture", "philosophy"],
+      "archetype_affinity": {
+        "power": 0.4, "transformation": 0.5, "outsider": 0.3, "creation": 0.3,
+        "shadow": 0.3, "wisdom": 0.5, "connection": 0.2, "struggle": 0.4,
+        "freedom": 0.3, "spiritual": 0.2, "trickster": 0.1, "explorer": 0.3
+      }
+    },
+    {
+      "id": "work",
+      "label": "Creative Work",
+      "description": "A book, film, album, game, painting, or other creative work",
+      "domains": ["literature", "visual_art", "culture", "music"],
+      "archetype_affinity": {
+        "power": 0.1, "transformation": 0.3, "outsider": 0.3, "creation": 0.7,
+        "shadow": 0.2, "wisdom": 0.3, "connection": 0.3, "struggle": 0.2,
+        "freedom": 0.2, "spiritual": 0.2, "trickster": 0.2, "explorer": 0.3
+      }
+    },
+    {
+      "id": "concept",
+      "label": "Abstract Concept",
+      "description": "A philosophical concept, theory, principle, or abstract idea",
+      "domains": ["philosophy", "mathematics", "science", "psychology"],
+      "archetype_affinity": {
+        "power": 0.2, "transformation": 0.2, "outsider": 0.1, "creation": 0.2,
+        "shadow": 0.1, "wisdom": 0.6, "connection": 0.2, "struggle": 0.1,
+        "freedom": 0.2, "spiritual": 0.3, "trickster": 0.1, "explorer": 0.2
+      }
+    },
+    {
+      "id": "archetype",
+      "label": "Archetype",
+      "description": "A recognized archetypal figure or pattern (Jungian, mythological)",
+      "domains": ["philosophy", "spirituality", "psychology"],
+      "archetype_affinity": {
+        "power": 0.4, "transformation": 0.5, "outsider": 0.4, "creation": 0.2,
+        "shadow": 0.4, "wisdom": 0.5, "connection": 0.3, "struggle": 0.3,
+        "freedom": 0.3, "spiritual": 0.5, "trickster": 0.3, "explorer": 0.3
+      }
+    },
+    {
+      "id": "mythological",
+      "label": "Mythological Figure",
+      "description": "A figure from mythology, folklore, or religious tradition",
+      "domains": ["literature", "spirituality", "culture"],
+      "archetype_affinity": {
+        "power": 0.5, "transformation": 0.5, "outsider": 0.3, "creation": 0.3,
+        "shadow": 0.4, "wisdom": 0.4, "connection": 0.3, "struggle": 0.4,
+        "freedom": 0.3, "spiritual": 0.6, "trickster": 0.4, "explorer": 0.2
+      }
+    },
+    {
+      "id": "place",
+      "label": "Place / Setting",
+      "description": "A real or fictional place that carries symbolic meaning",
+      "domains": ["culture", "nature"],
+      "archetype_affinity": {
+        "power": 0.1, "transformation": 0.2, "outsider": 0.3, "creation": 0.2,
+        "shadow": 0.1, "wisdom": 0.1, "connection": 0.2, "struggle": 0.1,
+        "freedom": 0.4, "spiritual": 0.2, "trickster": 0.0, "explorer": 0.5
+      }
+    }
+  ]
+}

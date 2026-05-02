@@ -1,0 +1,74 @@
+{
+  "relationships": [
+    {
+      "id": "admires",
+      "label": "admires",
+      "polarity": 1.0,
+      "description": "Positive regard, sees as aspirational or worthy of emulation",
+      "inverse": "admired_by"
+    },
+    {
+      "id": "identifies_with",
+      "label": "identifies with",
+      "polarity": 0.8,
+      "description": "Strong resonance, sees self in the other",
+      "inverse": "identified_with_by"
+    },
+    {
+      "id": "fascinated_by",
+      "label": "is fascinated by",
+      "polarity": 0.6,
+      "description": "Drawn to, intrigued by, finds compelling",
+      "inverse": "fascinates"
+    },
+    {
+      "id": "fears_becoming",
+      "label": "fears becoming",
+      "polarity": -0.7,
+      "description": "Shadow connection, sees as negative potential self",
+      "inverse": "feared_by"
+    },
+    {
+      "id": "contrasts_with",
+      "label": "contrasts with",
+      "polarity": 0.0,
+      "description": "Oppositional but informative, defines by difference",
+      "inverse": "contrasts_with"
+    },
+    {
+      "id": "aspires_to",
+      "label": "aspires to",
+      "polarity": 0.9,
+      "description": "Goal-state connection, represents ideal",
+      "inverse": "aspired_to_by"
+    },
+    {
+      "id": "rivals",
+      "label": "is rival to",
+      "polarity": -0.3,
+      "description": "Competitive tension, mutual challenge",
+      "inverse": "rivals"
+    },
+    {
+      "id": "mentored_by",
+      "label": "is mentored by",
+      "polarity": 0.7,
+      "description": "Learning relationship, guided by",
+      "inverse": "mentors"
+    },
+    {
+      "id": "complements",
+      "label": "complements",
+      "polarity": 0.5,
+      "description": "Fills gaps, completes what the other lacks",
+      "inverse": "complemented_by"
+    },
+    {
+      "id": "parallels",
+      "label": "parallels",
+      "polarity": 0.4,
+      "description": "Structural similarity across different domains",
+      "inverse": "paralleled_by"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "domains": [
+    {
+      "id": "music",
+      "label": "Music",
+      "description": "Musical forms, composers, performers, and theory",
+      "subdomains": ["classical", "jazz", "electronic", "folk", "world", "rock", "hip_hop", "experimental"]
+    },
+    {
+      "id": "mathematics",
+      "label": "Mathematics",
+      "description": "Mathematical structures, theorems, and proofs",
+      "subdomains": ["algebra", "topology", "probability", "logic", "geometry", "number_theory", "calculus", "statistics"]
+    },
+    {
+      "id": "philosophy",
+      "label": "Philosophy",
+      "description": "Philosophical traditions, thinkers, and arguments",
+      "subdomains": ["ethics", "epistemology", "metaphysics", "aesthetics", "logic", "existentialism", "stoicism", "phenomenology"]
+    },
+    {
+      "id": "literature",
+      "label": "Literature",
+      "description": "Written works, authors, and literary traditions",
+      "subdomains": ["fiction", "poetry", "drama", "mythology", "essays", "science_fiction", "fantasy", "noir"]
+    },
+    {
+      "id": "visual_art",
+      "label": "Visual Art",
+      "description": "Visual arts, design, and architecture",
+      "subdomains": ["painting", "sculpture", "architecture", "photography", "design", "typography", "film", "animation"]
+    },
+    {
+      "id": "science",
+      "label": "Science",
+      "description": "Natural sciences and scientific method",
+      "subdomains": ["physics", "biology", "chemistry", "neuroscience", "ecology", "astronomy", "genetics", "complexity"]
+    },
+    {
+      "id": "psychology",
+      "label": "Psychology",
+      "description": "Psychological theories, personality models, and cognition",
+      "subdomains": ["personality", "cognition", "behavioral", "developmental", "social", "clinical", "evolutionary", "positive"]
+    },
+    {
+      "id": "martial_arts",
+      "label": "Martial Arts & Strategy",
+      "description": "Martial traditions, strategy, and physical disciplines",
+      "subdomains": ["strategy", "discipline", "philosophy", "technique", "budo", "internal", "weapons", "competition"]
+    },
+    {
+      "id": "spirituality",
+      "label": "Spirituality & Religion",
+      "description": "Spiritual traditions, contemplative practices, and myth",
+      "subdomains": ["meditation", "mysticism", "ritual", "contemplation", "zen", "sufism", "shamanism", "monasticism"]
+    },
+    {
+      "id": "technology",
+      "label": "Technology",
+      "description": "Computing, engineering, and technological systems",
+      "subdomains": ["ai", "systems", "networks", "information", "robotics", "cryptography", "open_source", "infrastructure"]
+    },
+    {
+      "id": "nature",
+      "label": "Nature",
+      "description": "Natural world, ecosystems, and cosmology",
+      "subdomains": ["ecosystems", "evolution", "geology", "astronomy", "ocean", "weather", "botany", "wilderness"]
+    },
+    {
+      "id": "culture",
+      "label": "Culture",
+      "description": "Popular culture, media, and social phenomena",
+      "subdomains": ["film", "games", "sports", "fashion", "food", "internet", "memes", "subcultures"]
+    }
+  ],
+  "isomorphisms": [
+    {"domains": ["music", "mathematics"], "bridge": "Harmonic structure mirrors number theory — ratios, intervals, and proportional relationships"},
+    {"domains": ["philosophy", "martial_arts"], "bridge": "Strategic epistemology — knowledge as action, action as knowledge"},
+    {"domains": ["nature", "visual_art"], "bridge": "Fractal geometry and self-similarity in aesthetics and organic form"},
+    {"domains": ["psychology", "literature"], "bridge": "Narrative identity — character arcs as personality development models"},
+    {"domains": ["spirituality", "science"], "bridge": "Contemplation and the scientific method — observation, hypothesis, surrender to evidence"},
+    {"domains": ["technology", "biology"], "bridge": "Neural networks, genetic algorithms, emergent behavior in complex systems"},
+    {"domains": ["music", "philosophy"], "bridge": "Counterpoint as dialectic — independent voices creating meaning through tension and resolution"},
+    {"domains": ["mathematics", "nature"], "bridge": "Fibonacci sequences, golden ratio, and mathematical patterns in natural growth"},
+    {"domains": ["culture", "mythology"], "bridge": "Modern mythmaking — superheroes, pop icons, and archetypal narratives"},
+    {"domains": ["martial_arts", "spirituality"], "bridge": "Moving meditation — the body as instrument of contemplative practice"},
+    {"domains": ["literature", "technology"], "bridge": "Hypertext, interactive fiction, and the evolution of narrative through code"},
+    {"domains": ["visual_art", "mathematics"], "bridge": "Geometric abstraction, perspective, and the mathematics of visual perception"}
+  ]
+}

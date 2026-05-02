@@ -22,12 +22,10 @@ from soulcraft.backup import (
     get_backup_status,
     auto_backup_if_enabled,
 )
-from soulcraft.entities import extract_entities
+from soulcraft.engine import GameEngine
 from soulcraft.logging_config import get_logger, configure_root_logger
 from soulcraft.naming import research_name, format_research_report
-from soulcraft.patterns import build_pattern_graph
-from soulcraft.research import enrich_entities
-from soulcraft.synthesis import synthesize_soulmd, synthesize_soulmd_stream
+from soulcraft.quality import validate_output
 from soulcraft.traces import save_run, log_request, get_diagnostics, get_recent_runs
 from soulcraft.translate import (
     translate_text,
@@ -51,6 +49,7 @@ CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3110")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
+VALID_LENSES = {"identity", "brand", "design"}
 
 logger = get_logger("soulcraft.server")
 
@@ -83,38 +82,57 @@ def _request_leave():
 
 
 def run_pipeline(brain_dump):
-    """Run the full 3-stage pipeline on a brain dump string."""
+    """Run the full pipeline on a brain dump string using the GameEngine."""
     if not brain_dump or len(brain_dump.strip()) < 3:
         return {"error": "Brain dump is empty or too short"}
 
-    timings = {}
-
+    engine = GameEngine()
     try:
-        t0 = time.time()
-        entities = extract_entities(brain_dump)
-        timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+        output = engine.run_full(brain_dump, lens="identity")
     except RuntimeError as e:
         return {"error": str(e)}
 
-    t0 = time.time()
-    enrich_entities(entities)
-    timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
+    state = engine.state
+    graph = state.metadata.get("pattern_graph", {})
 
-    t0 = time.time()
-    graph = build_pattern_graph(entities, brain_dump)
-    timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
-
-    t0 = time.time()
-    soulmd = synthesize_soulmd(entities, graph)
-    timings["stage3_synthesis_ms"] = int((time.time() - t0) * 1000)
-
-    save_run(brain_dump, entities, graph, soulmd, stage_timings=timings)
+    save_run(brain_dump,
+             [b.to_dict() for b in state.beads],
+             graph, output,
+             stage_timings=state.timings)
 
     return {
-        "stage1_entities": entities,
+        "stage1_entities": [b.to_dict() for b in state.beads],
         "stage2_graph": graph,
-        "stage3_soulmd": soulmd,
-        "timings": timings,
+        "stage3_soulmd": output,
+        "timings": state.timings,
+    }
+
+
+def run_game_pipeline(brain_dump, lens="identity"):
+    """Run the full Glass Bead Game pipeline using the GameEngine."""
+    if not brain_dump or len(brain_dump.strip()) < 3:
+        return {"error": "Brain dump is empty or too short"}
+
+    if lens not in VALID_LENSES:
+        return {"error": f"Invalid lens '{lens}'. Must be one of: {', '.join(sorted(VALID_LENSES))}"}
+
+    engine = GameEngine()
+    try:
+        output = engine.run_full(brain_dump, lens=lens)
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    state = engine.state
+    return {
+        "lens": lens,
+        "stage1_entities": [b.to_dict() for b in state.beads],
+        "stage2_graph": state.metadata.get("pattern_graph", {}),
+        "stage3_output": output,
+        "stage3_soulmd": output if lens == "identity" else None,
+        "threads": [t.to_dict() for t in state.threads],
+        "tensions": state.tensions,
+        "timings": state.timings,
+        "quality": validate_output(output, lens=lens),
     }
 
 
@@ -170,6 +188,17 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/backups/status":
             self._json_response(get_backup_status())
             self._log("GET", self.path, 200, start)
+        elif self.path == "/api/lenses":
+            self._json_response({"lenses": sorted(VALID_LENSES)})
+            self._log("GET", self.path, 200, start)
+        elif self.path == "/api/game/schema":
+            from soulcraft.bead import VALID_TYPES
+            self._json_response({
+                "phases": ["declaration", "elaboration", "connection", "resolution"],
+                "lenses": sorted(VALID_LENSES),
+                "entity_types": sorted(VALID_TYPES),
+            })
+            self._log("GET", self.path, 200, start)
         elif self.path == "/robots.txt":
             self._serve_robots(start)
         elif self.path == "/sitemap.xml":
@@ -197,6 +226,10 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_backup_restore(start)
         elif self.path == "/api/backups/cleanup":
             self._handle_backup_cleanup(start)
+        elif self.path == "/api/game":
+            self._handle_game(start)
+        elif self.path == "/api/game/stream":
+            self._handle_game_stream(start)
         else:
             self.send_response(404)
             self._send_cors_headers()
@@ -448,15 +481,129 @@ class Handler(BaseHTTPRequestHandler):
         self._json_response(result)
         self._log("POST", self.path, 200, start)
 
+    def _handle_game(self, start):
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
+
+        brain_dump = data.get("brain_dump", "")
+        lens = data.get("lens", "identity")
+
+        is_valid, error, _ = validate_brain_dump(brain_dump)
+        if not is_valid:
+            self._json_response({"error": error}, 400)
+            return
+
+        if not _request_enter():
+            self._json_response({"error": "Server is shutting down"}, 503)
+            return
+        if not _pipeline_semaphore.acquire(blocking=False):
+            _request_leave()
+            self._json_response({"error": "Server busy"}, 503)
+            return
+        try:
+            result = run_game_pipeline(brain_dump, lens=lens)
+        finally:
+            _pipeline_semaphore.release()
+            _request_leave()
+
+        status = 200 if "error" not in result else 500
+        self._json_response(result, status)
+        self._log("POST", self.path, status, start, extra={
+            "lens": lens,
+            "entity_count": len(result.get("stage1_entities", [])),
+            "output_length": len(result.get("stage3_output", "")),
+            "timings": result.get("timings"),
+        })
+
+    def _handle_game_stream(self, start):
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
+
+        brain_dump = data.get("brain_dump", "")
+        lens = data.get("lens", "identity")
+
+        is_valid, error, _ = validate_brain_dump(brain_dump)
+        if not is_valid:
+            self._json_response({"error": error}, 400)
+            return
+
+        if not _request_enter():
+            self._json_response({"error": "Server is shutting down"}, 503)
+            return
+        if not _pipeline_semaphore.acquire(blocking=False):
+            _request_leave()
+            self._json_response({"error": "Server busy"}, 503)
+            return
+
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Content-Security-Policy", CSP_HEADER)
+            self._send_cors_headers()
+            self.end_headers()
+
+            rid = self._request_id()
+            deadline = time.time() + SSE_WRITE_TIMEOUT
+
+            engine = GameEngine()
+            timings = {}
+
+            def _send(event):
+                if isinstance(event, dict):
+                    event["request_id"] = rid
+                payload = json.dumps(event)
+                self.wfile.write(f"data: {payload}\n\n".encode())
+                self.wfile.flush()
+
+            try:
+                # Phase 1: Declaration
+                t0 = time.time()
+                state = engine.declare_themes(brain_dump)
+                timings["declaration_ms"] = int((time.time() - t0) * 1000)
+                _send({"type": "entities", "data": [b.to_dict() for b in state.beads]})
+
+                # Phase 2: Elaboration
+                t0 = time.time()
+                engine.elaborate()
+                timings["elaboration_ms"] = int((time.time() - t0) * 1000)
+
+                # Phase 3: Connection
+                t0 = time.time()
+                engine.connect_domains()
+                timings["connection_ms"] = int((time.time() - t0) * 1000)
+                _send({"type": "graph", "data": state.metadata.get("pattern_graph", {})})
+                if state.tensions:
+                    _send({"type": "tensions", "data": state.tensions})
+
+                # Phase 4: Resolution (streamed)
+                for event in engine.resolve_stream(lens=lens, stage_timings=timings):
+                    if time.time() > deadline:
+                        break
+                    _send(event)
+                    deadline = time.time() + SSE_WRITE_TIMEOUT
+
+            except (BrokenPipeError, ConnectionResetError):
+                logger.warning(f"[{rid}] Client disconnected during game stream")
+
+            self._log("POST", self.path, 200, start, extra={
+                "streamed": True, "lens": lens, "timings": timings,
+            })
+        finally:
+            _pipeline_semaphore.release()
+            _request_leave()
+
     # --- Streaming ---
 
     def _handle_stream(self, brain_dump, start):
         timings = {}
         rid = self._request_id()
-        entities = None
-        graph = None
 
-        # Send SSE headers immediately so the frontend gets a response
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -465,7 +612,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.end_headers()
 
-        def _send_event(event):
+        def _send(event):
             if isinstance(event, dict):
                 event["request_id"] = rid
             payload = json.dumps(event)
@@ -473,48 +620,51 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
 
         deadline = time.time() + SSE_WRITE_TIMEOUT
+        state = None
+        graph = {}
 
         try:
-            # Stage 1: Entity extraction
-            try:
-                t0 = time.time()
-                entities = extract_entities(brain_dump)
-                timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
-            except RuntimeError as e:
-                _send_event({"type": "error", "error": str(e)})
-                self._log("POST", "/api/extract", 503, start, extra={"error": str(e)})
-                return
+            engine = GameEngine()
 
-            # Stage 1b: Research enrichment
+            # Phase 1: Declaration
             t0 = time.time()
-            enrich_entities(entities)
+            state = engine.declare_themes(brain_dump)
+            timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+
+            # Phase 1b: Elaboration
+            t0 = time.time()
+            engine.elaborate()
             timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
 
-            # Emit entities event so frontend can render chips
-            _send_event({"type": "entities", "data": entities})
+            _send({"type": "entities", "data": [b.to_dict() for b in state.beads]})
 
-            # Stage 2: Pattern graph
+            # Phase 2: Connection
             t0 = time.time()
-            graph = build_pattern_graph(entities, brain_dump)
+            engine.connect_domains()
             timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
 
-            # Emit graph event so frontend can render pattern analysis
-            _send_event({"type": "graph", "data": graph})
+            graph = state.metadata.get("pattern_graph", {})
+            _send({"type": "graph", "data": graph})
 
-            # Stage 3: Stream synthesis (yields entities, graph, tokens, done)
-            for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
+            # Phase 3: Stream resolution
+            for event in engine.resolve_stream(lens="identity", stage_timings=timings):
                 if time.time() > deadline:
-                    logger.warning(f"[{rid}] SSE write timeout exceeded, aborting stream")
+                    logger.warning(f"[{rid}] SSE write timeout exceeded")
                     break
-                _send_event(event)
+                _send(event)
                 deadline = time.time() + SSE_WRITE_TIMEOUT
+
+            save_run(brain_dump,
+                     [b.to_dict() for b in state.beads],
+                     graph, "",
+                     stage_timings=timings)
 
         except (BrokenPipeError, ConnectionResetError):
             logger.warning(f"[{rid}] Client disconnected during SSE stream")
 
         self._log("POST", "/api/extract", 200, start, extra={
             "streamed": True,
-            "entity_count": len(entities) if entities else 0,
+            "entity_count": len(state.beads) if state else 0,
             "emergent": graph.get("emergent_topic") if graph else None,
             "timings": timings,
         })

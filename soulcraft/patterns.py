@@ -135,14 +135,30 @@ PATTERNS = [
 
 # Entity type affinities to patterns (entity types that tend to support certain patterns)
 _TYPE_AFFINITIES = {
-    "emotion": {"transformation": 0.3, "shadow": 0.3, "connection": 0.2, "struggle": 0.2},
-    "skill": {"creation": 0.4, "wisdom": 0.3, "power": 0.1},
-    "person": {"transformation": 0.2, "power": 0.2, "outsider": 0.2, "connection": 0.2},
-    "work": {"creation": 0.3, "wisdom": 0.2, "spiritual": 0.1},
-    "concept": {"wisdom": 0.3, "spiritual": 0.2, "transformation": 0.2},
-    "place": {"explorer": 0.4, "spiritual": 0.2},
-    "event": {"transformation": 0.3, "struggle": 0.3},
+    "character": {"transformation": 0.25, "shadow": 0.2, "power": 0.2, "outsider": 0.15, "connection": 0.1},
+    "person": {"transformation": 0.2, "power": 0.2, "outsider": 0.2, "connection": 0.2, "wisdom": 0.1},
+    "historical_figure": {"power": 0.3, "transformation": 0.2, "wisdom": 0.2, "struggle": 0.15},
+    "work": {"creation": 0.3, "wisdom": 0.2, "spiritual": 0.1, "transformation": 0.1},
+    "concept": {"wisdom": 0.3, "spiritual": 0.2, "transformation": 0.2, "explorer": 0.1},
+    "archetype": {"wisdom": 0.2, "transformation": 0.2, "shadow": 0.2, "spiritual": 0.2},
+    "mythological": {"transformation": 0.25, "spiritual": 0.25, "power": 0.15, "trickster": 0.15},
+    "place": {"explorer": 0.4, "spiritual": 0.2, "freedom": 0.1},
 }
+
+
+def _score_from_knowledge_base(entity):
+    """Score entity against patterns using curated knowledge base data."""
+    from .knowledge import character_by_name
+    kb = character_by_name(entity.get("canonical", ""))
+    if not kb:
+        return {}
+    scores = {}
+    archetype_scores = kb.get("archetype_scores", {})
+    pattern_ids = [p["id"] for p in PATTERNS]
+    for arch_id, score in archetype_scores.items():
+        if arch_id in pattern_ids:
+            scores[arch_id] = score * 0.5
+    return scores
 
 
 def llm_classify_patterns(entities):
@@ -303,6 +319,10 @@ def build_pattern_graph(entities, full_text=""):
             s = _score_entity_pattern(entity, pattern, full_text)
             if s > 0:
                 kw_scores[entity["canonical"]][pattern["id"]] += s
+        # Knowledge base archetype scores (tertiary signal)
+        kb_scores = _score_from_knowledge_base(entity)
+        for pid, score in kb_scores.items():
+            kw_scores[entity["canonical"]][pid] += score
 
     # --- Blended scoring: 0.7 LLM + 0.3 keyword ---
     raw_scores = defaultdict(lambda: defaultdict(float))

@@ -1,0 +1,281 @@
+{
+  "source": "IPIP-NEO (Public Domain)",
+  "description": "Big Five / OCEAN 30-facet taxonomy with trait keywords for personality projection",
+  "domains": [
+    {
+      "id": "O",
+      "name": "Openness to Experience",
+      "description": "Imagination, creativity, intellectual curiosity, preference for novelty",
+      "facets": [
+        {
+          "id": "O1",
+          "name": "Fantasy",
+          "description": "Vivid imagination, rich inner world",
+          "keywords": ["imaginative", "dreamy", "creative", "fantastical", "visionary", "inventive", "whimsical", "fanciful", "daydreamer", "original", "artistic", "poetic"],
+          "high": "Has a vivid imagination, gets absorbed in fantasy",
+          "low": "Practical, grounded, prefers facts to imagination"
+        },
+        {
+          "id": "O2",
+          "name": "Aesthetics",
+          "description": "Appreciation of beauty, art, and form",
+          "keywords": ["aesthetic", "artistic", "appreciative", "sensitive", "refined", "tasteful", "cultured", "beautiful", "elegant", "musical", "poetic", "graceful"],
+          "high": "Deeply moved by art and beauty",
+          "low": "Indifferent to artistic expression"
+        },
+        {
+          "id": "O3",
+          "name": "Feelings",
+          "description": "Receptivity to inner emotions, emotional awareness",
+          "keywords": ["emotional", "sensitive", "passionate", "introspective", "aware", "empathetic", "feeling", "expressive", "tender", "warm", "responsive", "deep"],
+          "high": "Experiences emotions fully, values emotional life",
+          "low": "Detached from emotions, values rationality"
+        },
+        {
+          "id": "O4",
+          "name": "Actions",
+          "description": "Willingness to try new things, preference for variety",
+          "keywords": ["adventurous", "experimental", "versatile", "novel", "curious", "exploratory", "unconventional", "daring", "spontaneous", "bold", "willing", "open"],
+          "high": "Prefers variety, seeks new experiences",
+          "low": "Prefers routine, sticks to the familiar"
+        },
+        {
+          "id": "O5",
+          "name": "Ideas",
+          "description": "Intellectual curiosity, interest in abstract concepts",
+          "keywords": ["intellectual", "curious", "analytical", "philosophical", "theoretical", "abstract", "conceptual", "investigative", "thoughtful", "deep", "inquisitive", "scholarly"],
+          "high": "Curious about ideas, enjoys philosophical discussion",
+          "low": "Practical, prefers concrete problems"
+        },
+        {
+          "id": "O6",
+          "name": "Values",
+          "description": "Openness to re-examining values, tolerance",
+          "keywords": ["tolerant", "liberal", "open-minded", "progressive", "rebellious", "nonconforming", "unconventional", "flexible", "broad-minded", "accepting", "inclusive", "free-thinking"],
+          "high": "Questions authority, re-examines social norms",
+          "low": "Conservative, accepts traditional values"
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Conscientiousness",
+      "description": "Organization, discipline, reliability, goal-directed behavior",
+      "facets": [
+        {
+          "id": "C1",
+          "name": "Competence",
+          "description": "Self-efficacy, belief in one's capability",
+          "keywords": ["capable", "efficient", "competent", "confident", "effective", "skilled", "proficient", "able", "resourceful", "accomplished", "adept", "expert"],
+          "high": "Confident in abilities, handles tasks well",
+          "low": "Doubts own competence"
+        },
+        {
+          "id": "C2",
+          "name": "Order",
+          "description": "Preference for organization and structure",
+          "keywords": ["organized", "orderly", "systematic", "structured", "methodical", "neat", "tidy", "precise", "careful", "meticulous", "disciplined", "planned"],
+          "high": "Well-organized, keeps things in order",
+          "low": "Disorganized, prefers flexibility"
+        },
+        {
+          "id": "C3",
+          "name": "Dutifulness",
+          "description": "Sense of obligation, ethical adherence",
+          "keywords": ["dutiful", "responsible", "reliable", "ethical", "conscientious", "dependable", "trustworthy", "faithful", "committed", "dedicated", "principled", "moral"],
+          "high": "Strong sense of duty, follows through",
+          "low": "Casual about obligations"
+        },
+        {
+          "id": "C4",
+          "name": "Achievement Striving",
+          "description": "Drive for excellence and accomplishment",
+          "keywords": ["ambitious", "driven", "determined", "industrious", "persevering", "goal-oriented", "hardworking", "achievement-focused", "relentless", "tenacious", "focused", "motivated"],
+          "high": "Driven to achieve, sets high standards",
+          "low": "Content with minimal effort"
+        },
+        {
+          "id": "C5",
+          "name": "Self-Discipline",
+          "description": "Ability to follow through on tasks despite distraction",
+          "keywords": ["disciplined", "focused", "persistent", "dedicated", "consistent", "steady", "resolute", "committed", "thorough", "diligent", "unwavering", "resolved"],
+          "high": "Gets things done, stays on task",
+          "low": "Procrastinates, struggles to complete tasks"
+        },
+        {
+          "id": "C6",
+          "name": "Deliberation",
+          "description": "Careful consideration before acting",
+          "keywords": ["cautious", "deliberate", "thoughtful", "prudent", "careful", "measured", "considered", "strategic", "reflective", "calculated", "patient", "wary"],
+          "high": "Thinks before acting, avoids impulsive decisions",
+          "low": "Impulsive, acts without thinking"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Extraversion",
+      "description": "Social energy, assertiveness, positive emotionality",
+      "facets": [
+        {
+          "id": "E1",
+          "name": "Warmth",
+          "description": "Interpersonal closeness, affection",
+          "keywords": ["warm", "affectionate", "friendly", "cordial", "welcoming", "kind", "sociable", "approachable", "amiable", "genial", "companionable", "caring"],
+          "high": "Warm and affectionate toward others",
+          "low": "Reserved, maintains distance"
+        },
+        {
+          "id": "E2",
+          "name": "Gregariousness",
+          "description": "Preference for company and social situations",
+          "keywords": ["sociable", "outgoing", "gregarious", "extroverted", "convivial", "social", "lively", "talkative", "engaging", "charismatic", "crowd-loving", "energetic"],
+          "high": "Enjoys company, prefers being around people",
+          "low": "Prefers solitude or small groups"
+        },
+        {
+          "id": "E3",
+          "name": "Assertiveness",
+          "description": "Comfort with leadership, speaking up",
+          "keywords": ["assertive", "dominant", "forceful", "bold", "commanding", "decisive", "leadership", "confident", "outspoken", "direct", "influential", "persuasive"],
+          "high": "Takes charge, comfortable leading",
+          "low": "Hesitant to speak up, prefers following"
+        },
+        {
+          "id": "E4",
+          "name": "Activity",
+          "description": "Pace of living, energy level",
+          "keywords": ["energetic", "active", "dynamic", "vigorous", "fast-paced", "driven", "spirited", "lively", "restless", "industrious", "busy", "high-energy"],
+          "high": "Fast-paced, always on the move",
+          "low": "Leisurely, unhurried"
+        },
+        {
+          "id": "E5",
+          "name": "Excitement-Seeking",
+          "description": "Desire for stimulation and thrills",
+          "keywords": ["thrill-seeking", "adventurous", "excitable", "stimulated", "daring", "risk-taking", "bold", "fearless", "wild", "intense", "stimulation-loving", "uninhibited"],
+          "high": "Craves excitement, takes risks",
+          "low": "Prefers calm, avoids thrills"
+        },
+        {
+          "id": "E6",
+          "name": "Positive Emotions",
+          "description": "Tendency to experience joy, enthusiasm",
+          "keywords": ["cheerful", "enthusiastic", "joyful", "optimistic", "upbeat", "happy", "exuberant", "merry", "jovial", "buoyant", "radiant", "elated"],
+          "high": "Experiences frequent positive emotions",
+          "low": "Less prone to enthusiasm, more even-keeled"
+        }
+      ]
+    },
+    {
+      "id": "A",
+      "name": "Agreeableness",
+      "description": "Cooperation, trust, compassion, social harmony",
+      "facets": [
+        {
+          "id": "A1",
+          "name": "Trust",
+          "description": "Belief in others' good intentions",
+          "keywords": ["trusting", "faithful", "believing", "optimistic-about-others", "credulous", "confident-in-others", "unsuspecting", "forgiving", "accepting", "guileless", "sincere", "open"],
+          "high": "Assumes others have good intentions",
+          "low": "Cynical, suspicious of motives"
+        },
+        {
+          "id": "A2",
+          "name": "Straightforwardness",
+          "description": "Honesty, frankness in communication",
+          "keywords": ["honest", "frank", "direct", "straightforward", "candid", "sincere", "truthful", "genuine", "transparent", "open", "blunt", "plain-spoken"],
+          "high": "Speaks directly, avoids manipulation",
+          "low": "Willing to use flattery, manipulates"
+        },
+        {
+          "id": "A3",
+          "name": "Altruism",
+          "description": "Active concern for others' welfare",
+          "keywords": ["altruistic", "helpful", "generous", "caring", "compassionate", "selfless", "benevolent", "giving", "supportive", "nurturing", "charitable", "kind"],
+          "high": "Genuinely concerned for others' well-being",
+          "low": "Self-interested, less concerned with others"
+        },
+        {
+          "id": "A4",
+          "name": "Compliance",
+          "description": "Response to conflict, willingness to yield",
+          "keywords": ["cooperative", "accommodating", "yielding", "peaceable", "diplomatic", "agreeable", "conciliatory", "patient", "tolerant", "flexible", "collaborative", "harmonious"],
+          "high": "Avoids conflict, yields in disagreements",
+          "low": "Competitive, aggressive in conflicts"
+        },
+        {
+          "id": "A5",
+          "name": "Modesty",
+          "description": "Humility, lack of self-promotion",
+          "keywords": ["humble", "modest", "unassuming", "self-effacing", "unpretentious", "down-to-earth", "grounded", "unassuming", "quiet", "reserved", "un boastful", "simple"],
+          "high": "Humble, does not seek spotlight",
+          "low": "Self-promoting, believes they are superior"
+        },
+        {
+          "id": "A6",
+          "name": "Tender-Mindedness",
+          "description": "Empathy, emotional sensitivity to others",
+          "keywords": ["empathetic", "tender", "sympathetic", "sensitive", "compassionate", "gentle", "understanding", "caring", "soft-hearted", "humane", "kind", "nurturing"],
+          "high": "Easily moved by others' suffering",
+          "low": "Hard-nosed, tough-minded, pragmatic"
+        }
+      ]
+    },
+    {
+      "id": "N",
+      "name": "Neuroticism",
+      "description": "Emotional instability, anxiety, negative emotionality",
+      "facets": [
+        {
+          "id": "N1",
+          "name": "Anxiety",
+          "description": "Worry, fearfulness, tension",
+          "keywords": ["anxious", "worried", "fearful", "tense", "nervous", "apprehensive", "uneasy", "stressed", "restless", "jittery", "panicked", "high-strung"],
+          "high": "Frequently worried, fears the worst",
+          "low": "Calm, rarely anxious"
+        },
+        {
+          "id": "N2",
+          "name": "Angry Hostility",
+          "description": "Tendency toward anger, frustration",
+          "keywords": ["angry", "irritable", "frustrated", "hot-tempered", "aggressive", "hostile", "bitter", "resentful", "volatile", "combative", "furious", "enraged"],
+          "high": "Easily angered, feels frustrated often",
+          "low": "Rarely gets angry, stays composed"
+        },
+        {
+          "id": "N3",
+          "name": "Depression",
+          "description": "Sadness, hopelessness, loneliness",
+          "keywords": ["sad", "melancholic", "hopeless", "lonely", "dejected", "gloomy", "despondent", "blue", "down", "empty", "despairing", "withdrawn"],
+          "high": "Prone to sadness, feelings of emptiness",
+          "low": "Rarely feels down, content"
+        },
+        {
+          "id": "N4",
+          "name": "Self-Consciousness",
+          "description": "Social anxiety, embarrassment, shyness",
+          "keywords": ["shy", "self-conscious", "embarrassed", "insecure", "timid", "awkward", "uncomfortable", "bashful", "hesitant", "modest", "retiring", "diffident"],
+          "high": "Uncomfortable in social situations, fears judgment",
+          "low": "Confident in social settings"
+        },
+        {
+          "id": "N5",
+          "name": "Impulsiveness",
+          "description": "Acting on urges, difficulty resisting temptation",
+          "keywords": ["impulsive", "reckless", "spontaneous", "uncontrolled", "hasty", "rash", "compulsive", "erratic", "unpredictable", "careless", "feckless", "sudden"],
+          "high": "Acts on impulse, gives in to urges",
+          "low": "Resists temptation, controlled"
+        },
+        {
+          "id": "N6",
+          "name": "Vulnerability",
+          "description": "Difficulty coping with stress",
+          "keywords": ["vulnerable", "fragile", "overwhelmed", "helpless", "stressed", "breakable", "sensitive", "weak", "defenseless", "exposed", "susceptible", "tender"],
+          "high": "Overwhelmed by stress, panics under pressure",
+          "low": "Handles stress well, remains calm"
+        }
+      ]
+    }
+  ]
+}

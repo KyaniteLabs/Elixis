@@ -7,6 +7,7 @@ themes/traits for each entity. Gracefully degrades when offline.
 import json
 import re
 import time
+import urllib.parse
 import urllib.request
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -68,8 +69,50 @@ def _extract_themes_from_text(text):
     return sorted(found)
 
 
+_WIKI_SPARQL = "https://query.wikidata.org/sparql"
+_SPARQL_TIMEOUT = 8
+
+
+def _wikidata_lookup(name):
+    """Query Wikidata for structured entity data. Returns dict or None."""
+    safe_name = name.replace('"', '\\"')
+    query = f"""SELECT ?item ?itemDescription (GROUP_CONCAT(DISTINCT ?typeLabel; separator=", ") AS ?types) WHERE {{
+  ?item rdfs:label "{safe_name}"@en .
+  ?item wdt:P31 ?type .
+  ?type rdfs:label ?typeLabel . FILTER(LANG(?typeLabel) = "en")
+  OPTIONAL {{ ?item schema:description ?itemDescription . FILTER(LANG(?itemDescription) = "en") }}
+  FILTER EXISTS {{
+    ?item wdt:P31 ?t .
+    VALUES ?t {{ wd:Q5 wd:Q95074 wd:Q15632617 wd:Q11424 wd:Q5398426 }}
+  }}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" . }}
+}} GROUP BY ?item ?itemDescription LIMIT 3"""
+    params = urllib.parse.urlencode({"query": query, "format": "json"}).encode()
+    req = urllib.request.Request(
+        _WIKI_SPARQL,
+        data=params,
+        headers={
+            "User-Agent": "Soulcraft/1.0 (https://github.com/KyaniteLabs/SoulCraft)",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=_SPARQL_TIMEOUT) as resp:
+            data = json.loads(resp.read())
+            results = data.get("results", {}).get("bindings", [])
+            if not results:
+                return None
+            best = results[0]
+            description = best.get("itemDescription", {}).get("value", "")
+            types_str = best.get("types", {}).get("value", "")
+            types = [t.strip() for t in types_str.split(",") if t.strip()] if types_str else []
+            return {"description": description, "types": types[:3]}
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError, TimeoutError):
+        return None
+
+
 def _enrich_single(entity):
-    """Fetch Wikipedia summary for one entity. Returns (index, summary_text) or (index, "")."""
+    """Fetch Wikipedia summary for one entity. Falls back to Wikidata."""
     name = entity.get("canonical", "")
     if not name:
         return ""
@@ -81,6 +124,12 @@ def _enrich_single(entity):
 
     if not summary and entity.get("source"):
         summary = _wiki_summary(entity["source"])
+
+    # Wikidata fallback for structured data
+    if not summary:
+        wd = _wikidata_lookup(name)
+        if wd and wd.get("description"):
+            return wd["description"]
 
     return summary
 
