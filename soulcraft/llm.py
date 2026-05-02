@@ -21,6 +21,10 @@ CLASSIFY_MODEL = os.environ.get("LLM_CLASSIFY_MODEL", "")
 PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
 API_KEY = os.environ.get("LLM_API_KEY", "")
 
+# Cached availability check (avoids hammering Ollama on every call)
+_availability_cache = {"result": None, "expires": 0}
+_AVAILABILITY_TTL = 10  # seconds
+
 
 def _call_ollama(messages, model=None, max_tokens=4096, think=True):
     """Call Ollama's chat API. Returns a result dict with content + telemetry."""
@@ -159,16 +163,23 @@ def chat(messages, model=None, max_tokens=None, think=True):
 
 
 def is_available():
-    """Check if the LLM service is reachable."""
+    """Check if the LLM service is reachable. Results cached for 10s."""
+    now = time.time()
+    if _availability_cache["result"] is not None and now < _availability_cache["expires"]:
+        return _availability_cache["result"]
     try:
         url = f"{OLLAMA_BASE}/api/tags" if PROVIDER == "ollama" else None
         if not url:
-            return bool(API_KEY)
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            return resp.status == 200
+            result = bool(API_KEY)
+        else:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                result = resp.status == 200
     except Exception:
-        return False
+        result = False
+    _availability_cache["result"] = result
+    _availability_cache["expires"] = now + _AVAILABILITY_TTL
+    return result
 
 
 def chat_stream(messages, model=None):
@@ -270,5 +281,7 @@ def chat_stream(messages, model=None):
                         "provider": PROVIDER,
                     }
 
-    except (urllib.error.URLError, OSError):
+    except (urllib.error.URLError, OSError) as e:
+        yield {"type": "error", "error": str(e)}
+        yield {"type": "soulmd_done", "data": {"length": 0, "source": "error"}}
         return

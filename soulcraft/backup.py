@@ -171,10 +171,7 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
                 members.append(member)
             tar.extractall(path=extract_dir, members=members)
 
-            # Count restored files
-            for member in tar.getmembers():
-                if member.isfile():
-                    result["files_restored"] += 1
+            result["files_restored"] = sum(1 for m in members if m.isfile())
 
         result["success"] = True
 

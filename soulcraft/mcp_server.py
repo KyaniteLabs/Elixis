@@ -192,6 +192,8 @@ def _tool_create_soul(args):
 
 def _tool_extract_entities(args):
     text = args.get("text", "")
+    if not text or not text.strip():
+        return {"content": [{"type": "text", "text": "Error: 'text' must be a non-empty string"}], "isError": True}
     entities = extract_entities(text)
     out = []
     for e in entities[:15]:
@@ -205,6 +207,8 @@ def _tool_extract_entities(args):
 
 def _tool_analyze_patterns(args):
     text = args.get("text", "")
+    if not text or not text.strip():
+        return {"content": [{"type": "text", "text": "Error: 'text' must be a non-empty string"}], "isError": True}
     entities = extract_entities(text)
     graph = build_pattern_graph(entities, text)
     result = {
@@ -223,6 +227,10 @@ def _tool_translate(args):
     text = args.get("text", "")
     target_lang = args.get("target_lang", "")
     source_lang = args.get("source_lang", "en")
+    if not text or not text.strip():
+        return {"content": [{"type": "text", "text": "Error: 'text' must be a non-empty string"}], "isError": True}
+    if not target_lang or len(target_lang) != 2:
+        return {"content": [{"type": "text", "text": "Error: 'target_lang' must be a 2-letter language code"}], "isError": True}
     result = translate_text(text, target_lang, source_lang)
     if result.get("success"):
         return {"content": [{"type": "text", "text": result.get("translated_text", "")}]}
@@ -236,6 +244,8 @@ def _tool_research_name(args):
     name = args.get("name", "")
     context = args.get("context", "")
     generate_variants = args.get("generate_variants", True)
+    if not name or not name.strip():
+        return {"content": [{"type": "text", "text": "Error: 'name' must be a non-empty string"}], "isError": True}
     report = research_name(name, context, generate_variants)
     summary = {
         "input_name": report.get("input_name"),
