@@ -17,6 +17,7 @@ _PROJECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 CACHE_DIR = os.environ.get("SOULCRAFT_CACHE_DIR", os.path.join(_PROJECT_DIR, "translations"))
 CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
 CACHE_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB max total cache size
+MAX_TRANSLATE_TEXT_LENGTH = 50000  # 50K chars max for translation input
 
 
 def _get_cache_key(text: str, target_lang: str, source_lang: str) -> str:
@@ -211,6 +212,15 @@ def translate_text(
             "source_lang": source_lang,
             "target_lang": target_lang,
             "model": None,
+        }
+
+    if len(text) > MAX_TRANSLATE_TEXT_LENGTH:
+        return {
+            "translated_text": "",
+            "success": False,
+            "error": f"Text too long ({len(text)} chars, max {MAX_TRANSLATE_TEXT_LENGTH})",
+            "source_lang": source_lang,
+            "target_lang": target_lang,
         }
 
     if target_lang == source_lang:

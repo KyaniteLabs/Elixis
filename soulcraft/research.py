@@ -6,6 +6,7 @@ themes/traits for each entity. Gracefully degrades when offline.
 
 import json
 import re
+import time
 import urllib.request
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -89,45 +90,47 @@ def _enrich_single(entity):
 def enrich_entities(entities):
     """Enrich entity list with Wikipedia summaries and extracted themes.
 
-    Modifies entities in place. Gracefully skips entities that can't be
-    enriched. Returns the same list (mutated).
+    Returns a new list with enriched copies. Does not mutate the input.
 
     Args:
         entities: list of entity dicts from extract_entities()
 
     Returns:
-        The same list, with 'description' and 'themes' updated where possible.
+        New list with 'description' and 'themes' updated where possible.
     """
     if not entities:
         return entities
 
     batch = entities[:_MAX_ENTITIES]
+    enriched = [dict(e) for e in entities]
 
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = {pool.submit(_enrich_single, entity): i for i, entity in enumerate(batch)}
-        for future in as_completed(futures):
-            idx = futures[future]
-            entity = batch[idx]
-            try:
-                summary = future.result()
-            except Exception:
-                summary = ""
+        try:
+            for future in as_completed(futures, timeout=30):
+                idx = futures[future]
+                entity = enriched[idx]
+                try:
+                    summary = future.result()
+                except Exception:
+                    summary = ""
 
-            if summary:
-                entity["description"] = summary
-                wiki_themes = _extract_themes_from_text(summary)
-                existing = set(entity.get("themes", []))
-                merged = existing | set(wiki_themes)
-                if merged:
-                    entity["themes"] = sorted(merged)
+                if summary:
+                    entity["description"] = summary
+                    wiki_themes = _extract_themes_from_text(summary)
+                    existing = set(entity.get("themes", []))
+                    merged = existing | set(wiki_themes)
+                    if merged:
+                        entity["themes"] = sorted(merged)
 
-            # Also extract themes from traits if not already present
-            existing_themes = set(entity.get("themes", []))
-            traits_text = " ".join(entity.get("traits", []))
-            if traits_text:
-                trait_themes = _extract_themes_from_text(traits_text)
-                merged = existing_themes | set(trait_themes)
-                if merged:
-                    entity["themes"] = sorted(merged)
+                existing_themes = set(entity.get("themes", []))
+                traits_text = " ".join(entity.get("traits", []))
+                if traits_text:
+                    trait_themes = _extract_themes_from_text(traits_text)
+                    merged = existing_themes | set(trait_themes)
+                    if merged:
+                        entity["themes"] = sorted(merged)
+        except TimeoutError:
+            pass
 
-    return entities
+    return enriched
