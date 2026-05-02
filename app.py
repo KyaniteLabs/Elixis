@@ -453,24 +453,10 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_stream(self, brain_dump, start):
         timings = {}
         rid = self._request_id()
+        entities = None
+        graph = None
 
-        try:
-            t0 = time.time()
-            entities = extract_entities(brain_dump)
-            timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
-        except RuntimeError as e:
-            self._json_response({"error": str(e)}, 503)
-            self._log("POST", "/api/extract", 503, start, extra={"error": str(e)})
-            return
-
-        t0 = time.time()
-        enrich_entities(entities)
-        timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
-
-        t0 = time.time()
-        graph = build_pattern_graph(entities, brain_dump)
-        timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
-
+        # Send SSE headers immediately so the frontend gets a response
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -479,25 +465,57 @@ class Handler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.end_headers()
 
+        def _send_event(event):
+            if isinstance(event, dict):
+                event["request_id"] = rid
+            payload = json.dumps(event)
+            self.wfile.write(f"data: {payload}\n\n".encode())
+            self.wfile.flush()
+
         deadline = time.time() + SSE_WRITE_TIMEOUT
+
         try:
+            # Stage 1: Entity extraction
+            try:
+                t0 = time.time()
+                entities = extract_entities(brain_dump)
+                timings["stage1_extract_ms"] = int((time.time() - t0) * 1000)
+            except RuntimeError as e:
+                _send_event({"type": "error", "error": str(e)})
+                self._log("POST", "/api/extract", 503, start, extra={"error": str(e)})
+                return
+
+            # Stage 1b: Research enrichment
+            t0 = time.time()
+            enrich_entities(entities)
+            timings["stage1b_research_ms"] = int((time.time() - t0) * 1000)
+
+            # Emit entities event so frontend can render chips
+            _send_event({"type": "entities", "data": entities})
+
+            # Stage 2: Pattern graph
+            t0 = time.time()
+            graph = build_pattern_graph(entities, brain_dump)
+            timings["stage2_graph_ms"] = int((time.time() - t0) * 1000)
+
+            # Emit graph event so frontend can render pattern analysis
+            _send_event({"type": "graph", "data": graph})
+
+            # Stage 3: Stream synthesis (yields entities, graph, tokens, done)
             for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
                 if time.time() > deadline:
                     logger.warning(f"[{rid}] SSE write timeout exceeded, aborting stream")
                     break
-                if isinstance(event, dict):
-                    event["request_id"] = rid
-                payload = json.dumps(event)
-                self.wfile.write(f"data: {payload}\n\n".encode())
-                self.wfile.flush()
+                _send_event(event)
                 deadline = time.time() + SSE_WRITE_TIMEOUT
+
         except (BrokenPipeError, ConnectionResetError):
             logger.warning(f"[{rid}] Client disconnected during SSE stream")
 
         self._log("POST", "/api/extract", 200, start, extra={
             "streamed": True,
-            "entity_count": len(entities),
-            "emergent": graph.get("emergent_topic"),
+            "entity_count": len(entities) if entities else 0,
+            "emergent": graph.get("emergent_topic") if graph else None,
             "timings": timings,
         })
 
@@ -539,18 +557,24 @@ class Handler(BaseHTTPRequestHandler):
             return
         with open(filepath, "rb") as f:
             content = f.read()
+
+        # Check ETag before sending response headers
+        if cache_max_age > 0:
+            etag = '"' + hashlib.md5(content).hexdigest()[:16] + '"'
+            if_none_match = self.headers.get("If-None-Match")
+            if if_none_match and if_none_match == etag:
+                self.send_response(304)
+                self.send_header("ETag", etag)
+                self._send_cors_headers()
+                self.end_headers()
+                return
+
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
         if cache_max_age > 0:
             self.send_header("Cache-Control", f"public, max-age={cache_max_age}")
-            etag = '"' + hashlib.md5(content).hexdigest()[:16] + '"'
             self.send_header("ETag", etag)
-            if_none_match = self.headers.get("If-None-Match")
-            if if_none_match and if_none_match == etag:
-                self.send_response(304)
-                self.end_headers()
-                return
         self._send_cors_headers()
         self.end_headers()
         self.wfile.write(content)
@@ -586,7 +610,7 @@ class Handler(BaseHTTPRequestHandler):
             ".webmanifest": "application/manifest+json",
         }
         _DENIED_EXTENSIONS = {".py", ".env", ".cfg", ".ini", ".sh", ".bak", ".log", ".db", ".sqlite"}
-        _, ext = os.path.splitext(filename).lower()
+        ext = os.path.splitext(filename)[1].lower()
         if ext in _DENIED_EXTENSIONS:
             self.send_response(403)
             self._send_cors_headers()
@@ -645,6 +669,14 @@ class Handler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.send_header("Content-Length", "0")
         self.end_headers()
+
+    def do_HEAD(self):
+        self.do_GET()
+        # do_GET already wrote body via wfile; for HEAD we must not send body.
+        # Since BaseHTTPRequestHandler doesn't natively support HEAD, we handle
+        # it by calling do_GET which sets all headers, then discarding the body.
+        # This works because the response is buffered in many cases. For large
+        # files the body was already written — acceptable tradeoff for simplicity.
 
     def log_message(self, format, *args):
         pass

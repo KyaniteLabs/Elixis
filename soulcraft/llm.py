@@ -211,11 +211,16 @@ def is_available():
     if _availability_cache["result"] is not None and now < _availability_cache["expires"]:
         return _availability_cache["result"]
     try:
-        url = f"{cfg.base_url}/api/tags" if cfg.provider == "ollama" else None
-        if not url:
-            result = bool(cfg.api_key)
-        else:
+        if cfg.provider == "ollama":
+            url = f"{cfg.base_url}/api/tags"
             req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                result = resp.status == 200
+        else:
+            # OpenAI-compatible: hit /models or /v1/models
+            url = f"{cfg.base_url}/models"
+            headers = {"Authorization": f"Bearer {cfg.api_key}"} if cfg.api_key else {}
+            req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=3) as resp:
                 result = resp.status == 200
     except Exception:
@@ -226,15 +231,92 @@ def is_available():
 
 
 def chat_stream(messages, model=None):
-    """Stream a chat completion from Ollama, yielding tokens as they arrive.
+    """Stream a chat completion, yielding tokens as they arrive.
+
+    Supports both Ollama and OpenAI-compatible APIs (selected by LLM_PROVIDER).
 
     Yields dicts:
       {"type": "token", "content": "..."} — each token
       {"type": "thinking", "content": "..."} — model reasoning (if present)
       {"type": "done", "latency_ms": N} — final event
 
-    If Ollama is unavailable, yields nothing.
+    If unavailable, yields nothing.
     """
+    if cfg.provider == "openai":
+        yield from _chat_stream_openai(messages, model)
+    else:
+        yield from _chat_stream_ollama(messages, model)
+
+
+def _chat_stream_openai(messages, model=None):
+    """Stream from an OpenAI-compatible API (/v1/chat/completions with stream=true)."""
+    url = f"{cfg.base_url}/chat/completions"
+    used_model = model or cfg.default_model
+    payload = json.dumps({
+        "model": used_model,
+        "messages": messages,
+        "stream": True,
+        "max_tokens": 2048,
+    }).encode()
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if cfg.api_key:
+        headers["Authorization"] = f"Bearer {cfg.api_key}"
+
+    req = urllib.request.Request(url, data=payload, headers=headers)
+    start = time.time()
+    full_response = []
+
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            for raw_line in resp:
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line or not line.startswith("data: "):
+                    continue
+                data_str = line[6:]
+                if data_str == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(data_str)
+                except json.JSONDecodeError:
+                    continue
+
+                delta = chunk.get("choices", [{}])[0].get("delta", {})
+                content = delta.get("content", "")
+
+                if content:
+                    full_response.append(content)
+                    yield {"type": "token", "content": content}
+
+        latency_ms = int((time.time() - start) * 1000)
+        prompt_text = messages[-1].get("content", "") if messages else ""
+        full_text = "".join(full_response)
+
+        from .traces import save_trace
+        save_trace(
+            prompt=prompt_text,
+            response=full_text,
+            latency_ms=latency_ms,
+            model=used_model,
+            extra={"provider": "openai-stream"},
+        )
+        yield {
+            "type": "done",
+            "latency_ms": latency_ms,
+            "tokens_in": 0,
+            "tokens_out": len(full_response),
+            "tokens_per_sec": round(len(full_response) / (latency_ms / 1000), 1) if latency_ms > 0 else 0,
+            "model": used_model,
+            "provider": "openai",
+        }
+    except (urllib.error.URLError, OSError, TimeoutError) as e:
+        import logging
+        logging.getLogger("soulcraft.llm").warning(f"OpenAI stream failed: {e}")
+
+
+def _chat_stream_ollama(messages, model=None):
+    """Stream from Ollama's native API (/api/chat with stream=true)."""
     url = f"{cfg.base_url}/api/chat"
     payload = json.dumps({
         "model": model or cfg.default_model,

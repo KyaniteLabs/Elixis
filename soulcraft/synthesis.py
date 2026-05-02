@@ -124,9 +124,6 @@ def synthesize_soulmd_stream(entities, graph, stage_timings=None):
     """
     timings = stage_timings or {}
 
-    yield {"type": "entities", "data": entities}
-    yield {"type": "graph", "data": graph}
-
     if not llm_available():
         soulmd = _template_synthesize(entities, graph)
         yield {"type": "soulmd_token", "content": soulmd}
