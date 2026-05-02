@@ -19,6 +19,11 @@ def _llm_extract_entities(text):
     if not is_available():
         return []
 
+    _MAX_EXTRACT_CHARS = 4000
+    raw = text.strip()
+    truncated = raw[:_MAX_EXTRACT_CHARS]
+    suffix = "\n... [text truncated for analysis]" if len(raw) > _MAX_EXTRACT_CHARS else ""
+
     system = (
         "You are a cultural reference analyzer. Extract entities from text. "
         "Respond with ONLY a JSON array. No markdown, no explanation."
@@ -34,7 +39,7 @@ For each entity, return:
 - traits: 2-4 specific personality phrases (e.g. "paranoid ambition", "cold calculation")
 - related: 2-3 similar characters/figures
 
-Text: {text.strip()}
+Text: {truncated}{suffix}
 
 Output JSON array only:
 [{{"name": "...", "type": "...", "source": "...", "themes": [...], "traits": [...], "related": [...]}}]"""

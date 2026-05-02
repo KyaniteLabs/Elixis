@@ -57,9 +57,8 @@ logger = get_logger("soulcraft.server")
 _pipeline_semaphore = threading.Semaphore(MAX_CONCURRENT_PIPELINES)
 
 # Graceful shutdown: track in-flight requests and drain on signal
-_active_requests = threading.Semaphore(0)  # count of in-flight requests
 _active_count = 0
-_active_count_lock = threading.Lock()
+_drain_condition = threading.Condition(threading.Lock())
 _shutdown_requested = threading.Event()
 SHUTDOWN_DRAIN_TIMEOUT = int(os.environ.get("SHUTDOWN_DRAIN_TIMEOUT", "30"))
 
@@ -68,7 +67,7 @@ def _request_enter():
     """Track a request entering processing. Returns False if shutting down."""
     if _shutdown_requested.is_set():
         return False
-    with _active_count_lock:
+    with _drain_condition:
         global _active_count
         _active_count += 1
     return True
@@ -76,12 +75,10 @@ def _request_enter():
 
 def _request_leave():
     """Track a request finishing processing."""
-    with _active_count_lock:
+    with _drain_condition:
         global _active_count
         _active_count -= 1
-    # If shutdown is waiting, pulse the event
-    if _shutdown_requested.is_set():
-        _shutdown_requested.set()
+        _drain_condition.notify_all()
 
 
 def run_pipeline(brain_dump):
@@ -560,9 +557,25 @@ class Handler(BaseHTTPRequestHandler):
             ".jpg": "image/jpeg",
             ".svg": "image/svg+xml",
             ".ico": "image/x-icon",
+            ".json": "application/json",
+            ".webp": "image/webp",
+            ".woff2": "font/woff2",
+            ".woff": "font/woff",
+            ".webmanifest": "application/manifest+json",
         }
-        _, ext = os.path.splitext(filename)
-        content_type = content_types.get(ext, "application/octet-stream")
+        _DENIED_EXTENSIONS = {".py", ".env", ".cfg", ".ini", ".sh", ".bak", ".log", ".db", ".sqlite"}
+        _, ext = os.path.splitext(filename).lower()
+        if ext in _DENIED_EXTENSIONS:
+            self.send_response(403)
+            self._send_cors_headers()
+            self.end_headers()
+            return
+        content_type = content_types.get(ext)
+        if content_type is None:
+            self.send_response(403)
+            self._send_cors_headers()
+            self.end_headers()
+            return
         self._serve_file(filename, content_type)
 
     def do_OPTIONS(self):
@@ -615,16 +628,17 @@ def main():
     finally:
         # Drain in-flight requests
         drain_start = time.time()
-        with _active_count_lock:
+        with _drain_condition:
             remaining = _active_count
         if remaining > 0:
             logger.info(f"Waiting for {remaining} in-flight requests to complete (max {SHUTDOWN_DRAIN_TIMEOUT}s)...")
             while time.time() - drain_start < SHUTDOWN_DRAIN_TIMEOUT:
-                with _active_count_lock:
+                with _drain_condition:
                     if _active_count <= 0:
                         break
-                time.sleep(0.5)
-            with _active_count_lock:
+                    remaining_ms = max(0, (SHUTDOWN_DRAIN_TIMEOUT - (time.time() - drain_start)) * 1000)
+                    _drain_condition.wait(timeout=min(remaining_ms / 1000, 1.0))
+            with _drain_condition:
                 final = _active_count
             if final > 0:
                 logger.warning(f"Drain timeout exceeded, {final} requests still active")
