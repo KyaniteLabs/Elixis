@@ -8,6 +8,7 @@ import json
 import re
 import urllib.request
 import urllib.error
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 _WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
 _TIMEOUT = 4  # seconds per request
@@ -68,6 +69,23 @@ def _extract_themes_from_text(text):
     return sorted(found)
 
 
+def _enrich_single(entity):
+    """Fetch Wikipedia summary for one entity. Returns (index, summary_text) or (index, "")."""
+    name = entity.get("canonical", "")
+    if not name:
+        return ""
+
+    summary = _wiki_summary(name)
+
+    if not summary and entity.get("source"):
+        summary = _wiki_summary(f"{name} ({entity['source']})")
+
+    if not summary and entity.get("source"):
+        summary = _wiki_summary(entity["source"])
+
+    return summary
+
+
 def enrich_entities(entities):
     """Enrich entity list with Wikipedia summaries and extracted themes.
 
@@ -83,37 +101,33 @@ def enrich_entities(entities):
     if not entities:
         return entities
 
-    for entity in entities[:_MAX_ENTITIES]:
-        name = entity.get("canonical", "")
-        if not name:
-            continue
+    batch = entities[:_MAX_ENTITIES]
 
-        summary = _wiki_summary(name)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {pool.submit(_enrich_single, entity): i for i, entity in enumerate(batch)}
+        for future in as_completed(futures):
+            idx = futures[future]
+            entity = batch[idx]
+            try:
+                summary = future.result()
+            except Exception:
+                summary = ""
 
-        # If direct name fails, try "Name (source)" format
-        if not summary and entity.get("source"):
-            summary = _wiki_summary(f"{name} ({entity['source']})")
+            if summary:
+                entity["description"] = summary
+                wiki_themes = _extract_themes_from_text(summary)
+                existing = set(entity.get("themes", []))
+                merged = existing | set(wiki_themes)
+                if merged:
+                    entity["themes"] = sorted(merged)
 
-        # If still no luck, try the source itself
-        if not summary and entity.get("source"):
-            summary = _wiki_summary(entity["source"])
-
-        if summary:
-            entity["description"] = summary
-            # Merge wiki-found themes with existing ones
-            wiki_themes = _extract_themes_from_text(summary)
-            existing = set(entity.get("themes", []))
-            merged = existing | set(wiki_themes)
-            if merged:
-                entity["themes"] = sorted(merged)
-
-        # Also extract themes from traits if not already present
-        existing_themes = set(entity.get("themes", []))
-        traits_text = " ".join(entity.get("traits", []))
-        if traits_text:
-            trait_themes = _extract_themes_from_text(traits_text)
-            merged = existing_themes | set(trait_themes)
-            if merged:
-                entity["themes"] = sorted(merged)
+            # Also extract themes from traits if not already present
+            existing_themes = set(entity.get("themes", []))
+            traits_text = " ".join(entity.get("traits", []))
+            if traits_text:
+                trait_themes = _extract_themes_from_text(traits_text)
+                merged = existing_themes | set(trait_themes)
+                if merged:
+                    entity["themes"] = sorted(merged)
 
     return entities

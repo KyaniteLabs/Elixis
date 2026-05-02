@@ -97,7 +97,26 @@ class Handler(BaseHTTPRequestHandler):
             self._json_response(get_diagnostics())
             self._log("GET", self.path, 200, start)
         elif self.path == "/api/health":
-            self._json_response({"status": "ok"})
+            llm_ok = False
+            try:
+                from soulcraft.llm import is_available as llm_available
+                llm_ok = llm_available()
+            except Exception:
+                pass
+            disk_ok = True
+            try:
+                if hasattr(os, 'statvfs'):
+                    stat = os.statvfs(os.path.dirname(os.path.abspath(__file__)))
+                    free_gb = (stat.f_bavail * stat.f_frsize) / (1024 ** 3)
+                    disk_ok = free_gb > 0.5
+            except Exception:
+                pass
+            status = "ok" if (llm_ok and disk_ok) else "degraded"
+            self._json_response({
+                "status": status,
+                "llm": "available" if llm_ok else "unavailable",
+                "disk": "ok" if disk_ok else "low",
+            })
         elif self.path == "/api/runs":
             self._json_response({"runs": get_recent_runs(50)})
             self._log("GET", self.path, 200, start)

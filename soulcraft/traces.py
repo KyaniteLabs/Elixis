@@ -20,10 +20,50 @@ _TRACES_DIR = os.path.join(_BASE_DIR, "traces")
 _RUNS_DIR = os.path.join(_BASE_DIR, "runs")
 _REQUESTS_LOG = os.path.join(_BASE_DIR, "requests.log")
 
+_MAX_TRACE_FILES = 200
+_MAX_RUN_FILES = 100
+_MAX_REQUEST_LOG_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+def _rotate_directory(directory, max_files):
+    """Keep only the most recent files in a directory."""
+    try:
+        files = sorted(
+            [f for f in os.listdir(directory) if f.endswith(".json")],
+            reverse=True,
+        )
+        for old_file in files[max_files:]:
+            try:
+                os.remove(os.path.join(directory, old_file))
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
+def _rotate_request_log():
+    """Truncate request log if it exceeds the size cap."""
+    try:
+        if not os.path.isfile(_REQUESTS_LOG):
+            return
+        size = os.path.getsize(_REQUESTS_LOG)
+        if size <= _MAX_REQUEST_LOG_BYTES:
+            return
+        with open(_REQUESTS_LOG) as f:
+            lines = f.readlines()
+        keep = lines[-10000:]
+        with open(_REQUESTS_LOG, "w") as f:
+            f.writelines(keep)
+    except OSError:
+        pass
+
 
 def _ensure_dirs():
     os.makedirs(_TRACES_DIR, exist_ok=True)
     os.makedirs(_RUNS_DIR, exist_ok=True)
+    _rotate_directory(_TRACES_DIR, _MAX_TRACE_FILES)
+    _rotate_directory(_RUNS_DIR, _MAX_RUN_FILES)
+    _rotate_request_log()
 
 
 def save_trace(prompt, response, latency_ms, model="", extra=None):

@@ -12,8 +12,9 @@ from typing import Optional, Dict, List, Generator
 from .llm import chat, chat_stream, is_available
 
 
-# Cache configuration
-CACHE_DIR = os.path.join(os.path.expanduser("~"), ".soulcraft", "translations")
+# Cache configuration — use project-local directory so it persists in Docker
+_PROJECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".soulcraft")
+CACHE_DIR = os.environ.get("SOULCRAFT_CACHE_DIR", os.path.join(_PROJECT_DIR, "translations"))
 CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
 
 
