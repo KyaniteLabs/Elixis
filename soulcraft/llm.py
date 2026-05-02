@@ -16,7 +16,7 @@ import urllib.error
 
 OLLAMA_BASE = os.environ.get("LLM_BASE_URL", "http://localhost:11434")
 FALLBACK_BASE_URL = os.environ.get("LLM_FALLBACK_URL", "")  # Redundant inference server
-DEFAULT_MODEL = os.environ.get("LLM_MODEL", "gemma4")
+DEFAULT_MODEL = os.environ.get("LLM_MODEL", "gemma-4b")
 CLASSIFY_MODEL = os.environ.get("LLM_CLASSIFY_MODEL", "")
 PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
 API_KEY = os.environ.get("LLM_API_KEY", "")

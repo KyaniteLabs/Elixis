@@ -1,0 +1,337 @@
+openapi: "3.1.0"
+info:
+  title: SoulCraft API
+  description: |
+    AI-powered identity synthesis companion for OpenClaw and Soul Spec.
+    Transforms brain dump text into structured SOUL.md identity documents
+    through a 3-stage pipeline: entity extraction, archetypal pattern analysis,
+    and LLM-assisted synthesis.
+  version: "1.0.0"
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  contact:
+    url: https://github.com/KyaniteLabs/SoulCraft
+
+servers:
+  - url: http://localhost:3110
+    description: Local development server
+
+paths:
+  /api/extract:
+    post:
+      summary: Run the full 3-stage pipeline on a brain dump
+      description: |
+        Extracts entities, analyzes archetypal patterns, and synthesizes a
+        SOUL.md document. Supports both JSON and SSE streaming responses.
+      operationId: extractSoul
+      tags: [Pipeline]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brain_dump]
+              properties:
+                brain_dump:
+                  type: string
+                  description: Raw text with references, influences, values
+                stream:
+                  type: boolean
+                  default: false
+                  description: Enable SSE streaming response
+      responses:
+        "200":
+          description: Pipeline result with entities, graph, and SOUL.md
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stage1_entities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Entity"
+                  stage2_graph:
+                    $ref: "#/components/schemas/PatternGraph"
+                  stage3_soulmd:
+                    type: string
+                  timings:
+                    type: object
+                    additionalProperties:
+                      type: integer
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: Invalid input
+        "503":
+          description: LLM unavailable
+
+  /api/translate:
+    post:
+      summary: Translate text to a target language
+      operationId: translateText
+      tags: [Translation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, target_lang]
+              properties:
+                text:
+                  type: string
+                target_lang:
+                  type: string
+                  description: "ISO language code (e.g. 'es', 'fr', 'de')"
+                source_lang:
+                  type: string
+                  default: en
+                soulmd:
+                  type: boolean
+                  default: false
+                  description: Treat input as SOUL.md for structured translation
+      responses:
+        "200":
+          description: Translation result
+
+  /api/detect-language:
+    post:
+      summary: Detect the language of text
+      operationId: detectLanguage
+      tags: [Translation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+      responses:
+        "200":
+          description: Detected language
+
+  /api/translate-stream:
+    post:
+      summary: Stream translation with SSE events
+      operationId: translateStream
+      tags: [Translation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, target_lang]
+              properties:
+                text:
+                  type: string
+                target_lang:
+                  type: string
+                source_lang:
+                  type: string
+                  default: en
+      responses:
+        "200":
+          description: SSE stream of translation events
+
+  /api/naming:
+    post:
+      summary: Research a name with semantic analysis
+      operationId: researchName
+      tags: [Naming]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                context:
+                  type: string
+                generate_variants:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Name research report
+
+  /api/health:
+    get:
+      summary: Health check with LLM and disk status
+      operationId: healthCheck
+      tags: [System]
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                  llm:
+                    type: string
+                    enum: [available, unavailable]
+                  disk:
+                    type: string
+                    enum: [ok, low]
+
+  /api/diagnostics:
+    get:
+      summary: Full diagnostics with recent runs and traces
+      operationId: getDiagnostics
+      tags: [System]
+      responses:
+        "200":
+          description: Diagnostics data
+
+  /api/runs:
+    get:
+      summary: Recent pipeline runs
+      operationId: getRuns
+      tags: [System]
+      responses:
+        "200":
+          description: List of recent runs
+
+  /api/languages:
+    get:
+      summary: Supported translation languages
+      operationId: getLanguages
+      tags: [Translation]
+      responses:
+        "200":
+          description: Language code to name mapping
+
+  /api/translation-cache:
+    get:
+      summary: Translation cache statistics
+      operationId: getCacheStats
+      tags: [System]
+      delete:
+        summary: Clear the translation cache
+        operationId: clearCache
+        responses:
+          "200":
+            description: Cache cleared
+
+  /api/backups:
+    get:
+      summary: List available backups
+      operationId: listBackups
+      tags: [Backups]
+      responses:
+        "200":
+          description: List of backups
+    post:
+      summary: Create a backup
+      operationId: createBackup
+      tags: [Backups]
+      responses:
+        "200":
+          description: Backup created
+
+  /api/backups/status:
+    get:
+      summary: Get backup status
+      operationId: getBackupStatus
+      tags: [Backups]
+      responses:
+        "200":
+          description: Backup status
+
+  /api/backups/restore:
+    post:
+      summary: Restore from a backup
+      operationId: restoreBackup
+      tags: [Backups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                force:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Restore result
+
+  /api/backups/cleanup:
+    post:
+      summary: Remove old backups
+      operationId: cleanupBackups
+      tags: [Backups]
+      responses:
+        "200":
+          description: Cleanup result
+
+components:
+  schemas:
+    Entity:
+      type: object
+      properties:
+        canonical:
+          type: string
+          description: Canonical entity name
+        original:
+          type: string
+          description: Original text as it appeared
+        type:
+          type: string
+          description: "Entity type (person, work, concept, historical_figure, etc.)"
+        themes:
+          type: array
+          items:
+            type: string
+        traits:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+          description: Wikipedia summary if available
+
+    PatternGraph:
+      type: object
+      properties:
+        patterns:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              id:
+                type: string
+              probability:
+                type: number
+              supporting_entities:
+                type: integer
+        emergent_topic:
+          type: string
+        emergent_theme:
+          type: string
+        consensus_score:
+          type: number
+        bridges:
+          type: array
+          items:
+            type: object
