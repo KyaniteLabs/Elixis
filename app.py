@@ -46,7 +46,7 @@ from soulcraft.validation import (
 PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "soulcraft", "templates")
 CSP_HEADER = get_content_security_policy()
-CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "*")
+CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3110")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
@@ -360,34 +360,40 @@ class Handler(BaseHTTPRequestHandler):
             self._json_response({"error": "No target_lang provided"}, 400)
             return
 
-        self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream")
-        self.send_header("Cache-Control", "no-cache")
-        self.send_header("Connection", "keep-alive")
-        self.send_header("Content-Security-Policy", CSP_HEADER)
-        self._send_cors_headers()
-        self.end_headers()
-
-        rid = self._request_id()
-        deadline = time.time() + SSE_WRITE_TIMEOUT
+        if not _request_enter():
+            self._json_response({"error": "Server is shutting down"}, 503)
+            return
         try:
-            for event in translate_text_stream(text, target_lang, source_lang):
-                if time.time() > deadline:
-                    break
-                if isinstance(event, dict):
-                    event["request_id"] = rid
-                payload = json.dumps(event)
-                self.wfile.write(f"data: {payload}\n\n".encode())
-                self.wfile.flush()
-                deadline = time.time() + SSE_WRITE_TIMEOUT
-        except (BrokenPipeError, ConnectionResetError):
-            pass
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Content-Security-Policy", CSP_HEADER)
+            self._send_cors_headers()
+            self.end_headers()
 
-        self._log("POST", self.path, 200, start, extra={
-            "target_lang": target_lang,
-            "source_lang": source_lang,
-            "text_length": len(text),
-        })
+            rid = self._request_id()
+            deadline = time.time() + SSE_WRITE_TIMEOUT
+            try:
+                for event in translate_text_stream(text, target_lang, source_lang):
+                    if time.time() > deadline:
+                        break
+                    if isinstance(event, dict):
+                        event["request_id"] = rid
+                    payload = json.dumps(event)
+                    self.wfile.write(f"data: {payload}\n\n".encode())
+                    self.wfile.flush()
+                    deadline = time.time() + SSE_WRITE_TIMEOUT
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+            self._log("POST", self.path, 200, start, extra={
+                "target_lang": target_lang,
+                "source_lang": source_lang,
+                "text_length": len(text),
+            })
+        finally:
+            _request_leave()
 
     def _handle_naming(self, start):
         data, err = self._read_json_body()
