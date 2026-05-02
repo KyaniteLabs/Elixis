@@ -5,9 +5,12 @@ Uses LLM classification (primary) blended with keyword scoring (secondary).
 Finds bridge concepts, consensus, sub-patterns, and emergent patterns.
 """
 
-import json
+import logging
 import math
+import time
 from collections import defaultdict
+
+logger = logging.getLogger("soulcraft.patterns")
 
 # Archetypal pattern definitions with keyword associations
 PATTERNS = [
@@ -131,18 +134,138 @@ PATTERNS = [
         "color": "#fbbf24",
         "sub_patterns": ["Into the Unknown", "Frontier Justice", "Restless Wanderer"],
     },
+    {
+        "id": "caregiver",
+        "name": "The Caregiver",
+        "keywords": ["care", "nurture", "protect", "heal", "comfort", "shelter",
+                      "compassion", "generous", "selfless", "devotion", "sacrifice",
+                      "mother", "father", "guardian", "altruism", "empathy",
+                      "tend", "foster", "support", "nourish"],
+        "color": "#f472b6",
+        "sub_patterns": ["Wounded Healer", "Selfless Martyr", "Nurturing Presence"],
+    },
+    {
+        "id": "sage",
+        "name": "The Sage",
+        "keywords": ["wisdom", "knowledge", "truth", "insight", "teach", "learn",
+                      "contemplate", "philosophy", "intellect", "understanding",
+                      "enlightenment", "counsel", "advis", "mentor", "scholar",
+                      "thinker", "research", "meditat", "discern", "perceive"],
+        "color": "#818cf8",
+        "sub_patterns": ["Seeker of Truth", "Detached Observer", "Ancient Wisdom"],
+    },
+    {
+        "id": "achiever",
+        "name": "The Achiever",
+        "keywords": ["achieve", "success", "accomplish", "goal", "drive", "ambition",
+                      "excel", "perform", "win", "productive", "progress", "advance",
+                      "efficiency", "optimiz", "mastery", "competence", "determination",
+                      "industrious", "diligent", "persever"],
+        "color": "#34d399",
+        "sub_patterns": ["Relentless Climber", "Perfectionist", "Self-Made Legend"],
+    },
+    {
+        "id": "loyalist",
+        "name": "The Loyalist",
+        "keywords": ["loyal", "faithful", "devoted", "allegiance", "commitment",
+                      "reliable", "steadfast", "trustworthy", "depend", "duty",
+                      "obligation", "responsible", "conscient", "dedicat", "vigilant",
+                      "prepared", "security", "belonging", "tribe", "covenant"],
+        "color": "#60a5fa",
+        "sub_patterns": ["Faithful Guardian", "Anxious Sentinel", "Steadfast Ally"],
+    },
+    {
+        "id": "enthusiast",
+        "name": "The Enthusiast",
+        "keywords": ["enthusiasm", "excitement", "adventure", "optimism", "spontaneous",
+                      "versatile", "curious", "variety", "experience", "pleasure",
+                      "joy", "fun", "celebrat", "passionate", "vivacious",
+                      "freedom", "opportunity", "abundance", "sensation", "wonder"],
+        "color": "#fb923c",
+        "sub_patterns": ["Eternal Optimist", "Sensation Seeker", "Renaissance Spirit"],
+    },
+    {
+        "id": "challenger",
+        "name": "The Challenger",
+        "keywords": ["challenge", "confront", "assert", "domineer", "strong-will",
+                      "decisiv", "protector", "intense", "powerful", "force",
+                      "magneti", "leader", "command", "resilien", "formidable",
+                      "dominant", "combative", "fierce", "warrior", "fighter"],
+        "color": "#ef4444",
+        "sub_patterns": ["Protective Titan", "Righteous Crusader", "Fearless Provocateur"],
+    },
+    {
+        "id": "peacemaker",
+        "name": "The Peacemaker",
+        "keywords": ["peace", "harmony", "mediate", "diplomacy", "calm", "unify",
+                      "reconcil", "accommodat", "gentle", "patient", "accept",
+                      "understand", "consensus", "cooperat", "tranquil", "serene",
+                      "balance", "moderat", "ease", "soothe"],
+        "color": "#a78bfa",
+        "sub_patterns": ["Inner Sanctuary", "Diplomatic Bridge", "Harmonious Anchor"],
+    },
+    {
+        "id": "reformer",
+        "name": "The Reformer",
+        "keywords": ["reform", "improv", "perfect", "principle", "moral", "ethical",
+                      "standard", "discipline", "integrity", "righteous", "ideal",
+                      "purpose", "cause", "correct", "justice", "fair",
+                      "rational", "order", "systemat", "conscient"],
+        "color": "#2dd4bf",
+        "sub_patterns": ["Principled Crusader", "Moral Architect", "Rigid Idealist"],
+    },
+    {
+        "id": "herald",
+        "name": "The Herald",
+        "keywords": ["announce", "proclaim", "message", "signal", "call", "summon",
+                      "awaken", "prophesy", "vision", "oracle", "messenger",
+                      "harbinger", "clarion", "trumpet", "declaration", "revelat",
+                      "omen", "portent", "herald", "invitat", "quest"],
+        "color": "#facc15",
+        "sub_patterns": ["Divine Messenger", "Prophetic Voice", "Call to Adventure"],
+    },
+    {
+        "id": "guardian",
+        "name": "The Guardian",
+        "keywords": ["guard", "protect", "defend", "shield", "watch", "ward",
+                      "sentinel", "keeper", "preserve", "safeguard", "bastion",
+                      "fortress", "bulwark", "watchman", "steward", "custodian",
+                      "gatekeeper", "threshold", "sanctuar", "haven"],
+        "color": "#94a3b8",
+        "sub_patterns": ["Steadfast Sentinel", "Sacred Protector", "Boundary Keeper"],
+    },
+    {
+        "id": "shapeshifter",
+        "name": "The Shapeshifter",
+        "keywords": ["shift", "change", "adapt", "transform", "fluid", "mutable",
+                      "ambiguous", "double", "mirror", "mask", "disguise", "alter",
+                      "protean", "chameleon", "versatil", "elusiv", "mercurial",
+                      "paradox", "contradict", "flux", "morph"],
+        "color": "#c084fc",
+        "sub_patterns": ["The Double Agent", "Mirror of Desire", "Catalyst of Change"],
+    },
+    {
+        "id": "mentor",
+        "name": "The Mentor",
+        "keywords": ["mentor", "guide", "teacher", "wise", "counsel", "advise",
+                      "instruct", "nurture", "develop", "train", "prepare",
+                      "support", "encourage", "knowledge", "experience", "patience",
+                      "sacrifice", "legacy", "wisdom", "growth", "protégé"],
+        "color": "#059669",
+        "sub_patterns": ["The Wise Sage", "The Reluctant Guide", "The Fallen Teacher"],
+    },
 ]
 
 # Entity type affinities to patterns (entity types that tend to support certain patterns)
 _TYPE_AFFINITIES = {
-    "character": {"transformation": 0.25, "shadow": 0.2, "power": 0.2, "outsider": 0.15, "connection": 0.1},
-    "person": {"transformation": 0.2, "power": 0.2, "outsider": 0.2, "connection": 0.2, "wisdom": 0.1},
-    "historical_figure": {"power": 0.3, "transformation": 0.2, "wisdom": 0.2, "struggle": 0.15},
-    "work": {"creation": 0.3, "wisdom": 0.2, "spiritual": 0.1, "transformation": 0.1},
-    "concept": {"wisdom": 0.3, "spiritual": 0.2, "transformation": 0.2, "explorer": 0.1},
-    "archetype": {"wisdom": 0.2, "transformation": 0.2, "shadow": 0.2, "spiritual": 0.2},
-    "mythological": {"transformation": 0.25, "spiritual": 0.25, "power": 0.15, "trickster": 0.15},
-    "place": {"explorer": 0.4, "spiritual": 0.2, "freedom": 0.1},
+    "character": {"transformation": 0.25, "shadow": 0.2, "power": 0.2, "outsider": 0.15, "connection": 0.1, "shapeshifter": 0.1},
+    "person": {"transformation": 0.2, "power": 0.2, "outsider": 0.2, "connection": 0.2, "wisdom": 0.1, "achiever": 0.1},
+    "historical_figure": {"power": 0.3, "transformation": 0.2, "wisdom": 0.2, "struggle": 0.15, "reformer": 0.1},
+    "work": {"creation": 0.3, "wisdom": 0.2, "spiritual": 0.1, "transformation": 0.1, "herald": 0.1},
+    "concept": {"wisdom": 0.3, "spiritual": 0.2, "transformation": 0.2, "explorer": 0.1, "sage": 0.1},
+    "archetype": {"wisdom": 0.2, "transformation": 0.2, "shadow": 0.2, "spiritual": 0.2, "guardian": 0.1},
+    "mythological": {"transformation": 0.25, "spiritual": 0.25, "power": 0.15, "trickster": 0.15, "mentor": 0.1, "shapeshifter": 0.1},
+    "place": {"explorer": 0.4, "spiritual": 0.2, "freedom": 0.1, "guardian": 0.1},
 }
 
 
@@ -161,14 +284,19 @@ def _score_from_knowledge_base(entity):
     return scores
 
 
-def llm_classify_patterns(entities):
+def llm_classify_patterns(entities, telemetry=None):
     """Use LLM to classify entities against the 12 archetypal patterns.
+
+    Args:
+        entities: list of entity dicts
+        telemetry: optional dict to populate with classification metrics
 
     Returns dict: {entity_name: {pattern_id: score_0_to_1}}
     Raises RuntimeError if LLM fails.
     """
     from .llm import chat, CLASSIFY_MODEL
 
+    t0 = time.time()
     entity_list = "\n".join(
         f"{e['canonical']}|{e.get('type','?')}|{e.get('source','')}|"
         f"{','.join(e.get('themes',[])[:4])}|{','.join(e.get('traits',[])[:3])}"
@@ -196,13 +324,35 @@ def llm_classify_patterns(entities):
         think=False,
     )
 
+    duration_ms = int((time.time() - t0) * 1000)
+
+    llm_meta = {}
+    if isinstance(result, dict):
+        llm_meta = {
+            "model": result.get("model", ""),
+            "provider": result.get("provider", ""),
+            "tokens_in": result.get("tokens_in", 0),
+            "tokens_out": result.get("tokens_out", 0),
+            "latency_ms": result.get("latency_ms", 0),
+            "tokens_per_sec": result.get("tokens_per_sec", 0),
+        }
+        if result.get("error"):
+            llm_meta["llm_error"] = result["error"]
+
     response = result["content"] if isinstance(result, dict) else result
     if not response or len(response) < 10:
+        if telemetry is not None:
+            telemetry.update({"source": "empty_response", "duration_ms": duration_ms, **llm_meta})
         raise RuntimeError("LLM pattern classification returned empty response")
 
     from .parsing import parse_llm_json_array
     data = parse_llm_json_array(response)
     if data is None:
+        if telemetry is not None:
+            telemetry.update({
+                "source": "parse_failure", "duration_ms": duration_ms,
+                "response_length": len(response), **llm_meta,
+            })
         raise RuntimeError("LLM pattern classification returned invalid JSON")
 
     # Build entity_name -> {pattern_id: score} mapping
@@ -225,6 +375,18 @@ def llm_classify_patterns(entities):
                 val = 0
             clean[pid] = max(0.0, min(1.0, val))
         classifications[name] = clean
+
+    if telemetry is not None:
+        telemetry.update({
+            "source": "llm",
+            "duration_ms": duration_ms,
+            "entity_count": len(classifications),
+            "items_in_raw_response": len(data),
+            **llm_meta,
+        })
+    logger.info("LLM classified %d entities in %dms (tokens: %d→%d)",
+                len(classifications), duration_ms,
+                llm_meta.get("tokens_in", 0), llm_meta.get("tokens_out", 0))
 
     return classifications
 
@@ -282,8 +444,13 @@ def _score_entity_pattern(entity, pattern, full_text=""):
     return min(score, 1.0)
 
 
-def build_pattern_graph(entities, full_text=""):
+def build_pattern_graph(entities, full_text="", telemetry=None):
     """Build the full pattern probability graph with LLM + keyword blended scoring.
+
+    Args:
+        entities: list of entity dicts
+        full_text: original input text for proximity scoring
+        telemetry: optional dict to populate with graph-building metrics
 
     Returns:
         dict with patterns, entity_scores, bridges, consensus, emergent_topic,
@@ -304,13 +471,15 @@ def build_pattern_graph(entities, full_text=""):
 
     # --- LLM classification (primary signal, weight 0.7) ---
     llm_scores = {}
+    llm_tele = {}
     try:
-        llm_scores = llm_classify_patterns(entities)
+        llm_scores = llm_classify_patterns(entities, telemetry=llm_tele)
     except RuntimeError:
         # If LLM classification fails after entity extraction succeeded,
         # fall back to keyword-only scoring (the LLM was working moments ago,
         # this is a transient failure)
         llm_scores = {}
+        logger.warning("LLM pattern classification failed, using keyword-only scoring")
 
     # --- Keyword scoring (secondary signal, weight 0.3) ---
     kw_scores = defaultdict(lambda: defaultdict(float))
@@ -454,6 +623,19 @@ def build_pattern_graph(entities, full_text=""):
         notes.append("Classification: LLM-assisted (0.7) + keyword analysis (0.3)")
     else:
         notes.append("Classification: keyword-only (LLM classification unavailable)")
+
+    if telemetry is not None:
+        telemetry.update({
+            "llm_classification": llm_tele,
+            "llm_available": bool(llm_scores),
+            "entity_count": len(entities),
+            "pattern_count": len(result_patterns),
+            "bridge_count": len(bridges),
+            "consensus_score": round(consensus, 3),
+        })
+    logger.info("Pattern graph built: %d patterns, %d bridges, consensus=%.2f (LLM: %s)",
+                len(result_patterns), len(bridges), consensus,
+                "yes" if llm_scores else "no")
 
     return {
         "patterns": result_patterns,

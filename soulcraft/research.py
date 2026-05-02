@@ -5,12 +5,15 @@ themes/traits for each entity. Gracefully degrades when offline.
 """
 
 import json
+import logging
 import re
 import time
 import urllib.parse
 import urllib.request
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger("soulcraft.research")
 
 _WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
 _TIMEOUT = 4  # seconds per request
@@ -54,6 +57,21 @@ _THEME_KEYWORDS = {
     "spiritual": ["spirit", "sacred", "divine", "holy", "mystic", "transcend", "soul", "faith", "ritual", "myth", "archetyp"],
     "trickster": ["trick", "deceiv", "manipulat", "con artist", "grifter", "charm", "wit", "humor", "cunning", "clever", "scam", "lie"],
     "explorer": ["explor", "discover", "journey", "adventure", "quest", "frontier", "unknown", "wander", "travel", "expedition"],
+    "caregiver": ["care", "nurtur", "protect", "heal", "comfort", "compassion", "generous", "selfless", "devot", "shelter"],
+    "sage": ["sage", "teach", "learn", "study", "contemplat", "insight", "enlighten", "guid", "mentor", "counsel"],
+    "achiever": ["achieve", "succee", "accomplish", "goal", "drive", "ambit", "excel", "perform", "win", "productiv"],
+    "loyalist": ["loyal", "faithful", "devote", "allegian", "commit", "depend", "reliable", "steadfast", "trustworth"],
+    "enthusiast": ["enthusias", "excit", "adventur", "optimis", "spontaneous", "versatil", "curious", "variety", "experience"],
+    "challenger": ["challeng", "confront", "assert", "domineer", "strong-will", "decisiv", "protector", "intense", "powerful"],
+    "peacemaker": ["peace", "harmon", "mediat", "diplomat", "calm", "unify", "reconcil", "accommodat", "gentle"],
+    "reformer": ["reform", "improv", "perfect", "principle", "moral", "ethic", "standard", "discipline", "integrity", "righteous"],
+    "chaos": ["chaos", "disorder", "anarchy", "turmoil", "havoc", "entropy", "disrupt", "unpredict", "catastroph"],
+    "destruction": ["destroy", "destruct", "devastat", "annihilat", "ruin", "wreck", "obliterat", "shatter", "demolish"],
+    "honor": ["honor", "honour", "dignity", "respect", "integri", "nobility", "chivalr", "virtue", "code"],
+    "justice": ["justice", "fair", "equit", "right", "lawful", "legitimat", "morality", "accountab", "consequence"],
+    "loyalty": ["loyalty", "allegian", "devotion", "faithfulness", "commit", "stand by", "solidarity"],
+    "mentor": ["mentor", "guide", "tutor", "coach", "advis", "instruc", "wisdom figure", "teacher"],
+    "survival": ["survival", "surviv", "endur", "persever", "persist", "resilien", "adapt", "withstand", "overcome"],
 }
 
 
@@ -134,22 +152,30 @@ def _enrich_single(entity):
     return summary
 
 
-def enrich_entities(entities):
+def enrich_entities(entities, telemetry=None):
     """Enrich entity list with Wikipedia summaries and extracted themes.
 
     Returns a new list with enriched copies. Does not mutate the input.
 
     Args:
         entities: list of entity dicts from extract_entities()
+        telemetry: optional dict to populate with enrichment metrics
 
     Returns:
         New list with 'description' and 'themes' updated where possible.
     """
     if not entities:
+        if telemetry is not None:
+            telemetry["source"] = "empty_input"
         return entities
 
+    t0 = time.time()
     batch = entities[:_MAX_ENTITIES]
     enriched = [dict(e) for e in entities]
+
+    success_count = 0
+    fail_count = 0
+    timeout_hit = False
 
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = {pool.submit(_enrich_single, entity): i for i, entity in enumerate(batch)}
@@ -161,14 +187,18 @@ def enrich_entities(entities):
                     summary = future.result()
                 except Exception:
                     summary = ""
+                    fail_count += 1
 
                 if summary:
+                    success_count += 1
                     entity["description"] = summary
                     wiki_themes = _extract_themes_from_text(summary)
                     existing = set(entity.get("themes", []))
                     merged = existing | set(wiki_themes)
                     if merged:
                         entity["themes"] = sorted(merged)
+                else:
+                    fail_count += 1
 
                 existing_themes = set(entity.get("themes", []))
                 traits_text = " ".join(entity.get("traits", []))
@@ -178,6 +208,21 @@ def enrich_entities(entities):
                     if merged:
                         entity["themes"] = sorted(merged)
         except TimeoutError:
-            pass
+            timeout_hit = True
+
+    duration_ms = int((time.time() - t0) * 1000)
+    if telemetry is not None:
+        telemetry.update({
+            "source": "wikipedia",
+            "duration_ms": duration_ms,
+            "entity_count": len(batch),
+            "success_count": success_count,
+            "fail_count": fail_count,
+            "timeout_hit": timeout_hit,
+            "truncated": len(entities) > _MAX_ENTITIES,
+        })
+    logger.info("Enriched %d/%d entities in %dms (timeout: %s)",
+                success_count, len(batch), duration_ms,
+                "yes" if timeout_hit else "no")
 
     return enriched

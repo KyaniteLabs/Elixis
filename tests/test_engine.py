@@ -41,15 +41,15 @@ def _make_entity(
 def _make_engine(**overrides):
     """Build a GameEngine with sensible defaults that avoid lazy imports."""
     defaults = dict(
-        extract_entities=lambda x: [
+        extract_entities=lambda x, telemetry=None: [
             _make_entity(canonical="Alpha", themes=["power", "shadow"]),
             _make_entity(canonical="Beta", etype="character", themes=["wisdom"]),
         ],
         annotate_bead=lambda x: {"sentiment": 0.5, "intensity": 0.7},
         deduplicate_beads=lambda beads: beads,
-        enrich_entities=lambda entities: entities,
+        enrich_entities=lambda entities, telemetry=None: entities,
         character_by_name=lambda name: None,
-        build_pattern_graph=lambda entities, text: {
+        build_pattern_graph=lambda entities, text, telemetry=None: {
             "patterns": [
                 {"name": "Power", "probability": 0.8, "supporting_entities": 2, "sub_patterns": []},
             ],
@@ -230,7 +230,7 @@ class TestDeclareThemes:
 
     def test_sets_provenance_based_on_confidence(self):
         engine = _make_engine(
-            extract_entities=lambda x: [
+            extract_entities=lambda x, telemetry=None: [
                 _make_entity(canonical="High", confidence=0.95),
                 _make_entity(canonical="Low", confidence=0.5),
             ],
@@ -265,7 +265,7 @@ class TestDeclareThemes:
 
     def test_entity_with_no_themes(self):
         engine = _make_engine(
-            extract_entities=lambda x: [{"canonical": "Empty", "original": "Empty", "type": "concept", "themes": [], "traits": [], "confidence": 0.5, "source": "", "description": "", "related": []}],
+            extract_entities=lambda x, telemetry=None: [{"canonical": "Empty", "original": "Empty", "type": "concept", "themes": [], "traits": [], "confidence": 0.5, "source": "", "description": "", "related": []}],
         )
         state = engine.declare_themes("input")
         assert state.beads[0].themes == []
@@ -281,7 +281,7 @@ class TestElaborate:
 
     def test_enriches_beads(self):
         engine = _make_engine(
-            enrich_entities=lambda entities: [
+            enrich_entities=lambda entities, telemetry=None: [
                 {**e, "description": "enriched desc", "themes": ["power", "extra"]}
                 for e in entities
             ],
@@ -328,7 +328,7 @@ class TestElaborate:
     def test_enrich_entities_shorter_than_beads(self):
         """If enrich returns fewer items, remaining beads stay unchanged."""
         engine = _make_engine(
-            enrich_entities=lambda entities: entities[:1],
+            enrich_entities=lambda entities, telemetry=None: entities[:1],
         )
         engine.declare_themes("input")
         state = engine.elaborate()
@@ -374,7 +374,7 @@ class TestConnectDomains:
             "score_b": 0.6,
         }
         engine = _make_engine(
-            build_pattern_graph=lambda e, t: {
+            build_pattern_graph=lambda e, t, telemetry=None: {
                 "patterns": [{"name": "Power", "probability": 0.8, "sub_patterns": []}],
                 "bridges": [bridge],
                 "consensus_score": 0.75,
@@ -392,12 +392,12 @@ class TestConnectDomains:
 
     def test_essential_tension_on_low_consensus(self):
         engine = _make_engine(
-            extract_entities=lambda x: [
+            extract_entities=lambda x, telemetry=None: [
                 _make_entity(canonical="A"),
                 _make_entity(canonical="B"),
                 _make_entity(canonical="C"),
             ],
-            build_pattern_graph=lambda e, t: {
+            build_pattern_graph=lambda e, t, telemetry=None: {
                 "patterns": [{"name": "X", "probability": 0.3, "sub_patterns": []}],
                 "bridges": [],
                 "consensus_score": 0.2,
@@ -413,7 +413,7 @@ class TestConnectDomains:
 
     def test_no_tension_when_consensus_high(self):
         engine = _make_engine(
-            build_pattern_graph=lambda e, t: {
+            build_pattern_graph=lambda e, t, telemetry=None: {
                 "patterns": [],
                 "bridges": [],
                 "consensus_score": 0.8,
@@ -428,8 +428,8 @@ class TestConnectDomains:
 
     def test_no_tension_when_few_beads(self):
         engine = _make_engine(
-            extract_entities=lambda x: [_make_entity(canonical="Solo")],
-            build_pattern_graph=lambda e, t: {
+            extract_entities=lambda x, telemetry=None: [_make_entity(canonical="Solo")],
+            build_pattern_graph=lambda e, t, telemetry=None: {
                 "patterns": [],
                 "bridges": [],
                 "consensus_score": 0.1,

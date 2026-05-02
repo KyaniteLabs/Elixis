@@ -13,18 +13,31 @@ _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 def _load_json(filename):
     path = os.path.join(_DATA_DIR, filename)
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    except json.JSONDecodeError as exc:
+        import logging
+        logging.getLogger("soulcraft.knowledge").error("Invalid JSON in %s: %s", filename, exc)
+        return {}
 
 
 def _load_jsonl(filename):
     path = os.path.join(_DATA_DIR, filename)
     entries = []
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                entries.append(json.loads(line))
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        entries.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+    except FileNotFoundError:
+        pass
     return entries
 
 

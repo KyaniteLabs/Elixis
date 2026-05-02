@@ -54,18 +54,18 @@ def detect_sentiment(text: str) -> float:
         else:
             continue
 
-        negated = False
+        negation_count = 0
         intensified = False
         start = max(0, i - 3)
         for j in range(start, i):
             if words[j] in NEGATION_WORDS:
-                negated = True
+                negation_count += 1
         int_start = max(0, i - 2)
         for j in range(int_start, i):
             if words[j] in INTENSIFIERS:
                 intensified = True
 
-        if negated:
+        if negation_count % 2 == 1:
             polarity = -polarity
         if intensified:
             polarity *= 1.5

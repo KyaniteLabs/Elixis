@@ -17,6 +17,10 @@ VALID_THEMES = frozenset({
     "connection", "struggle", "freedom", "spiritual", "trickster",
     "explorer", "caregiver", "sage", "achiever", "loyalist", "enthusiast",
     "challenger", "peacemaker", "reformer",
+    # Expanded: 12 new archetype patterns
+    "herald", "guardian", "shapeshifter", "mentor",
+    # Themes used in characters.jsonl knowledge base
+    "chaos", "destruction", "honor", "justice", "loyalty", "survival",
 })
 
 VALID_PROVENANCE = frozenset({"first-hand", "second-hand", "inferred", ""})

@@ -5,7 +5,7 @@ theme overlap, type affinity, and curated knowledge base data.
 """
 
 from collections import defaultdict
-from .knowledge import character_by_name, archetype_by_id, relationship_ids
+from .knowledge import character_by_name
 from .thread import Thread
 
 

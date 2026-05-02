@@ -158,7 +158,9 @@ class GameEngine:
         annotate_bead = self._get_annotate_bead()
         deduplicate_beads = self._get_deduplicate_beads()
 
-        raw_entities = extract_entities(state.raw_input)
+        extraction_tele = {}
+        raw_entities = extract_entities(state.raw_input, telemetry=extraction_tele)
+        state.metadata["extraction_telemetry"] = extraction_tele
 
         beads = []
         for e in raw_entities:
@@ -210,7 +212,9 @@ class GameEngine:
         character_by_name = self._get_character_by_name()
 
         entity_dicts = [b.to_dict() for b in state.beads]
-        enriched = enrich_entities(entity_dicts)
+        enrich_tele = {}
+        enriched = enrich_entities(entity_dicts, telemetry=enrich_tele)
+        state.metadata["enrichment_telemetry"] = enrich_tele
 
         for i, enriched_data in enumerate(enriched):
             if i < len(state.beads):
@@ -246,7 +250,9 @@ class GameEngine:
         build_pattern_graph = self._get_build_pattern_graph()
 
         entity_dicts = [b.to_dict() for b in state.beads]
-        graph = build_pattern_graph(entity_dicts, state.raw_input)
+        pattern_tele = {}
+        graph = build_pattern_graph(entity_dicts, state.raw_input, telemetry=pattern_tele)
+        state.metadata["pattern_telemetry"] = pattern_tele
 
         state.metadata["pattern_graph"] = graph
         threads = []

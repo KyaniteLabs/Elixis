@@ -5,11 +5,19 @@ with heuristic line-by-line parsing as fallback.
 """
 
 import json
+import logging
 import re
+import time
+
+logger = logging.getLogger("soulcraft.entities")
 
 
-def _llm_extract_entities(text):
+def _llm_extract_entities(text, telemetry=None):
     """Use the LLM to extract and classify entities from a brain dump.
+
+    Args:
+        text: raw brain dump text
+        telemetry: optional dict to populate with extraction metrics
 
     Returns a list of entity dicts with name, type, source, themes, traits,
     or empty list if LLM is unavailable or fails.
@@ -17,8 +25,12 @@ def _llm_extract_entities(text):
     from .llm import chat, is_available
 
     if not is_available():
+        if telemetry is not None:
+            telemetry["source"] = "unavailable"
+            telemetry["error"] = "LLM not available"
         return []
 
+    t0 = time.time()
     _MAX_EXTRACT_CHARS = 4000
     raw = text.strip()
     truncated = raw[:_MAX_EXTRACT_CHARS]
@@ -32,13 +44,16 @@ def _llm_extract_entities(text):
     from .bead import VALID_TYPES
     types_list = ", ".join(sorted(VALID_TYPES))
 
+    from .bead import VALID_THEMES
+    themes_list = ", ".join(sorted(VALID_THEMES))
+
     user = f"""Extract all named references from this text. Fix any typos in names.
 
 For each entity, return:
 - name: canonical name (corrected if misspelled)
 - type: one of: {types_list}
 - source: origin work/media (or "")
-- themes: 3-5 keywords from: transformation, power, outsider, creation, shadow, wisdom, connection, struggle, freedom, spiritual, trickster, explorer
+- themes: 3-5 keywords from: {themes_list}
 - traits: 2-4 specific personality phrases (e.g. "paranoid ambition", "cold calculation")
 - related: 2-3 similar characters/figures
 
@@ -55,16 +70,47 @@ Output JSON array only:
             ],
             model=None,
         )
-    except Exception:
+    except Exception as exc:
+        duration_ms = int((time.time() - t0) * 1000)
+        logger.warning("LLM entity extraction failed (%dms): %s", duration_ms, exc)
+        if telemetry is not None:
+            telemetry["source"] = "error"
+            telemetry["error"] = str(exc)
+            telemetry["duration_ms"] = duration_ms
         return []
+
+    duration_ms = int((time.time() - t0) * 1000)
+
+    # Capture LLM metrics from the result dict
+    llm_meta = {}
+    if isinstance(result, dict):
+        llm_meta = {
+            "model": result.get("model", ""),
+            "provider": result.get("provider", ""),
+            "tokens_in": result.get("tokens_in", 0),
+            "tokens_out": result.get("tokens_out", 0),
+            "latency_ms": result.get("latency_ms", 0),
+            "tokens_per_sec": result.get("tokens_per_sec", 0),
+        }
+        if result.get("error"):
+            llm_meta["llm_error"] = result["error"]
 
     response = result["content"] if isinstance(result, dict) else result
     if not response or len(response) < 10:
+        logger.warning("LLM response too short (%d chars) after %dms", len(response or ""), duration_ms)
+        if telemetry is not None:
+            telemetry.update({"source": "empty_response", "duration_ms": duration_ms, **llm_meta})
         return []
 
     from .parsing import parse_llm_json_array
     data = parse_llm_json_array(response)
     if data is None:
+        logger.warning("LLM response failed JSON parse after %dms (response length: %d)", duration_ms, len(response))
+        if telemetry is not None:
+            telemetry.update({
+                "source": "parse_failure", "duration_ms": duration_ms,
+                "response_length": len(response), **llm_meta,
+            })
         return []
 
     entities = []
@@ -104,29 +150,161 @@ Output JSON array only:
             "confidence": 0.95,
         })
 
+    if telemetry is not None:
+        telemetry.update({
+            "source": "llm",
+            "duration_ms": duration_ms,
+            "parse_success": True,
+            "entity_count": len(entities),
+            "input_length": len(text),
+            "input_truncated": len(raw) > _MAX_EXTRACT_CHARS,
+            "items_in_raw_response": len(data),
+            **llm_meta,
+        })
+    logger.info("LLM extracted %d entities in %dms (tokens: %d→%d)",
+                len(entities), duration_ms,
+                llm_meta.get("tokens_in", 0), llm_meta.get("tokens_out", 0))
+
     return entities
 
 
 def _infer_type(name, source):
-    """Infer entity type from name patterns and source."""
-    name_lower = name.lower()
-    mythological_hints = ["zeus", "odin", "thor", "aphrodite", "apollo", "athena",
-                          "hercules", "achilles", "beowulf", "gandalf", "sauron",
-                          "voldemort", "yoda", "moriarty", "holmes"]
-    place_hints = ["city", "country", "kingdom", "realm", "island", "mount",
-                   "river", "forest", "valley", "planet", "world", "land"]
-    archetype_hints = ["hero", "villain", "mentor", "trickster", "sage",
-                       "warrior", "king", "queen", "wizard", "knight"]
+    """Infer entity type from name patterns and source.
 
-    for hint in mythological_hints:
-        if hint in name_lower:
+    Detection order: mythological → historical → work → place → archetype → person → fallback
+    """
+    name_lower = name.lower()
+    words = name.split()
+    word_count = len(words)
+
+    # --- Mythological / legendary fictional characters ---
+    _MYTHO = {
+        # Greek/Roman
+        "zeus", "hera", "poseidon", "hades", "athena", "aphrodite", "apollo",
+        "artemis", "ares", "hephaestus", "hermes", "dionysus", "hestia",
+        "demeter", "persephone", "hercules", "achilles", "odysseus", "hector",
+        "paris", "helena", "medusa", "minotaur", "cerberus", "prometheus",
+        "icarus", "orpheus", "theseus", "perseus", "jason", "medea",
+        "oedipus", "antigone", "electra", "cassandra", "penelope",
+        # Norse
+        "odin", "thor", "loki", "freya", "freyr", "baldr", "tyr", "heimdall",
+        "frigg", "njord", "hel", "fenrir", "jormungandr", "sleipnir",
+        "valkyrie", "ragnar", "bjorn", "lagerta", "ivar",
+        # Egyptian
+        "ra", "isis", "osiris", "horus", "anubis", "seth", "bastet", "thoth",
+        "ptah", "sobek", "sekhmet", "hathor", "nephthys",
+        # Hindu/Vedic
+        "rama", "sita", "hanuman", "krishna", "arjuna", "shiva", "ganesh",
+        "kali", "durga", "lakshmi", "saraswati", "brahma", "vishnu",
+        # Japanese
+        "amaterasu", "susano", "tsukuyomi", "izanagi", "izanami",
+        # Celtic
+        "morrigan", "dagda", "lugh", "brigid", "cernunnos",
+        # Mesopotamian
+        "gilgamesh", "enkidu", "ishtar", "marduk", "tiamat",
+        # Famous fictional / literary
+        "gandalf", "sauron", "voldemort", "yoda", "moriarty", "holmes",
+        "dumbledore", "gollum", "aragorn", "legolas", "gimli", "frodo",
+        "samwise", "saruman", "galadriel", "elrond", "bilbo",
+        "darth vader", "luke skywalker", "han solo", "princess leia",
+        "obi-wan", "emperor palpatine",
+        "spock", "kirk", "captain picard",
+        "batman", "superman", "wonder woman", "joker", "riddler",
+        "dracula", "frankenstein",
+    }
+
+    for hint in _MYTHO:
+        if hint in name_lower or name_lower == hint:
             return "mythological" if not source else "character"
-    for hint in place_hints:
-        if hint in name_lower and not source:
+
+    # --- Historical figure patterns ---
+    _HISTORICAL_NAMES = {
+        "mozart", "beethoven", "bach", "chopin", "handel", "haydn", "schubert",
+        "brahms", "verdi", "wagner", "vivaldi", "tchaikovsky", "rachmaninoff",
+        "napoleon", "cleopatra", "alexander", "caesar", "augustus", "nero",
+        "confucius", "laozi", "buddha", "socrates", "plato", "aristotle",
+        "leonardo", "michelangelo", "raphael", "donatello", "botticelli",
+        "galileo", "newton", "einstein", "tesla", "darwin", "curie",
+        "shakespeare", "dante", "cervantes", "goethe", "tolstoy", "dostoevsky",
+        "marco polo", "magellan", "columbus", "ghengis", "genghis",
+        "sun tzu", "miyamoto musashi",
+        "freud", "jung", "nietzsche", "kant", "descartes", "hume",
+        "edison", "faraday", "maxwell",
+        "lincoln", "washington", "jefferson", "roosevelt", "churchill",
+        "gandhi", "mandela", "mlk", "martin luther king",
+    }
+    for hint in _HISTORICAL_NAMES:
+        if hint in name_lower:
+            return "historical_figure"
+
+    # --- Work detection ---
+    _WORK_SUFFIXES = {
+        "trilogy", "saga", "chronicle", "series", "cycle", "quartet",
+        "symphony", "concerto", "sonata", "opera", "requiem", "mass",
+        "novel", "poem", "play", "musical", "anthem", "ballad",
+        "painting", "sculpture", "fresco", "mural",
+        "theorem", "equation", "principle", "paradox",
+        "meditation", "book", "code",
+    }
+    for suffix in _WORK_SUFFIXES:
+        if name_lower.endswith(suffix) and word_count > 1:
+            return "work"
+
+    if name_lower.startswith("the ") and 2 <= word_count <= 5:
+        # "The Matrix" (2), "The Godfather" (2), "The Divine Comedy" (3)
+        # but NOT "The Great Warrior King of the North" (8)
+        return "work"
+
+    _KNOWN_WORKS = {
+        "odyssey", "iliad", "aeneid", "divine comedy", "hamlet", "macbeth",
+        "othello", "king lear", "tempest", "romeo and juliet",
+        "don quixote", "moby dick", "war and peace", "crime and punishment",
+        "1984", "brave new world", "catcher in the rye",
+        "lord of the rings", "hobbit", "silmarillion", "narnia",
+        "star wars", "star trek", "matrix", "inception", "interstellar",
+        "citizen kane", "godfather", "pulp fiction", "fight club",
+        "elements", "art of war", "book of five rings",
+        "bhagavad gita", "tao te ching", "i ching",
+    }
+    for work in _KNOWN_WORKS:
+        if name_lower == work or work in name_lower:
+            return "work"
+
+    # --- Place detection ---
+    _PLACE_SUFFIXES = {
+        "city", "country", "kingdom", "realm", "island", "mount", "mountain",
+        "river", "forest", "valley", "planet", "world", "land", "region",
+        "continent", "desert", "ocean", "sea", "lake", "bay", "gulf",
+        "peninsula", "plateau", "canyon", "gorge", "coast", "shore",
+        "empire", "republic", "province", "territory", "colony",
+        "castle", "fortress", "palace", "temple", "cathedral", "tower",
+        "dungeon", "labyrinth", "maze",
+        "station", "port", "harbor", "haven",
+    }
+    for suffix in _PLACE_SUFFIXES:
+        if name_lower.endswith(suffix) and not source:
             return "place"
-    for hint in archetype_hints:
-        if name_lower == hint or (hint in name_lower and len(name.split()) <= 2):
+
+    # --- Archetype detection ---
+    _ARCHETYPES = {
+        "hero", "villain", "mentor", "trickster", "sage", "warrior",
+        "king", "queen", "wizard", "knight", "healer", "explorer",
+        "outlaw", "lover", "caregiver", "creator", "jester", "magician",
+        "orphan", "innocent", "ruler", "seeker",
+        "shadow", "anima", "animus", "self", "persona",
+        "herald", "guardian", "shapeshifter",
+    }
+    for arch in _ARCHETYPES:
+        if name_lower == arch or (arch in name_lower and word_count <= 2):
             return "archetype"
+
+    # --- Person detection: "First Last" pattern (2 capitalized words) ---
+    # Only if source is present — a name mentioned in context of a work
+    if (word_count == 2 and source
+            and words[0][0].isupper() and words[1][0].isupper()):
+        return "person"
+
+    # --- Fallback ---
     return "character" if source else "concept"
 
 
@@ -228,18 +406,44 @@ def _heuristic_extract(text):
     return entities
 
 
-def extract_entities(text):
+def extract_entities(text, telemetry=None):
     """Main extraction pipeline. Uses LLM with heuristic fallback.
 
     Falls back to heuristic parsing if LLM returns empty.
+
+    Args:
+        text: raw brain dump text
+        telemetry: optional dict to populate with extraction metrics
     """
     if not text or not text.strip():
+        if telemetry is not None:
+            telemetry["source"] = "empty_input"
         return []
 
-    entities = _llm_extract_entities(text)
+    t0 = time.time()
+    llm_tele = {}
+    entities = _llm_extract_entities(text, telemetry=llm_tele)
 
     # Fallback to heuristic if LLM returns empty
     if not entities:
         entities = _heuristic_extract(text)
+        duration_ms = int((time.time() - t0) * 1000)
+        if telemetry is not None:
+            telemetry.update({
+                "source": "heuristic",
+                "duration_ms": duration_ms,
+                "entity_count": len(entities),
+                "input_length": len(text),
+                "llm_attempted": True,
+                "llm_source": llm_tele.get("source", "unknown"),
+                "llm_duration_ms": llm_tele.get("duration_ms", 0),
+            })
+        logger.info("Fell back to heuristic extraction: %d entities in %dms (LLM source: %s)",
+                    len(entities), duration_ms, llm_tele.get("source", "unknown"))
+    else:
+        duration_ms = int((time.time() - t0) * 1000)
+        if telemetry is not None:
+            telemetry.update(llm_tele)
+            telemetry["total_duration_ms"] = duration_ms
 
     return entities
