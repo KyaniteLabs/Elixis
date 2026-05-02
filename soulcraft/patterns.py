@@ -184,26 +184,10 @@ def llm_classify_patterns(entities):
     if not response or len(response) < 10:
         raise RuntimeError("LLM pattern classification returned empty response")
 
-    # Parse JSON from response
-    json_str = response.strip()
-    if "```" in json_str:
-        import re
-        match = re.search(r"```(?:json)?\s*\n?(.*?)```", json_str, re.DOTALL)
-        if match:
-            json_str = match.group(1).strip()
-
-    start = json_str.find("[")
-    end = json_str.rfind("]")
-    if start == -1 or end == -1:
+    from .parsing import parse_llm_json_array
+    data = parse_llm_json_array(response)
+    if data is None:
         raise RuntimeError("LLM pattern classification returned invalid JSON")
-
-    try:
-        data = json.loads(json_str[start:end + 1])
-    except json.JSONDecodeError:
-        raise RuntimeError("LLM pattern classification returned invalid JSON")
-
-    if not isinstance(data, list):
-        raise RuntimeError("LLM pattern classification returned non-array")
 
     # Build entity_name -> {pattern_id: score} mapping
     classifications = {}

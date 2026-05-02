@@ -54,25 +54,9 @@ Output JSON array only:
     if not response or len(response) < 10:
         return []
 
-    # Extract JSON from the response (may be wrapped in code fences)
-    json_str = response.strip()
-    if "```" in json_str:
-        match = re.search(r"```(?:json)?\s*\n?(.*?)```", json_str, re.DOTALL)
-        if match:
-            json_str = match.group(1).strip()
-
-    # Find the array bounds
-    start = json_str.find("[")
-    end = json_str.rfind("]")
-    if start == -1 or end == -1 or end <= start:
-        return []
-
-    try:
-        data = json.loads(json_str[start:end + 1])
-    except json.JSONDecodeError:
-        return []
-
-    if not isinstance(data, list):
+    from .parsing import parse_llm_json_array
+    data = parse_llm_json_array(response)
+    if data is None:
         return []
 
     entities = []
