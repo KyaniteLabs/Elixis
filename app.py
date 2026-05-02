@@ -9,6 +9,7 @@ import signal
 import sys
 import threading
 import time
+import uuid
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 
@@ -46,8 +47,13 @@ PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "soulcraft", "templates")
 CSP_HEADER = get_content_security_policy()
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "*")
+MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
+SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 
 logger = get_logger("soulcraft.server")
+
+# Semaphore to prevent resource exhaustion from too many simultaneous LLM calls
+_pipeline_semaphore = threading.Semaphore(MAX_CONCURRENT_PIPELINES)
 
 
 def run_pipeline(brain_dump):
@@ -88,8 +94,14 @@ def run_pipeline(brain_dump):
 
 class Handler(BaseHTTPRequestHandler):
 
+    def _request_id(self):
+        if not hasattr(self, '_req_id'):
+            self._req_id = uuid.uuid4().hex[:12]
+        return self._req_id
+
     def do_GET(self):
         start = time.time()
+        self._request_id()
         if self.path in ("", "/"):
             self._serve_file("landing.html", "text/html")
             self._log("GET", self.path, 200, start)
@@ -138,6 +150,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         start = time.time()
+        self._request_id()
         if self.path == "/api/extract":
             self._handle_extract(start)
         elif self.path == "/api/translate":
@@ -162,6 +175,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         start = time.time()
+        self._request_id()
         if self.path == "/api/translation-cache":
             result = clear_cache()
             self._json_response(result)
@@ -212,10 +226,21 @@ class Handler(BaseHTTPRequestHandler):
 
         accept = self.headers.get("Accept", "")
         if "text/event-stream" in accept or data.get("stream"):
-            self._handle_stream(brain_dump, start)
+            if not _pipeline_semaphore.acquire(blocking=False):
+                self._json_response({"error": "Server busy — too many concurrent pipeline requests"}, 503)
+                return
+            try:
+                self._handle_stream(brain_dump, start)
+            finally:
+                _pipeline_semaphore.release()
         else:
-            result = run_pipeline(brain_dump)
-            status = 200 if "error" not in result else 400
+            if not _pipeline_semaphore.acquire(blocking=False):
+                self._json_response({"error": "Server busy — too many concurrent pipeline requests"}, 503)
+                return
+            try:
+                result = run_pipeline(brain_dump)
+            finally:
+                _pipeline_semaphore.release()
             self._json_response(result, status)
             self._log("POST", self.path, status, start, extra={
                 "entity_count": len(result.get("stage1_entities", [])),
@@ -298,10 +323,20 @@ class Handler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.end_headers()
 
-        for event in translate_text_stream(text, target_lang, source_lang):
-            payload = json.dumps(event)
-            self.wfile.write(f"data: {payload}\n\n".encode())
-            self.wfile.flush()
+        rid = self._request_id()
+        deadline = time.time() + SSE_WRITE_TIMEOUT
+        try:
+            for event in translate_text_stream(text, target_lang, source_lang):
+                if time.time() > deadline:
+                    break
+                if isinstance(event, dict):
+                    event["request_id"] = rid
+                payload = json.dumps(event)
+                self.wfile.write(f"data: {payload}\n\n".encode())
+                self.wfile.flush()
+                deadline = time.time() + SSE_WRITE_TIMEOUT
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
         self._log("POST", self.path, 200, start, extra={
             "target_lang": target_lang,
@@ -364,6 +399,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _handle_stream(self, brain_dump, start):
         timings = {}
+        rid = self._request_id()
 
         try:
             t0 = time.time()
@@ -389,10 +425,20 @@ class Handler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.end_headers()
 
-        for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
-            payload = json.dumps(event)
-            self.wfile.write(f"data: {payload}\n\n".encode())
-            self.wfile.flush()
+        deadline = time.time() + SSE_WRITE_TIMEOUT
+        try:
+            for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
+                if time.time() > deadline:
+                    logger.warning(f"[{rid}] SSE write timeout exceeded, aborting stream")
+                    break
+                if isinstance(event, dict):
+                    event["request_id"] = rid
+                payload = json.dumps(event)
+                self.wfile.write(f"data: {payload}\n\n".encode())
+                self.wfile.flush()
+                deadline = time.time() + SSE_WRITE_TIMEOUT
+        except (BrokenPipeError, ConnectionResetError):
+            logger.warning(f"[{rid}] Client disconnected during SSE stream")
 
         self._log("POST", "/api/extract", 200, start, extra={
             "streamed": True,
@@ -407,8 +453,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept")
+        self.send_header("X-Request-ID", self._request_id())
 
     def _json_response(self, data, status=200):
+        if isinstance(data, dict):
+            data["_request_id"] = self._request_id()
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
@@ -420,8 +469,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def _log(self, method, path, status, start, extra=None):
         duration_ms = (time.time() - start) * 1000
+        rid = self._request_id()
+        if extra is None:
+            extra = {}
+        extra["request_id"] = rid
         log_request(method, path, status, duration_ms, extra)
-        logger.info(f"{method} {path} {status} {duration_ms:.0f}ms")
+        logger.info(f"[{rid}] {method} {path} {status} {duration_ms:.0f}ms")
 
     def _serve_file(self, filename, content_type):
         filepath = os.path.join(TEMPLATE_DIR, filename)
