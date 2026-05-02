@@ -6,7 +6,7 @@ Uses LLM (Ollama) for synthesis when available, template fallback otherwise.
 """
 
 from datetime import datetime
-from .llm import chat, is_available as llm_available
+from .llm import chat, chat_stream, is_available as llm_available
 
 # Template-based fallback content (used when no LLM is available)
 
@@ -121,8 +121,6 @@ def synthesize_soulmd_stream(entities, graph, stage_timings=None):
       {"type": "telemetry", "data": {...}} — model info, tokens, speed, timings
       {"type": "soulmd_done", "data": {...}}
     """
-    from .llm import chat_stream
-
     timings = stage_timings or {}
 
     yield {"type": "entities", "data": entities}

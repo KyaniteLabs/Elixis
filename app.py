@@ -12,7 +12,17 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 
+from soulcraft.backup import (
+    create_backup,
+    list_backups,
+    restore_backup,
+    cleanup_old_backups,
+    get_backup_status,
+    auto_backup_if_enabled,
+)
 from soulcraft.entities import extract_entities
+from soulcraft.logging_config import get_logger, configure_root_logger
+from soulcraft.naming import research_name, format_research_report
 from soulcraft.patterns import build_pattern_graph
 from soulcraft.research import enrich_entities
 from soulcraft.synthesis import synthesize_soulmd, synthesize_soulmd_stream
@@ -26,9 +36,18 @@ from soulcraft.translate import (
     get_cache_stats,
     clear_cache,
 )
+from soulcraft.validation import (
+    validate_brain_dump,
+    validate_api_request,
+    get_content_security_policy,
+)
 
 PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "soulcraft", "templates")
+CSP_HEADER = get_content_security_policy()
+CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "*")
+
+logger = get_logger("soulcraft.server")
 
 
 def run_pipeline(brain_dump):
@@ -68,6 +87,7 @@ def run_pipeline(brain_dump):
 
 
 class Handler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         start = time.time()
         if self.path in ("", "/"):
@@ -87,6 +107,12 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/translation-cache":
             self._json_response(get_cache_stats())
             self._log("GET", self.path, 200, start)
+        elif self.path == "/api/backups":
+            self._json_response({"backups": list_backups()})
+            self._log("GET", self.path, 200, start)
+        elif self.path == "/api/backups/status":
+            self._json_response(get_backup_status())
+            self._log("GET", self.path, 200, start)
         else:
             self._serve_static(self.path)
             self._log("GET", self.path, 200, start)
@@ -94,114 +120,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         start = time.time()
         if self.path == "/api/extract":
-            length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(length).decode("utf-8")
-            data = json.loads(body)
-            brain_dump = data.get("brain_dump", "")
-
-            if not brain_dump or len(brain_dump.strip()) < 3:
-                self._json_response({"error": "Brain dump is empty or too short"}, 400)
-                return
-
-            # Check if client wants streaming
-            accept = self.headers.get("Accept", "")
-            if "text/event-stream" in accept or data.get("stream"):
-                self._handle_stream(brain_dump, start)
-            else:
-                result = run_pipeline(brain_dump)
-                status = 200 if "error" not in result else 400
-                self._json_response(result, status)
-                self._log("POST", self.path, status, start, extra={
-                    "entity_count": len(result.get("stage1_entities", [])),
-                    "emergent": result.get("stage2_graph", {}).get("emergent_topic"),
-                    "soulmd_length": len(result.get("stage3_soulmd", "")),
-                    "timings": result.get("timings"),
-                })
+            self._handle_extract(start)
         elif self.path == "/api/translate":
-            length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(length).decode("utf-8")
-            data = json.loads(body)
-
-            text = data.get("text", "")
-            target_lang = data.get("target_lang", "")
-            source_lang = data.get("source_lang", "en")
-
-            if not text:
-                self._json_response({"error": "No text provided"}, 400)
-                return
-
-            if not target_lang:
-                self._json_response({"error": "No target_lang provided"}, 400)
-                return
-
-            # Check if this is a SOUL.md translation
-            is_soulmd = data.get("soulmd", False)
-
-            if is_soulmd:
-                result = translate_soulmd(text, target_lang)
-            else:
-                result = translate_text(text, target_lang, source_lang)
-
-            status = 200 if result.get("success") else 500
-            self._json_response(result, status)
-            self._log("POST", self.path, status, start, extra={
-                "target_lang": target_lang,
-                "source_lang": source_lang,
-                "text_length": len(text),
-                "success": result.get("success"),
-            })
+            self._handle_translate(start)
         elif self.path == "/api/detect-language":
-            length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(length).decode("utf-8")
-            data = json.loads(body)
-
-            text = data.get("text", "")
-            if not text:
-                self._json_response({"error": "No text provided"}, 400)
-                return
-
-            detected = detect_language(text)
-            self._json_response({
-                "detected_language": detected,
-                "language_name": get_supported_languages().get(detected, "Unknown") if detected else None,
-            })
-            self._log("POST", self.path, 200, start)
+            self._handle_detect_language(start)
         elif self.path == "/api/translate-stream":
-            length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(length).decode("utf-8")
-            data = json.loads(body)
-
-            text = data.get("text", "")
-            target_lang = data.get("target_lang", "")
-            source_lang = data.get("source_lang", "en")
-
-            if not text:
-                self._json_response({"error": "No text provided"}, 400)
-                return
-
-            if not target_lang:
-                self._json_response({"error": "No target_lang provided"}, 400)
-                return
-
-            # Send SSE response
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.end_headers()
-
-            for event in translate_text_stream(text, target_lang, source_lang):
-                payload = json.dumps(event)
-                self.wfile.write(f"data: {payload}\n\n".encode())
-                self.wfile.flush()
-
-            self._log("POST", self.path, 200, start, extra={
-                "target_lang": target_lang,
-                "source_lang": source_lang,
-                "text_length": len(text),
-            })
+            self._handle_translate_stream(start)
+        elif self.path == "/api/naming":
+            self._handle_naming(start)
+        elif self.path == "/api/backups":
+            self._handle_backup_create(start)
+        elif self.path == "/api/backups/restore":
+            self._handle_backup_restore(start)
+        elif self.path == "/api/backups/cleanup":
+            self._handle_backup_cleanup(start)
         else:
             self.send_response(404)
+            self._send_cors_headers()
             self.end_headers()
             self._log("POST", self.path, 404, start)
 
@@ -211,17 +147,188 @@ class Handler(BaseHTTPRequestHandler):
             result = clear_cache()
             self._json_response(result)
             self._log("DELETE", self.path, 200, start)
+        elif self.path.startswith("/api/backups/"):
+            name = self.path[len("/api/backups/"):]
+            result = {"removed": 0, "error": None}
+            backups = list_backups()
+            target = next((b for b in backups if b["name"] == name), None)
+            if target:
+                try:
+                    os.remove(target["path"])
+                    result = {"removed": 1, "name": name}
+                except OSError as e:
+                    result = {"removed": 0, "error": str(e)}
+            else:
+                result = {"removed": 0, "error": f"Backup not found: {name}"}
+            self._json_response(result)
+            self._log("DELETE", self.path, 200, start)
         else:
             self.send_response(404)
+            self._send_cors_headers()
             self.end_headers()
             self._log("DELETE", self.path, 404, start)
 
-    def _handle_stream(self, brain_dump, start):
-        """Handle a streaming SSE response."""
-        from soulcraft.entities import extract_entities
-        from soulcraft.patterns import build_pattern_graph
-        from soulcraft.research import enrich_entities
+    # --- Endpoint handlers ---
 
+    def _handle_extract(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+        brain_dump = data.get("brain_dump", "")
+
+        is_valid, error, _ = validate_brain_dump(brain_dump)
+        if not is_valid:
+            self._json_response({"error": error}, 400)
+            return
+
+        accept = self.headers.get("Accept", "")
+        if "text/event-stream" in accept or data.get("stream"):
+            self._handle_stream(brain_dump, start)
+        else:
+            result = run_pipeline(brain_dump)
+            status = 200 if "error" not in result else 400
+            self._json_response(result, status)
+            self._log("POST", self.path, status, start, extra={
+                "entity_count": len(result.get("stage1_entities", [])),
+                "emergent": result.get("stage2_graph", {}).get("emergent_topic"),
+                "soulmd_length": len(result.get("stage3_soulmd", "")),
+                "timings": result.get("timings"),
+            })
+
+    def _handle_translate(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+
+        text = data.get("text", "")
+        target_lang = data.get("target_lang", "")
+        source_lang = data.get("source_lang", "en")
+
+        if not text:
+            self._json_response({"error": "No text provided"}, 400)
+            return
+        if not target_lang:
+            self._json_response({"error": "No target_lang provided"}, 400)
+            return
+
+        is_soulmd = data.get("soulmd", False)
+        if is_soulmd:
+            result = translate_soulmd(text, target_lang)
+        else:
+            result = translate_text(text, target_lang, source_lang)
+
+        status = 200 if result.get("success") else 500
+        self._json_response(result, status)
+        self._log("POST", self.path, status, start, extra={
+            "target_lang": target_lang,
+            "source_lang": source_lang,
+            "text_length": len(text),
+            "success": result.get("success"),
+        })
+
+    def _handle_detect_language(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+
+        text = data.get("text", "")
+        if not text:
+            self._json_response({"error": "No text provided"}, 400)
+            return
+
+        detected = detect_language(text)
+        self._json_response({
+            "detected_language": detected,
+            "language_name": get_supported_languages().get(detected, "Unknown") if detected else None,
+        })
+        self._log("POST", self.path, 200, start)
+
+    def _handle_translate_stream(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+
+        text = data.get("text", "")
+        target_lang = data.get("target_lang", "")
+        source_lang = data.get("source_lang", "en")
+
+        if not text:
+            self._json_response({"error": "No text provided"}, 400)
+            return
+        if not target_lang:
+            self._json_response({"error": "No target_lang provided"}, 400)
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self._send_cors_headers()
+        self.end_headers()
+
+        for event in translate_text_stream(text, target_lang, source_lang):
+            payload = json.dumps(event)
+            self.wfile.write(f"data: {payload}\n\n".encode())
+            self.wfile.flush()
+
+        self._log("POST", self.path, 200, start, extra={
+            "target_lang": target_lang,
+            "source_lang": source_lang,
+            "text_length": len(text),
+        })
+
+    def _handle_naming(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+
+        name = data.get("name", "")
+        context = data.get("context", "")
+        generate_variants = data.get("generate_variants", True)
+
+        if not name:
+            self._json_response({"error": "No name provided"}, 400)
+            return
+
+        report = research_name(name, context, generate_variants)
+        self._json_response(report)
+        self._log("POST", self.path, 200, start, extra={
+            "name": name,
+            "context": context,
+            "variant_count": len(report.get("variants", [])),
+        })
+
+    def _handle_backup_create(self, start):
+        result = create_backup()
+        status = 200 if result["status"] == "success" else 202 if result["status"] == "skipped" else 500
+        self._json_response(result, status)
+        self._log("POST", self.path, status, start, extra={"backup_status": result["status"]})
+
+    def _handle_backup_restore(self, start):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        data = json.loads(body)
+
+        backup_name = data.get("name", "")
+        force = data.get("force", False)
+
+        if not backup_name:
+            self._json_response({"error": "No backup name provided"}, 400)
+            return
+
+        result = restore_backup(backup_name, force=force)
+        status = 200 if result["success"] else 400
+        self._json_response(result, status)
+        self._log("POST", self.path, status, start, extra={"backup_name": backup_name})
+
+    def _handle_backup_cleanup(self, start):
+        result = cleanup_old_backups()
+        self._json_response(result)
+        self._log("POST", self.path, 200, start)
+
+    # --- Streaming ---
+
+    def _handle_stream(self, brain_dump, start):
         timings = {}
 
         try:
@@ -245,6 +352,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
+        self._send_cors_headers()
         self.end_headers()
 
         for event in synthesize_soulmd_stream(entities, graph, stage_timings=timings):
@@ -252,7 +360,6 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(f"data: {payload}\n\n".encode())
             self.wfile.flush()
 
-        duration_ms = (time.time() - start) * 1000
         self._log("POST", "/api/extract", 200, start, extra={
             "streamed": True,
             "entity_count": len(entities),
@@ -260,22 +367,33 @@ class Handler(BaseHTTPRequestHandler):
             "timings": timings,
         })
 
+    # --- Response helpers ---
+
+    def _send_cors_headers(self):
+        self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept")
+
     def _json_response(self, data, status=200):
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Security-Policy", CSP_HEADER)
+        self._send_cors_headers()
         self.end_headers()
         self.wfile.write(body)
 
     def _log(self, method, path, status, start, extra=None):
         duration_ms = (time.time() - start) * 1000
         log_request(method, path, status, duration_ms, extra)
+        logger.info(f"{method} {path} {status} {duration_ms:.0f}ms")
 
     def _serve_file(self, filename, content_type):
         filepath = os.path.join(TEMPLATE_DIR, filename)
         if not os.path.isfile(filepath):
             self.send_response(404)
+            self._send_cors_headers()
             self.end_headers()
             return
         with open(filepath, "rb") as f:
@@ -283,6 +401,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
+        self._send_cors_headers()
         self.end_headers()
         self.wfile.write(content)
 
@@ -301,6 +420,15 @@ class Handler(BaseHTTPRequestHandler):
         content_type = content_types.get(ext, "application/octet-stream")
         self._serve_file(filename, content_type)
 
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self._send_cors_headers()
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def log_message(self, format, *args):
+        pass
+
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
@@ -308,6 +436,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 
 def main():
+    configure_root_logger()
     port = PORT
     if "--port" in sys.argv:
         idx = sys.argv.index("--port")
@@ -316,36 +445,32 @@ def main():
 
     server = ThreadedHTTPServer(("0.0.0.0", port), Handler)
 
-    # Graceful shutdown handler
     shutdown_event = threading.Event()
 
     def signal_handler(signum, frame):
-        print(f"\nReceived signal {signum}, initiating graceful shutdown...")
+        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
         shutdown_event.set()
         server.shutdown()
 
-    # Register signal handlers
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
 
-    print(f"Soulcraft running on http://localhost:{port}")
-    print(f"PID: {os.getpid()}")
+    logger.info(f"Soulcraft running on http://localhost:{port} (PID: {os.getpid()})")
 
-    # Start server in a thread so we can handle signals
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
 
     try:
-        # Wait for shutdown signal
         while not shutdown_event.is_set():
             shutdown_event.wait(1)
     except KeyboardInterrupt:
-        print("\nShutting down...")
+        logger.info("Shutting down...")
     finally:
+        auto_backup_if_enabled()
         server.server_close()
         server_thread.join(timeout=5)
-        print("Shutdown complete.")
+        logger.info("Shutdown complete.")
 
 
 if __name__ == "__main__":

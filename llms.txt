@@ -16,7 +16,7 @@ SoulCraft helps transform research notes, cultural context, constraints, and cre
 - `README.md`: public-facing overview
 - `soulcraft/`: core Python package
 - `tests/`: verification suite
-- `app.py`: Flask entry point
+- `app.py`: HTTP server entry point (stdlib)
 - `traefik/`: deployment examples
 
 ## Keywords
