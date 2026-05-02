@@ -56,6 +56,33 @@ logger = get_logger("soulcraft.server")
 # Semaphore to prevent resource exhaustion from too many simultaneous LLM calls
 _pipeline_semaphore = threading.Semaphore(MAX_CONCURRENT_PIPELINES)
 
+# Graceful shutdown: track in-flight requests and drain on signal
+_active_requests = threading.Semaphore(0)  # count of in-flight requests
+_active_count = 0
+_active_count_lock = threading.Lock()
+_shutdown_requested = threading.Event()
+SHUTDOWN_DRAIN_TIMEOUT = int(os.environ.get("SHUTDOWN_DRAIN_TIMEOUT", "30"))
+
+
+def _request_enter():
+    """Track a request entering processing. Returns False if shutting down."""
+    if _shutdown_requested.is_set():
+        return False
+    with _active_count_lock:
+        global _active_count
+        _active_count += 1
+    return True
+
+
+def _request_leave():
+    """Track a request finishing processing."""
+    with _active_count_lock:
+        global _active_count
+        _active_count -= 1
+    # If shutdown is waiting, pulse the event
+    if _shutdown_requested.is_set():
+        _shutdown_requested.set()
+
 
 def run_pipeline(brain_dump):
     """Run the full 3-stage pipeline on a brain dump string."""
@@ -227,21 +254,31 @@ class Handler(BaseHTTPRequestHandler):
 
         accept = self.headers.get("Accept", "")
         if "text/event-stream" in accept or data.get("stream"):
+            if not _request_enter():
+                self._json_response({"error": "Server is shutting down"}, 503)
+                return
             if not _pipeline_semaphore.acquire(blocking=False):
+                _request_leave()
                 self._json_response({"error": "Server busy — too many concurrent pipeline requests"}, 503)
                 return
             try:
                 self._handle_stream(brain_dump, start)
             finally:
                 _pipeline_semaphore.release()
+                _request_leave()
         else:
+            if not _request_enter():
+                self._json_response({"error": "Server is shutting down"}, 503)
+                return
             if not _pipeline_semaphore.acquire(blocking=False):
+                _request_leave()
                 self._json_response({"error": "Server busy — too many concurrent pipeline requests"}, 503)
                 return
             try:
                 result = run_pipeline(brain_dump)
             finally:
                 _pipeline_semaphore.release()
+                _request_leave()
             status = 200 if "error" not in result else 500
             self._json_response(result, status)
             self._log("POST", self.path, status, start, extra={
@@ -546,6 +583,7 @@ def main():
 
     def signal_handler(signum, frame):
         logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        _shutdown_requested.set()
         shutdown_event.set()
         server.shutdown()
 
@@ -564,6 +602,23 @@ def main():
     except KeyboardInterrupt:
         logger.info("Shutting down...")
     finally:
+        # Drain in-flight requests
+        drain_start = time.time()
+        with _active_count_lock:
+            remaining = _active_count
+        if remaining > 0:
+            logger.info(f"Waiting for {remaining} in-flight requests to complete (max {SHUTDOWN_DRAIN_TIMEOUT}s)...")
+            while time.time() - drain_start < SHUTDOWN_DRAIN_TIMEOUT:
+                with _active_count_lock:
+                    if _active_count <= 0:
+                        break
+                time.sleep(0.5)
+            with _active_count_lock:
+                final = _active_count
+            if final > 0:
+                logger.warning(f"Drain timeout exceeded, {final} requests still active")
+            else:
+                logger.info("All in-flight requests completed")
         auto_backup_if_enabled()
         server.server_close()
         server_thread.join(timeout=5)
