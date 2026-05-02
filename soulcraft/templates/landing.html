@@ -3,26 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoulCraft — AI-Powered Identity Synthesis for SOUL.md</title>
-<meta name="description" content="Transform brain dump text into structured SOUL.md identity documents through a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis. Companion tool for OpenClaw.">
-<meta name="keywords" content="SOUL.md, OpenClaw, AI identity, persona synthesis, entity extraction, pattern analysis, LLM, archetypal patterns, identity document, AI agent">
+<title>SoulCraft — Glass Bead Game</title>
+<meta name="description" content="Interactive Glass Bead Game interface for SoulCraft. Transform brain dump text into structured SOUL.md identity documents through entity extraction, pattern analysis, and synthesis.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#0a0a0f">
 <link rel="canonical" href="https://github.com/KyaniteLabs/SoulCraft">
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="SoulCraft — AI-Powered Identity Synthesis">
-<meta property="og:description" content="Transform brain dump text into structured SOUL.md identity documents. Entity extraction, archetypal pattern analysis, and LLM-assisted synthesis.">
+<meta property="og:title" content="SoulCraft — Glass Bead Game">
+<meta property="og:description" content="Transform brain dump text into structured SOUL.md identity documents. Interactive Glass Bead Game interface.">
 <meta property="og:url" content="https://github.com/KyaniteLabs/SoulCraft">
 <meta property="og:site_name" content="SoulCraft">
 <meta property="og:locale" content="en_US">
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SoulCraft — AI-Powered Identity Synthesis">
-<meta name="twitter:description" content="Transform brain dump text into structured SOUL.md identity documents. Companion tool for OpenClaw.">
 
 <!-- JSON-LD Structured Data -->
 <script type="application/ld+json">
@@ -30,18 +24,13 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "SoulCraft",
-  "description": "AI-powered identity synthesis companion for OpenClaw and Soul Spec. Transforms brain dump text into structured SOUL.md identity documents through a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis.",
+  "description": "AI-powered identity synthesis companion for OpenClaw and Soul Spec. Interactive Glass Bead Game interface transforms brain dump text into structured SOUL.md identity documents.",
   "url": "https://github.com/KyaniteLabs/SoulCraft",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux",
   "programmingLanguage": "Python",
   "license": "https://opensource.org/licenses/MIT",
   "codeRepository": "https://github.com/KyaniteLabs/SoulCraft",
-  "installUrl": "https://github.com/KyaniteLabs/SoulCraft#installation",
-  "sameAs": [
-    "https://github.com/KyaniteLabs/SoulCraft",
-    "https://kyanitelabs.tech"
-  ],
   "author": {
     "@type": "Organization",
     "name": "Kyanite Labs",
@@ -51,934 +40,1079 @@
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD"
-  },
-  "featureList": [
-    "3-stage LLM pipeline: entity extraction, pattern graph, SOUL.md synthesis",
-    "12 archetypal patterns with probability scoring",
-    "Wikipedia enrichment for extracted entities",
-    "MCP server for AI agent native access",
-    "SSE streaming for real-time analysis",
-    "On-the-fly translation with caching",
-    "Zero external Python dependencies"
-  ]
+  }
 }
 </script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap');
 
+<style>
+/* ════════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — All visual constants as CSS custom properties
+   ════════════════════════════════════════════════════════════════════════════ */
 :root {
-  --bg: #080808;
-  --surface: #0f0f0f;
-  --surface2: #161616;
-  --accent: #00D4FF;
-  --accent2: #0A6E8A;
-  --gold: #ffc200;
-  --text: #f0ede8;
-  --muted: #666;
-  --border: #2a2a2a;
-  --pattern-colors: #ff6b00 #a855f7 #ffc200 #4ecdc4 #f43f5e #38bdf8 #34d399 #ef4444 #22d3ee #e879f9 #6b7280 #fbbf24;
+  /* Background */
+  --bg-primary: #0a0a0f;
+  --bg-surface: #101018;
+  --bg-surface-elevated: #16161f;
+  --bg-glass: rgba(255, 255, 255, 0.03);
+  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-active: rgba(255, 255, 255, 0.18);
+
+  /* Text */
+  --text-primary: #e8e6e3;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-dim: #4b5563;
+
+  /* Accent */
+  --accent: #6ee7b7;
+  --accent-dim: rgba(110, 231, 183, 0.15);
+  --accent-glow: rgba(110, 231, 183, 0.25);
+
+  /* Sentiment */
+  --sentiment-positive: #4ade80;
+  --sentiment-negative: #f87171;
+  --sentiment-neutral: #94a3b8;
+
+  /* Pattern Colors */
+  --pattern-0: #ff6b00;
+  --pattern-1: #a855f7;
+  --pattern-2: #fbbf24;
+  --pattern-3: #4ecdc4;
+  --pattern-4: #f43f5e;
+  --pattern-5: #38bdf8;
+  --pattern-6: #34d399;
+  --pattern-7: #ef4444;
+  --pattern-8: #22d3ee;
+  --pattern-9: #e879f9;
+  --pattern-10: #6b7280;
+  --pattern-11: #f97316;
+
+  /* Type Colors */
+  --type-character: #6ee7b7;
+  --type-movie: #4ecdc4;
+  --type-book: #fbbf24;
+  --type-tv_show: #a855f7;
+  --type-historical_figure: #38bdf8;
+  --type-music: #22d3ee;
+  --type-person: #f97316;
+  --type-place: #84cc16;
+  --type-concept: #eab308;
+  --type-work: #4ecdc4;
+  --type-event: #c084fc;
+  --type-emotion: #f43f5e;
+  --type-skill: #38bdf8;
+  --type-default: #6b7280;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-base: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Sizing */
+  --sidebar-width: 300px;
+  --tab-bar-height: 44px;
+  --bead-dot-size: 8px;
+  --min-tap-target: 44px;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Consolas', monospace;
+  --font-size-xs: 0.625rem;
+  --font-size-sm: 0.75rem;
+  --font-size-base: 0.8125rem;
+  --font-size-md: 0.875rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Blur */
+  --blur-glass: 12px;
+  --blur-heavy: 24px;
+
+  /* Opacity */
+  --opacity-disabled: 0.4;
+  --opacity-muted: 0.6;
+
+  /* Transition */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Shadow */
+  --shadow-glow: 0 0 20px rgba(110, 231, 183, 0.15);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ════════════════════════════════════════════════════════════════════════════
+   RESET & BASE
+   ════════════════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
-  overflow-x: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
   line-height: 1.6;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
+/* ════════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ════════════════════════════════════════════════════════════════════════════ */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--bg-primary);
+  padding: var(--space-sm) var(--space-base);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
   z-index: 9999;
-}
-
-/* ── NAV ── */
-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 3rem;
-  background: rgba(8,8,8,0.9);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-.nav-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: 3px;
-  color: var(--accent);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
   text-decoration: none;
-}
-.nav-logo span { color: var(--text); }
-.nav-links { display: flex; gap: 2rem; align-items: center; }
-.nav-links a {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-cta {
-  background: var(--accent) !important;
-  color: #000 !important;
-  padding: 0.5rem 1.2rem;
-  border-radius: 3px;
-  font-weight: 600 !important;
-  letter-spacing: 1px !important;
-}
-.nav-cta:hover { background: var(--accent2) !important; }
-
-/* ── LANGUAGE SELECTOR ── */
-.lang-selector {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 0.4rem 0.8rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  border-radius: 3px;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.lang-selector:hover, .lang-selector:focus {
-  border-color: var(--accent);
-}
-.lang-selector option {
-  background: var(--surface2);
-  color: var(--text);
+  transition: top var(--transition-fast);
 }
 
-/* ── TRANSLATION STATUS ── */
-.translation-status {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  background: var(--surface2);
-  border: 1px solid var(--accent);
-  padding: 0.6rem 1rem;
-  border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--accent);
-  display: none;
-  align-items: center;
-  gap: 0.5rem;
-  z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
-.translation-status.active { display: flex; }
-.translation-status .translation-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--accent);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.skip-link:focus {
+  top: 0;
 }
 
-/* ── HERO ── */
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 8rem 3rem 4rem;
-  position: relative;
-  overflow: hidden;
-}
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 30%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 800px; height: 800px;
-  background: radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%);
-  pointer-events: none;
-}
-.hero-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-.hero-eyebrow::before {
-  content: '';
-  display: inline-block;
-  width: 40px; height: 1px;
-  background: var(--accent);
-}
-.hero h1 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(5rem, 14vw, 14rem);
-  line-height: 0.85;
-  letter-spacing: -2px;
-  color: var(--text);
-  margin-bottom: 2rem;
-}
-.hero h1 .accent { color: var(--accent); }
-.hero h1 .outline { -webkit-text-stroke: 2px var(--text); color: transparent; }
-.hero-sub {
-  font-size: 1.1rem;
-  color: var(--muted);
-  max-width: 560px;
-  line-height: 1.8;
-  margin-bottom: 3rem;
-  font-weight: 300;
-}
-.hero-sub strong { color: var(--text); font-weight: 400; }
-
-/* ── BEAD VIZ ── */
-.bead-viz { display: flex; align-items: center; gap: 0; margin: 3rem 0; position: relative; }
-.bead { width: 18px; height: 18px; border-radius: 50%; position: relative; flex-shrink: 0; }
-.bead::after { content: ''; position: absolute; inset: 2px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 60%); }
-.bead-1 { background: var(--accent); box-shadow: 0 0 20px rgba(0,212,255,0.6); }
-.bead-2 { background: var(--gold); box-shadow: 0 0 20px rgba(255,194,0,0.5); }
-.bead-3 { background: #4ecdc4; box-shadow: 0 0 20px rgba(78,205,196,0.5); }
-.bead-4 { background: #a855f7; box-shadow: 0 0 20px rgba(168,85,247,0.5); }
-.bead-5 { background: #f43f5e; box-shadow: 0 0 20px rgba(244,63,94,0.5); }
-.bead-thread { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border) 0%, var(--accent) 50%, var(--border) 100%); opacity: 0.5; }
-.bead-thread.active { background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--accent) 100%); opacity: 1; box-shadow: 0 0 8px rgba(0,212,255,0.4); }
-.bead-label { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; letter-spacing: 1px; color: var(--muted); white-space: nowrap; text-transform: uppercase; }
-.bead-wrap { position: relative; display: flex; align-items: center; }
-
-/* ── SECTIONS ── */
-.section { padding: 8rem 3rem; }
-.section-dark { background: var(--surface); }
-.section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
-.section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 6rem); letter-spacing: -1px; line-height: 0.9; color: var(--text); margin: 0 0 2rem 0; }
-
-/* ── PROBLEM GRID ── */
-.problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 3rem; }
-.problem-cell { background: var(--bg); padding: 2.5rem; position: relative; }
-.problem-cell .num { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; color: var(--border); line-height: 1; margin-bottom: 1rem; }
-.problem-cell h3 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.8rem; }
-.problem-cell p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
-.no-before { border-left: 3px solid var(--accent); background: linear-gradient(90deg, rgba(0,212,255,0.05) 0%, transparent 100%); }
-.no-before h3 { color: var(--accent); }
-
-/* ── LIVE DEMO ── */
-.demo-section { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.demo-header { text-align: center; padding: 5rem 3rem 3rem; }
-.demo-input-panel { padding: 3rem; max-width: 800px; margin: 0 auto; }
-.demo-output-panel { padding: 3rem; max-width: 1200px; margin: 0 auto; min-height: 200px; }
-
-/* ── INPUT FORM ── */
-.input-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: block; }
-.brain-dump {
-  width: 100%; height: 280px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 1.2rem;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  line-height: 1.7;
-  border-radius: 4px;
-  resize: vertical;
-  transition: border-color 0.2s;
-}
-.brain-dump:focus { outline: none; border-color: var(--accent); }
-.brain-dump::placeholder { color: #444; }
-
-.run-btn {
-  margin-top: 1.2rem;
-  background: var(--accent);
-  color: #000;
-  border: none;
-  padding: 0.9rem 2.5rem;
-  font-size: 0.85rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: background 0.2s, box-shadow 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.run-btn:hover { background: var(--accent2); box-shadow: 0 0 20px rgba(0,212,255,0.4); }
-.run-btn:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
-.run-btn .spinner { display: none; width: 14px; height: 14px; border: 2px solid #000; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
-.run-btn.loading .spinner { display: block; }
-.run-btn.loading .btn-text { opacity: 0.6; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.demo-error { background: #2a0a0a; border: 1px solid #ff4444; color: #ff6666; padding: 1rem; border-radius: 4px; margin-top: 1rem; display: none; font-size: 0.85rem; }
-
-/* ── PIPELINE PROGRESS ── */
-.pipeline-progress { display: none; margin-top: 1.5rem; }
-.pipeline-progress.active { display: block; }
-.pipeline-stages { display: flex; gap: 0; align-items: center; }
-.pipeline-stage-item {
-  display: flex; align-items: center; gap: 0.5rem;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
-  letter-spacing: 1px; text-transform: uppercase;
-  color: #444; transition: color 0.3s ease-out;
-}
-.pipeline-stage-item.active { color: var(--accent); }
-.pipeline-stage-item.done { color: #4ecdc4; }
-.pipeline-stage-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #333; transition: background 0.3s ease-out, box-shadow 0.3s ease-out;
-  flex-shrink: 0;
-}
-.pipeline-stage-item.active .pipeline-stage-dot {
-  background: var(--accent);
-  box-shadow: 0 0 10px rgba(0,212,255,0.6);
-  animation: pulse-dot 1.5s ease-in-out infinite;
-}
-.pipeline-stage-item.done .pipeline-stage-dot { background: #4ecdc4; box-shadow: 0 0 6px rgba(78,205,196,0.4); }
-.pipeline-stage-connector { flex: 1; height: 1px; background: #222; margin: 0 0.5rem; transition: background 0.3s; }
-.pipeline-stage-connector.done { background: #4ecdc4; }
-
-/* ── AMBIENT DEPTH ── */
-.demo-section { position: relative; overflow: hidden; }
-.demo-section::before {
-  content: ''; position: absolute;
-  top: -200px; right: -200px;
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(255,107,0,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-.demo-section::after {
-  content: ''; position: absolute;
-  bottom: -300px; left: -100px;
-  width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(168,85,247,0.04) 0%, transparent 70%);
-  pointer-events: none;
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-/* ── ACTIVE/PRESSED STATES ── */
-.run-btn:active:not(:disabled) { transform: scale(0.97); }
-.soulmd-btn:active { transform: scale(0.97); }
-.entity-chip:active { background: #2a2a2a; }
-
-/* ── HERO SCROLL HINT ── */
-.hero-demo-hint {
-  display: inline-flex; align-items: center; gap: 0.6rem;
-  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: var(--muted); text-decoration: none;
-  transition: color 0.2s ease-out;
-  margin-top: 1rem;
-}
-.hero-demo-hint:hover { color: var(--accent); }
-.hero-demo-hint .arrow { transition: transform 0.2s ease-out; }
-.hero-demo-hint:hover .arrow { transform: translateX(4px); }
-
-/* ── OUTPUT STATES ── */
-.output-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: var(--muted); gap: 1rem; padding-top: 4rem; }
-.output-placeholder .placeholder-icon { font-size: 3rem; opacity: 0.3; }
-.output-placeholder p { font-size: 0.85rem; max-width: 280px; line-height: 1.6; }
-
-/* ── ANALYSIS DASHBOARD ── */
-.analysis-dashboard { display: none; }
-
-/* ── THINKING / REASONING ── */
-.thinking-section { display: none; margin-bottom: 2rem; }
-.thinking-toggle {
-  background: none; border: 1px solid var(--border); color: var(--muted);
-  padding: 0.4rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
-  letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 3px;
-  display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem;
-  transition: all 0.2s;
-}
-.thinking-toggle:hover { border-color: var(--accent2); color: var(--accent2); }
-.thinking-toggle .arrow { transition: transform 0.2s; }
-.thinking-toggle.open .arrow { transform: rotate(90deg); }
-.thinking-content {
-  background: #0a0a12; border: 1px solid #1a1a2e; border-left: 3px solid var(--accent2);
-  padding: 1.2rem; border-radius: 4px; font-size: 0.78rem; line-height: 1.7;
-  color: #888; max-height: 300px; overflow-y: auto; display: none;
-  font-family: 'Inter', sans-serif;
-}
-.thinking-content.visible { display: block; }
-
-/* ── STREAMING CURSOR ── */
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-.streaming-cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); animation: blink 0.8s infinite; vertical-align: text-bottom; margin-left: 2px; }
-
-.analysis-section { margin-bottom: 2.5rem; }
-.analysis-section:last-child { margin-bottom: 0; }
-
-.analysis-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.analysis-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-/* Entity Cards */
-.entity-cards { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.entity-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  padding: 0.3rem 0.7rem;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  transition: border-color 0.2s;
-}
-.entity-chip .type-dot { width: 6px; height: 6px; border-radius: 50%; }
-.entity-chip.type-character { border-color: var(--accent); color: var(--accent); }
-.entity-chip.type-character .type-dot { background: var(--accent); }
-.entity-chip.type-movie { border-color: #4ecdc4; color: #4ecdc4; }
-.entity-chip.type-movie .type-dot { background: #4ecdc4; }
-.entity-chip.type-book { border-color: #ffe66d; color: #ffe66d; }
-.entity-chip.type-book .type-dot { background: #ffe66d; }
-.entity-chip.type-tv_show { border-color: #a855f7; color: #a855f7; }
-.entity-chip.type-tv_show .type-dot { background: #a855f7; }
-.entity-chip.type-historical_figure { border-color: #38bdf8; color: #38bdf8; }
-.entity-chip.type-historical_figure .type-dot { background: #38bdf8; }
-.entity-chip.type-music { border-color: #22d3ee; color: #22d3ee; }
-.entity-chip.type-music .type-dot { background: #22d3ee; }
-.entity-chip.type-person { border-color: #f97316; color: #f97316; }
-.entity-chip.type-person .type-dot { background: #f97316; }
-.entity-chip.type-place { border-color: #84cc16; color: #84cc16; }
-.entity-chip.type-place .type-dot { background: #84cc16; }
-.entity-chip.type-concept { border-color: #eab308; color: #eab308; }
-.entity-chip.type-concept .type-dot { background: #eab308; }
-.entity-chip.type-work { border-color: #4ecdc4; color: #4ecdc4; }
-.entity-chip.type-work .type-dot { background: #4ecdc4; }
-.entity-chip.type-event { border-color: #c084fc; color: #c084fc; }
-.entity-chip.type-event .type-dot { background: #c084fc; }
-.entity-chip.type-emotion { border-color: #f43f5e; color: #f43f5e; }
-.entity-chip.type-emotion .type-dot { background: #f43f5e; }
-.entity-chip.type-skill { border-color: #38bdf8; color: #38bdf8; }
-.entity-chip.type-skill .type-dot { background: #38bdf8; }
-
-/* Emergent Topic */
-.emergent-box {
-  background: var(--surface2);
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
-}
-.emergent-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 3px; height: 100%;
-  background: var(--accent);
-}
-.emergent-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
-.emergent-topic { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; margin-bottom: 0.4rem; }
-.emergent-theme { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
-.consensus-bar { display: flex; align-items: center; gap: 0.8rem; }
-.consensus-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-.consensus-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
-.consensus-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); }
-
-/* Pattern Graph */
-.pattern-graph { display: flex; flex-direction: column; gap: 0.6rem; }
-.pattern-row {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #1a1a1a;
-}
-.pattern-row:last-child { border-bottom: none; }
-.pattern-rank { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 20px; flex-shrink: 0; }
-.pattern-bar-wrap { flex: 1; display: flex; align-items: center; gap: 0.6rem; }
-.pattern-bar-track { flex: 1; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; }
-.pattern-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
-.pattern-name { font-size: 0.78rem; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pattern-prob { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); width: 36px; text-align: right; flex-shrink: 0; }
-.pattern-confidence { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #444; width: 30px; text-align: right; flex-shrink: 0; }
-
-/* Bridge Concepts */
-.bridges-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
-.bridge-item {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.82rem;
-}
-.bridge-entity { color: var(--text); font-weight: 600; margin-bottom: 0.3rem; }
-.bridge-connection { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; }
-.bridge-pill { padding: 0.1rem 0.5rem; border-radius: 3px; font-size: 0.7rem; }
-.bridge-arrow { color: var(--muted); }
-
-/* Analysis Notes */
-.analysis-notes { display: flex; flex-direction: column; gap: 0.5rem; }
-.analysis-note { font-size: 0.82rem; color: var(--muted); line-height: 1.6; padding-left: 1rem; border-left: 2px solid var(--border); }
-
-/* Entity Pattern Matrix */
-.matrix-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
-.entity-matrix { display: flex; flex-direction: column; gap: 0.6rem; }
-.matrix-row { display: flex; align-items: center; gap: 0.6rem; }
-.matrix-entity { font-size: 0.75rem; color: var(--text); width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.matrix-bars { display: flex; gap: 3px; flex: 1; align-items: center; }
-.matrix-seg { height: 10px; border-radius: 2px; min-width: 4px; transition: width 0.5s ease; }
-
-/* ── TELEMETRY PANEL ── */
-.telemetry-section { display: none; margin-bottom: 2.5rem; }
-.telemetry-toggle {
-  background: none; border: 1px solid var(--border); color: var(--muted);
-  padding: 0.4rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
-  letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 3px;
-  display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem;
-  transition: all 0.2s;
-}
-.telemetry-toggle:hover { border-color: #22d3ee; color: #22d3ee; }
-.telemetry-toggle .arrow { transition: transform 0.2s; }
-.telemetry-toggle.open .arrow { transform: rotate(90deg); }
-.telemetry-panel {
-  display: none;
-  background: #0a0a0f;
-  border: 1px solid #1a1a2e;
-  border-left: 3px solid #22d3ee;
-  border-radius: 4px;
-  padding: 1.2rem;
-}
-.telemetry-panel.visible { display: block; }
-
-.telemetry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-.telemetry-metric {
-  background: #0d0d14;
-  border: 1px solid #1a1a2e;
-  border-radius: 3px;
-  padding: 0.8rem;
-}
-.telemetry-metric-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #444;
-  margin-bottom: 0.3rem;
-}
-.telemetry-metric-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.1rem;
-  color: #22d3ee;
-  text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
-}
-.telemetry-metric-unit {
-  font-size: 0.6rem;
-  color: #555;
-  margin-left: 2px;
-}
-
-.telemetry-model-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: #0d0d14;
-  border: 1px solid #22d3ee33;
-  border-radius: 3px;
-  padding: 0.3rem 0.7rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: #22d3ee;
-  margin-bottom: 1rem;
-}
-.telemetry-model-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-.telemetry-timings {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.telemetry-stage {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-}
-.telemetry-stage-name {
-  color: #555;
-  width: 130px;
-  flex-shrink: 0;
-}
-.telemetry-stage-bar-track {
-  flex: 1;
-  height: 3px;
-  background: #1a1a2e;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.telemetry-stage-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.6s ease;
-}
-.telemetry-stage-ms {
-  color: #666;
-  width: 60px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-/* ── SUB-PATTERNS ── */
-.sub-patterns {
-  display: flex;
-  gap: 0.3rem;
-  margin-top: 0.3rem;
-  flex-wrap: wrap;
-}
-.sub-pattern-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 1px;
-  padding: 0.15rem 0.4rem;
-  border-radius: 2px;
-  background: #ffffff08;
-  border: 1px solid #ffffff15;
-  color: #888;
-}
-
-/* ── RELATED CHARACTERS ── */
-.related-section { margin-top: 0.4rem; }
-.related-chars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.2rem;
-}
-.related-chip {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.55rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
-  background: #ffffff06;
-  border: 1px solid #ffffff10;
-  color: #666;
-  cursor: default;
-}
-
-/* ── SOUL.MD OUTPUT ── */
-.soulmd-section { display: none; margin-top: 2.5rem; border-top: 1px solid var(--border); padding-top: 2rem; }
-.soulmd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-.soulmd-title { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
-.soulmd-actions { display: flex; gap: 0.5rem; }
-.soulmd-btn {
-  background: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold);
-  padding: 0.4rem 1rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.soulmd-btn:hover { background: var(--gold); color: #000; }
-.soulmd-output {
-  background: #0a0a0a;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--gold);
-  padding: 2rem;
-  border-radius: 4px;
-  white-space: pre-wrap;
-  font-size: 0.82rem;
-  line-height: 1.8;
-  color: #ccc;
-  max-height: 500px;
-  overflow-y: auto;
-  font-family: 'Courier New', Courier, monospace;
-}
-.soulmd-output::-webkit-scrollbar { width: 4px; }
-.soulmd-output::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
-.copied-toast { display: none; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #4ecdc4; letter-spacing: 1px; }
-
-/* ── HOW IT WORKS ── */
-.pipeline-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin-top: 3rem; border: 1px solid var(--border); }
-.pipeline-step { background: var(--bg); padding: 2.5rem; position: relative; }
-.pipeline-step::before { content: attr(data-step); font-family: 'Bebas Neue', sans-serif; font-size: 6rem; color: var(--border); line-height: 1; position: absolute; top: 1rem; right: 1.5rem; }
-.step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
-.step-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0 0 0.8rem 0; }
-.step-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
-
-/* ── SOUL FILE ── */
-.soul-file-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); margin-top: 3rem; border: 1px solid var(--border); }
-.soul-file-card { background: var(--bg); padding: 2rem; }
-.soul-file-card .card-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--border); margin-bottom: 1rem; }
-.soul-file-card h3 { font-size: 1rem; color: var(--text); margin-bottom: 0.6rem; }
-.soul-file-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
-
-/* ── FOOTER ── */
-footer { border-top: 1px solid var(--border); padding: 3rem; text-align: center; color: var(--muted); font-size: 0.8rem; }
-footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
-footer a:hover { color: var(--accent); }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .pipeline-steps { grid-template-columns: 1fr; }
-  .soul-file-grid { grid-template-columns: 1fr; }
-  nav { padding: 1rem 1.5rem; }
-  .hero { padding: 7rem 1.5rem 3rem; }
-  .section { padding: 5rem 1.5rem; }
-  .problem-grid { grid-template-columns: 1fr; }
-  .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ── ACCESSIBILITY ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .streaming-cursor { animation: none; opacity: 1; }
-  .telemetry-model-dot { animation: none; }
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 2px;
+/* ════════════════════════════════════════════════════════════════════════════
+   LAYOUT — Full-screen app shell
+   ════════════════════════════════════════════════════════════════════════════ */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
 }
 
-button, a, [onclick] { cursor: pointer; }
-
-/* ── VISUAL POLISH ── */
-.nav-logo:hover { text-shadow: 0 0 20px rgba(0,212,255,0.4); transition: text-shadow 0.3s ease; }
-
-.emergent-topic { text-shadow: 0 0 30px currentColor; }
-
-.run-btn { min-height: 44px; min-width: 44px; }
-.soulmd-btn { min-height: 32px; }
-.thinking-toggle, .telemetry-toggle { min-height: 36px; }
-
-.hero h1 { text-shadow: 0 4px 40px rgba(255,61,0,0.08); }
-
-.bead { transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; }
-.bead-wrap:hover .bead { transform: scale(1.3); }
-
-.entity-chip { transition: border-color 0.2s ease-out, background 0.2s ease-out; }
-.entity-chip:hover { background: #1e1e1e; }
-
-/* Skip to content link */
-.skip-link {
-  position: absolute; top: -100%; left: 50%; transform: translateX(-50%);
-  background: var(--accent); color: #000; padding: 0.5rem 1rem;
-  font-size: 0.8rem; z-index: 999; border-radius: 0 0 4px 4px;
-  transition: top 0.2s;
+/* ── Header Bar ── */
+.header-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(var(--blur-heavy));
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: 100;
 }
-.skip-link:focus { top: 0; }
+
+.header-brand {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.header-brand-accent {
+  color: var(--accent);
+}
+
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.header-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  transition: color var(--transition-fast);
+}
+
+.header-link:hover { color: var(--text-primary); }
+
+.header-github {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.header-github:hover { text-decoration: underline; }
+
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed;
+  top: 48px;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebar-section:last-child {
+  border-bottom: none;
+}
+
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+  display: block;
+}
+
+.sidebar-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: var(--space-base);
+}
+
+/* Textarea */
+.theme-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  padding: var(--space-base);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: 1.7;
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.theme-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-dim);
+}
+
+.theme-textarea::placeholder {
+  color: var(--text-dim);
+}
+
+/* Lens Selector */
+.lens-group {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-base);
+}
+
+.lens-btn {
+  flex: 1;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: var(--space-sm) var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  min-height: var(--min-tap-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lens-btn:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+.lens-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Play Button */
+.play-btn {
+  width: 100%;
+  margin-top: var(--space-base);
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-base);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: var(--min-tap-target);
+}
+
+.play-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow);
+  filter: brightness(1.1);
+}
+
+.play-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.play-btn:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.play-btn .spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--bg-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin var(--transition-slow) linear infinite;
+}
+
+.play-btn.loading .spinner { display: block; }
+.play-btn.loading .btn-label { opacity: var(--opacity-muted); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Pipeline Status */
+.pipeline-status {
+  margin-top: var(--space-base);
+  display: none;
+}
+
+.pipeline-status.active { display: block; }
+
+.pipeline-stages {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.pipeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.pipeline-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.pipeline-dot.done {
+  background: var(--sentiment-positive);
+  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.pipeline-connector {
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+  transition: background var(--transition-base);
+}
+
+.pipeline-connector.done {
+  background: var(--sentiment-positive);
+}
+
+.pipeline-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  margin-top: var(--space-sm);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* Example Buttons */
+.examples-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.example-btn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 28px;
+}
+
+.example-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Error */
+.error-msg {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--sentiment-negative);
+  padding: var(--space-sm) var(--space-base);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-base);
+  display: none;
+}
+
+.error-msg.visible { display: block; }
+
+/* ── Main Content Area ── */
+.main-content {
+  margin-left: var(--sidebar-width);
+  margin-top: 48px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+/* Tab Bar */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(var(--blur-glass));
+  flex-shrink: 0;
+  padding: 0 var(--space-base);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  padding: var(--space-md) var(--space-base);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  min-height: var(--tab-bar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.tab-btn:hover {
+  color: var(--text-secondary);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-btn .tab-badge {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  display: none;
+}
+
+.tab-btn .tab-badge.visible { display: inline-block; }
+
+/* Tab Panels */
+.tab-panel-container {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.tab-panel {
+  display: none;
+  padding: var(--space-xl);
+  min-height: 100%;
+  animation: fadeIn var(--transition-base);
+}
+
+.tab-panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Placeholder state */
+.panel-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-dim);
+  gap: var(--space-base);
+  padding: var(--space-2xl);
+}
+
+.panel-placeholder-icon {
+  font-size: var(--font-size-3xl);
+  opacity: 0.3;
+}
+
+.panel-placeholder p {
+  font-size: var(--font-size-md);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BEAD BOARD — Tab 1: Grid of bead cards
+   ════════════════════════════════════════════════════════════════════════════ */
+.bead-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-base);
+}
+
+.bead-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-base);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.bead-card:hover {
+  border-color: var(--border-active);
+  background: var(--bg-glass-hover);
+}
+
+.bead-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.bead-name {
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.bead-source {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  display: block;
+  margin-top: 2px;
+}
+
+.bead-sentiment {
+  width: var(--bead-dot-size);
+  height: var(--bead-dot-size);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.bead-type-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  margin-bottom: var(--space-sm);
+}
+
+.bead-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.bead-domain-tag {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   THREAD VIEW — Tab 2: Connection list
+   ════════════════════════════════════════════════════════════════════════════ */
+.thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.thread-item {
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-base) var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-base);
+  transition: border-color var(--transition-fast);
+  flex-wrap: wrap;
+}
+
+.thread-item:hover {
+  border-color: var(--border-active);
+}
+
+.thread-item.cross-domain {
+  border-left: 3px solid var(--accent);
+}
+
+.thread-marker {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.thread-participants {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.thread-bead-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thread-arrow {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.thread-relationship {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thread-strength {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: right;
+}
+
+.thread-strength-bar {
+  width: 60px;
+  height: 3px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.thread-strength-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PATTERN RADAR — Tab 3: Bar chart
+   ════════════════════════════════════════════════════════════════════════════ */
+.radar-summary {
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.radar-topic {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.radar-theme {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
+.radar-consensus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.radar-consensus-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.radar-consensus-track {
+  width: 120px;
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.radar-consensus-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.radar-consensus-pct {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+}
+
+.pattern-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.pattern-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-base);
+}
+
+.pattern-bar-rank {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pattern-bar-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.pattern-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.pattern-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s ease;
+}
+
+.pattern-bar-pct {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pattern-bar-support {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   OUTPUT — Tab 4: Rendered markdown
+   ════════════════════════════════════════════════════════════════════════════ */
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-base);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.output-title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--sentiment-neutral);
+}
+
+.output-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.output-btn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 28px;
+}
+
+.output-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.output-content {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  line-height: 1.8;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent);
+  animation: blink 0.8s infinite;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.copied-toast {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--sentiment-positive);
+  display: none;
+}
+
+.copied-toast.visible { display: inline; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FOOTER (inside sidebar)
+   ════════════════════════════════════════════════════════════════════════════ */
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--space-base) var(--space-lg);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.sidebar-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-footer a:hover { color: var(--accent); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .sidebar {
+    position: relative;
+    top: 0;
+    width: 100%;
+    max-height: 45vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .main-content {
+    margin-left: 0;
+    margin-top: 0;
+    height: 55vh;
+  }
+
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .bead-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .tab-btn {
+    font-size: var(--font-size-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+}
 </style>
 </head>
 <body>
-<a href="#demo" class="skip-link">Skip to demo</a>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
-<!-- ── NAV ── -->
-<nav>
-  <a href="/" class="nav-logo">SOUL<span>CRAFT</span></a>
-  <div class="nav-links">
-    <a href="#how-it-works" data-i18n="nav_how_it_works">How it works</a>
-    <a href="#demo" data-i18n="nav_try_it">Try it</a>
-    <select id="languageSelector" class="lang-selector" aria-label="Select language">
-      <option value="en">English</option>
-      <option value="es">Español</option>
-      <option value="fr">Français</option>
-      <option value="de">Deutsch</option>
-      <option value="it">Italiano</option>
-      <option value="pt">Português</option>
-      <option value="nl">Nederlands</option>
-      <option value="pl">Polski</option>
-      <option value="ru">Русский</option>
-      <option value="zh">中文</option>
-      <option value="ja">日本語</option>
-      <option value="ko">한국어</option>
-      <option value="ar">العربية</option>
-      <option value="hi">हिन्दी</option>
-      <option value="tr">Türkçe</option>
-      <option value="vi">Tiếng Việt</option>
-      <option value="th">ไทย</option>
-      <option value="sv">Svenska</option>
-      <option value="da">Dansk</option>
-      <option value="no">Norsk</option>
-      <option value="fi">Suomi</option>
-      <option value="cs">Čeština</option>
-      <option value="el">Ελληνικά</option>
-      <option value="he">עברית</option>
-      <option value="id">Bahasa Indonesia</option>
-      <option value="ms">Bahasa Melayu</option>
-      <option value="uk">Українська</option>
-      <option value="ro">Română</option>
-      <option value="hu">Magyar</option>
-    </select>
-    <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" class="nav-cta" data-i18n="nav_github">View on GitHub</a>
-  </div>
-</nav>
+<div class="app-shell">
+  <!-- ── Header ── -->
+  <header class="header-bar" role="banner">
+    <a href="/" class="header-brand" aria-label="SoulCraft home">
+      SOUL<span class="header-brand-accent">CRAFT</span>
+    </a>
+    <nav class="header-links" aria-label="Main navigation">
+      <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" rel="noopener" class="header-link header-github">GitHub</a>
+    </nav>
+  </header>
 
-<!-- ── HERO ── -->
-<main>
-<section class="hero">
-  <div class="hero-eyebrow">Kyanite Labs / OpenSoul Compatible</div>
-  <h1>
-    <span class="outline">GIVE YOUR</span><br>
-    AI A <span class="accent">SOUL</span>
-  </h1>
-  <p class="hero-sub">
-    Drop your references — characters, films, books, figures. Soulcraft finds the <strong>latent pattern</strong> underneath and builds a <strong>SOUL.md</strong> file. Not who the characters are. <strong>What it means that you chose them.</strong>
-  </p>
-
-  <div class="bead-viz">
-    <div class="bead-wrap">
-      <div class="bead bead-1"></div>
-      <div class="bead-label">Extract</div>
-    </div>
-    <div class="bead-thread active"></div>
-    <div class="bead-wrap">
-      <div class="bead bead-2"></div>
-      <div class="bead-label">Graph</div>
-    </div>
-    <div class="bead-thread active"></div>
-    <div class="bead-wrap">
-      <div class="bead bead-3"></div>
-      <div class="bead-label">Synthesize</div>
-    </div>
-    <div class="bead-thread"></div>
-    <div class="bead-wrap">
-      <div class="bead bead-4"></div>
-      <div class="bead-label">SOUL.md</div>
-    </div>
-  </div>
-
-  <a href="#demo" class="hero-demo-hint" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'}); return false;">
-    Drop your brain dump below
-    <span class="arrow">→</span>
-  </a>
-</section>
-
-<!-- ── THE PROBLEM ── -->
-<section class="section section-dark">
-  <div class="section-label">The Problem</div>
-  <h2 class="section-title">WHO YOU ARE ISN'T<br>IN THE PROMPT.</h2>
-  <div class="problem-grid">
-    <div class="problem-cell no-before">
-      <div class="num">01</div>
-      <h3>Agents have no identity.</h3>
-      <p>You can describe what an agent does. You can't describe who it is. AGENTS.md handles operations. Nothing handles identity.</p>
-    </div>
-    <div class="problem-cell">
-      <div class="num">02</div>
-      <h3>Personality is an afterthought.</h3>
-      <p>Most agent personality is retrofitted via system prompts. That's not identity — that's costuming.</p>
-    </div>
-    <div class="problem-cell">
-      <div class="num">03</div>
-      <h3>The pattern is invisible.</h3>
-      <p>Tony Montana AND Hannah Montana AND The Godfather? There's a reason. But no tool finds it.</p>
-    </div>
-    <div class="problem-cell">
-      <div class="num">04</div>
-      <h3>It's not transferable.</h3>
-      <p>A good identity file works across frameworks. OpenClaw, Aeon, Nanobot, ZeroClaw — all read SOUL.md.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── HOW IT WORKS ── -->
-<section class="section" id="how-it-works">
-  <div class="section-label">The Process</div>
-  <h2 class="section-title">THE GLASS BEAD<br>GAME.</h2>
-
-  <div class="pipeline-steps">
-    <div class="pipeline-step" data-step="01">
-      <div class="step-num">Stage 01</div>
-      <h3 class="step-title">Extract Entities</h3>
-      <div class="step-desc">Parse your brain dump into typed references — characters, films, books, historical figures. One per line, freeform, doesn't matter.</div>
-    </div>
-    <div class="pipeline-step" data-step="02">
-      <div class="step-num">Stage 02</div>
-      <h3 class="step-title">Pattern Graph Engine</h3>
-      <div class="step-desc">Every entity votes on every pattern. Probabilities emerge — not a single answer, a full probability space with bridges connecting patterns. Consensus score tells you how defined the identity is.</div>
-    </div>
-    <div class="pipeline-step" data-step="03">
-      <div class="step-num">Stage 03</div>
-      <h3 class="step-title">SOUL.md Synthesis</h3>
-      <div class="step-desc">OpenClaw-spec identity document. Worldview, voice, principles, boundaries. Nothing that isn't identity. Readable by any framework that reads markdown.</div>
-    </div>
-  </div>
-</section>
-
-<!-- ── WHAT YOU GET ── -->
-<section class="section section-dark">
-  <div class="section-label">The Output</div>
-  <h2 class="section-title">TWO THINGS.<br>ONE PROCESS.</h2>
-
-  <div class="soul-file-grid">
-    <div class="soul-file-card">
-      <div class="card-num">01</div>
-      <h3>Analysis Dashboard</h3>
-      <p>Visual, beautiful, explorable. Pattern probability graph, entity contribution scores, bridge concepts, consensus confidence. This is the art — it's not the output file.</p>
-    </div>
-    <div class="soul-file-card">
-      <div class="card-num">02</div>
-      <h3>SOUL.md</h3>
-      <p>The actual identity document. Clean, minimal, OpenClaw-spec. Worldview, voice, principles, boundaries, pet peeves. Works in OpenClaw, Aeon, Nanobot, ZeroClaw, any framework.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── LIVE DEMO ── -->
-<section class="demo-section" id="demo">
-  <div class="demo-header">
-    <div class="section-label">Live Demo</div>
-    <h2 class="section-title" style="margin-bottom:0">FIND THE THREAD.</h2>
-  </div>
-
-  <!-- Input (centered, max-width) -->
-  <div class="demo-input-panel">
-    <label class="input-label" for="brainDump">Your brain dump</label>
-    <textarea class="brain-dump" id="brainDump" aria-label="Enter your character and media references for analysis" placeholder="Drop your references here. One per line.
+  <!-- ── Sidebar: Theme Declaration ── -->
+  <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Theme Declaration</span>
+      <p class="sidebar-description">Drop your references. Characters, films, books, figures. SoulCraft finds the latent pattern.</p>
+      <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
+      <textarea
+        class="theme-textarea"
+        id="brainDump"
+        aria-label="Enter your character and media references for analysis"
+        placeholder="Drop your references here. One per line.
 
 Tony Montana (Scarface)
 Hannah Montana
@@ -989,247 +1123,469 @@ Villanelle (Killing Eve)
 Fight Club
 Patrick Bateman (American Psycho)
 Jesse Pinkman (Breaking Bad)
-Fleabag"></textarea>
+Fleabag"
+      ></textarea>
 
-    <button class="run-btn" id="runBtn" onclick="runPipeline()" aria-label="Run the SoulCraft analysis pipeline">
-      <span class="btn-text">Find the Thread →</span>
-      <span class="spinner"></span>
-    </button>
+      <div class="lens-group" role="radiogroup" aria-label="Select analysis lens">
+        <button class="lens-btn active" data-lens="identity" role="radio" aria-checked="true" tabindex="0">Identity</button>
+        <button class="lens-btn" data-lens="brand" role="radio" aria-checked="false" tabindex="-1">Brand</button>
+        <button class="lens-btn" data-lens="design" role="radio" aria-checked="false" tabindex="-1">Design</button>
+      </div>
 
-    <div class="pipeline-progress" id="pipelineProgress" role="status" aria-live="polite" aria-label="Pipeline progress">
-      <div class="pipeline-stages">
-        <div class="pipeline-stage-item" id="stage1Indicator">
-          <span class="pipeline-stage-dot"></span>
-          <span>Extract</span>
+      <button class="play-btn" id="playBtn" aria-label="Run SoulCraft analysis">
+        <span class="spinner"></span>
+        <span class="btn-label">Play</span>
+      </button>
+
+      <div class="pipeline-status" id="pipelineStatus" role="status" aria-live="polite" aria-label="Pipeline progress">
+        <div class="pipeline-stages">
+          <span class="pipeline-dot" id="dot1"></span>
+          <span class="pipeline-connector" id="conn1"></span>
+          <span class="pipeline-dot" id="dot2"></span>
+          <span class="pipeline-connector" id="conn2"></span>
+          <span class="pipeline-dot" id="dot3"></span>
         </div>
-        <div class="pipeline-stage-connector" id="conn1"></div>
-        <div class="pipeline-stage-item" id="stage2Indicator">
-          <span class="pipeline-stage-dot"></span>
-          <span>Graph</span>
-        </div>
-        <div class="pipeline-stage-connector" id="conn2"></div>
-        <div class="pipeline-stage-item" id="stage3Indicator">
-          <span class="pipeline-stage-dot"></span>
-          <span>Synthesize</span>
-        </div>
-        <div class="pipeline-stage-connector" id="conn3"></div>
-        <div class="pipeline-stage-item" id="stage4Indicator">
-          <span class="pipeline-stage-dot"></span>
-          <span>SOUL.md</span>
-        </div>
+        <div class="pipeline-label" id="pipelineLabel">Ready</div>
+      </div>
+
+      <div class="error-msg" id="errorMsg" role="alert"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <span class="sidebar-label">Examples</span>
+      <div class="examples-row">
+        <button class="example-btn" data-example="standard">Standard</button>
+        <button class="example-btn" data-example="power">Power</button>
+        <button class="example-btn" data-example="outsider">Outsiders</button>
+        <button class="example-btn" data-example="intellectual">Intellectuals</button>
       </div>
     </div>
 
-    <div class="demo-error" id="demoError"></div>
-
-    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-      <div class="input-label" style="margin-bottom: 0.8rem;">Examples</div>
-      <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-        <button class="soulmd-btn" onclick="loadExample('standard')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load standard example references">Standard</button>
-        <button class="soulmd-btn" onclick="loadExample('power')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load power players example references">Power Players</button>
-        <button class="soulmd-btn" onclick="loadExample('outsider')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load outsiders example references">Outsiders</button>
-        <button class="soulmd-btn" onclick="loadExample('intellectual')" style="font-size:0.6rem; padding: 0.3rem 0.7rem;" aria-label="Load intellectuals example references">Intellectuals</button>
-      </div>
+    <div class="sidebar-footer">
+      <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" rel="noopener">SoulCraft</a> by <a href="https://kyanitelabs.tech" target="_blank" rel="noopener">Kyanite Labs</a><br>
+      Inspired by <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
     </div>
-  </div>
+  </aside>
 
-  <!-- Output (full-width, below input) -->
-  <div class="demo-output-panel">
-    <div class="output-placeholder" id="outputPlaceholder">
-      <div class="placeholder-icon">◉</div>
-      <p>Run the pipeline to see the pattern graph analysis and generated SOUL.md</p>
+  <!-- ── Main Content ── -->
+  <main id="main-content" class="main-content" role="main">
+    <!-- Tab Bar -->
+    <div class="tab-bar" role="tablist" aria-label="Analysis panels">
+      <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-beads" id="tab-beads">
+        Bead Board <span class="tab-badge" id="badge-beads">0</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-threads" id="tab-threads">
+        Thread View <span class="tab-badge" id="badge-threads">0</span>
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-radar" id="tab-radar">
+        Pattern Radar
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-output" id="tab-output">
+        Output <span class="tab-badge" id="badge-output" style="display:none;">!</span>
+      </button>
     </div>
 
-    <!-- ANALYSIS DASHBOARD -->
-    <div class="analysis-dashboard" id="analysisDashboard">
-      <!-- Stage 1: Entities -->
-      <div class="analysis-section">
-        <div class="analysis-label">Stage 01 — Entities Extracted</div>
-        <div class="entity-cards" id="entityCards"></div>
+    <!-- Tab Panels -->
+    <div class="tab-panel-container">
+      <!-- Panel 1: Bead Board -->
+      <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
+        <div class="panel-placeholder" id="beadsPlaceholder">
+          <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
+          <p>Run the game to see extracted beads appear here as cards.</p>
+        </div>
+        <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
 
-      <!-- Stage 2: Pattern Graph -->
-      <div class="analysis-section">
-        <div class="analysis-label">Stage 02 — Pattern Probability Graph</div>
+      <!-- Panel 2: Thread View -->
+      <div class="tab-panel" role="tabpanel" id="panel-threads" aria-labelledby="tab-threads">
+        <div class="panel-placeholder" id="threadsPlaceholder">
+          <div class="panel-placeholder-icon" aria-hidden="true">&#10697;</div>
+          <p>Connections between beads will appear here after analysis.</p>
+        </div>
+        <div class="thread-list" id="threadList" style="display:none;"></div>
+      </div>
 
-        <div class="emergent-box" style="margin-bottom: 1.5rem;">
-          <div class="emergent-label">Emergent Identity</div>
-          <div class="emergent-topic" id="emergentTopic" style="color: var(--accent);">—</div>
-          <div class="emergent-theme" id="emergentTheme">—</div>
-          <div class="consensus-bar">
-            <span style="font-size:0.65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; flex-shrink:0;">Consensus</span>
-            <div class="consensus-track">
-              <div class="consensus-fill" id="consensusFill" style="width: 0%"></div>
+      <!-- Panel 3: Pattern Radar -->
+      <div class="tab-panel" role="tabpanel" id="panel-radar" aria-labelledby="tab-radar">
+        <div class="panel-placeholder" id="radarPlaceholder">
+          <div class="panel-placeholder-icon" aria-hidden="true">&#9881;</div>
+          <p>Pattern scores will visualize here once the graph engine runs.</p>
+        </div>
+        <div id="radarContent" style="display:none;">
+          <div class="radar-summary" id="radarSummary"></div>
+          <div class="pattern-bars" id="patternBars"></div>
+        </div>
+      </div>
+
+      <!-- Panel 4: Output -->
+      <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
+        <div class="panel-placeholder" id="outputPlaceholder">
+          <div class="panel-placeholder-icon" aria-hidden="true">&#9997;</div>
+          <p>The generated SOUL.md document will stream here in real time.</p>
+        </div>
+        <div id="outputContent" style="display:none;">
+          <div class="output-header">
+            <span class="output-title">SOUL.md</span>
+            <div class="output-actions" id="outputActions" style="display:none;">
+              <button class="output-btn" id="copyBtn" aria-label="Copy SOUL.md to clipboard">
+                <span aria-hidden="true">&#9135;</span> Copy
+              </button>
+              <button class="output-btn" id="downloadBtn" aria-label="Download SOUL.md file">
+                <span aria-hidden="true">&#8595;</span> Download
+              </button>
+              <span class="copied-toast" id="copiedToast">Copied</span>
             </div>
-            <span class="consensus-pct" id="consensusPct">0%</span>
           </div>
+          <pre class="output-content" id="outputContentPre"><span class="streaming-cursor" id="streamingCursor"></span></pre>
         </div>
-
-        <div class="pattern-graph" id="patternGraph"></div>
-      </div>
-
-      <!-- Bridges -->
-      <div class="analysis-section" id="bridgesSection" style="display:none;">
-        <div class="analysis-label">Pattern Bridges</div>
-        <div class="bridges-label">Entities connecting two patterns</div>
-        <div id="bridgesList"></div>
-      </div>
-
-      <!-- Entity Pattern Matrix -->
-      <div class="analysis-section" id="matrixSection" style="display:none;">
-        <div class="analysis-label">Entity × Pattern Matrix</div>
-        <div class="matrix-label">How each entity votes across patterns</div>
-        <div class="entity-matrix" id="entityMatrix"></div>
-      </div>
-
-      <!-- Analysis Notes -->
-      <div class="analysis-section" id="notesSection" style="display:none;">
-        <div class="analysis-label">Interpretation</div>
-        <div class="analysis-notes" id="analysisNotes"></div>
-      </div>
-
-      <!-- Thinking / Reasoning -->
-      <div class="thinking-section" id="thinkingSection">
-        <button class="thinking-toggle" id="thinkingToggle" onclick="toggleThinking()" aria-label="Toggle model reasoning display" aria-expanded="false">
-          <span class="arrow">▸</span> Model Reasoning
-        </button>
-        <div class="thinking-content" id="thinkingContent"></div>
-      </div>
-
-      <!-- Telemetry -->
-      <div class="telemetry-section" id="telemetrySection">
-        <button class="telemetry-toggle" id="telemetryToggle" onclick="toggleTelemetry()" aria-label="Toggle pipeline telemetry display" aria-expanded="false">
-          <span class="arrow">▸</span> Pipeline Telemetry
-        </button>
-        <div class="telemetry-panel" id="telemetryPanel">
-          <div class="telemetry-model-badge" id="telemetryModel">
-            <span class="telemetry-model-dot"></span>
-            <span id="telemetryModelText">—</span>
-          </div>
-          <div class="telemetry-grid" id="telemetryGrid"></div>
-          <div class="analysis-label" style="margin-top: 1rem; margin-bottom: 0.6rem;">Stage Timings</div>
-          <div class="telemetry-timings" id="telemetryTimings"></div>
-        </div>
-      </div>
-
-      <!-- Stage 3: SOUL.md -->
-      <div class="soulmd-section" id="soulmdSection">
-        <div class="soulmd-header">
-          <div class="soulmd-title">SOUL.md — OpenClaw Compatible</div>
-          <div class="soulmd-actions" id="soulmdActions" style="display:none;">
-            <button class="soulmd-btn" onclick="copySoulmd()" aria-label="Copy SOUL.md to clipboard">
-              <span>⎘</span> Copy
-            </button>
-            <button class="soulmd-btn" onclick="downloadSoulmd()" aria-label="Download SOUL.md file">
-              <span>↓</span> Download
-            </button>
-          </div>
-        </div>
-        <pre class="soulmd-output" id="soulmdOutput"><span class="streaming-cursor" id="streamingCursor"></span></pre>
-        <div class="copied-toast" id="copiedToast">Copied to clipboard</div>
       </div>
     </div>
-  </div>
-</section>
-
-</main>
-
-<!-- ── FOOTER ── -->
-<footer>
-  <p>
-    <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank">Soulcraft</a>
-    — Built by <a href="https://kyanitelabs.tech" target="_blank">Kyanite Labs</a> — the dev shop that never sleeps.
-    — Inspired by <a href="https://openclaw.ai" target="_blank">OpenClaw</a> &amp;
-    <a href="https://github.com/aaronjmars/soul.md" target="_blank">aaronjmars/soul.md</a>
-  </p>
-</footer>
+  </main>
+</div>
 
 <script>
-// ── EXAMPLES ──────────────────────────────────────────────────────────────
-const EXAMPLES = {
-  standard: `Tony Montana (Scarface)
-Hannah Montana
-The Godfather
-Don Draper (Mad Men)
-Tyler Durden (Fight Club)
-Villanelle (Killing Eve)
-Patrick Bateman (American Psycho)
-Jesse Pinkman (Breaking Bad)
-Fleabag (Phoebe Waller-Bridge)`,
-
-  power: `Tony Montana (Scarface)
-Tywin Lannister (Game of Thrones)
-Walter White (Breaking Bad)
-Don Draper (Mad Men)
-Michael Corleone (The Godfather)
-Patrick Bateman (American Psycho)
-Jordan Belfort (The Wolf of Wall Street)
-Frank Underwood (House of Cards)
-Tom Ripley (The Talented Mr. Ripley)`,
-
-  outsider: `Tyler Durden (Fight Club)
-Mr. Robot (Mr. Robot)
-Fleabag (Phoebe Waller-Bridge)
-Patrick Bateman (American Psycho)
-The Joker (The Dark Knight)
-Elliot Alderson (Mr. Robot)
-Arthur Fleck (Joker)
-Tyler Durden
-Jesse Pinkman (Breaking Bad)
-Harley Quinn (Batman)`,
-
-  intellectual: `Sherlock Holmes (any version)
-Dr. House (House M.D.)
-Light Yagami (Death Note)
-Light Yagami
-Patrick Bateman (American Psycho)
-Will Graham (Hannibal)
-L (Death Note)
-Moriarty (Sherlock)
-Tywin Lannister (Game of Thrones)
-Marty Byrde (Ozark)`,
+/* ════════════════════════════════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════════════════════════════════ */
+const state = {
+  lens: 'identity',
+  loading: false,
+  entities: [],
+  graph: null,
+  soulmdText: '',
 };
 
-function loadExample(key) {
-  document.getElementById('brainDump').value = EXAMPLES[key];
+const PATTERN_COLORS = [
+  'var(--pattern-0)', 'var(--pattern-1)', 'var(--pattern-2)',
+  'var(--pattern-3)', 'var(--pattern-4)', 'var(--pattern-5)',
+  'var(--pattern-6)', 'var(--pattern-7)', 'var(--pattern-8)',
+  'var(--pattern-9)', 'var(--pattern-10)', 'var(--pattern-11)',
+];
+
+const TYPE_COLORS = {
+  character: 'var(--type-character)',
+  movie: 'var(--type-movie)',
+  book: 'var(--type-book)',
+  tv_show: 'var(--type-tv_show)',
+  historical_figure: 'var(--type-historical_figure)',
+  music: 'var(--type-music)',
+  person: 'var(--type-person)',
+  place: 'var(--type-place)',
+  concept: 'var(--type-concept)',
+  work: 'var(--type-work)',
+  event: 'var(--type-event)',
+  emotion: 'var(--type-emotion)',
+  skill: 'var(--type-skill)',
+};
+
+const SENTIMENT_MAP = {
+  positive: 'var(--sentiment-positive)',
+  negative: 'var(--sentiment-negative)',
+  neutral: 'var(--sentiment-neutral)',
+};
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EXAMPLES
+   ════════════════════════════════════════════════════════════════════════════ */
+const EXAMPLES = {
+  standard: `Tony Montana (Scarface)\nHannah Montana\nThe Godfather\nDon Draper (Mad Men)\nTyler Durden (Fight Club)\nVillanelle (Killing Eve)\nPatrick Bateman (American Psycho)\nJesse Pinkman (Breaking Bad)\nFleabag (Phoebe Waller-Bridge)`,
+
+  power: `Tony Montana (Scarface)\nTywin Lannister (Game of Thrones)\nWalter White (Breaking Bad)\nDon Draper (Mad Men)\nMichael Corleone (The Godfather)\nPatrick Bateman (American Psycho)\nJordan Belfort (The Wolf of Wall Street)\nFrank Underwood (House of Cards)\nTom Ripley (The Talented Mr. Ripley)`,
+
+  outsider: `Tyler Durden (Fight Club)\nMr. Robot (Mr. Robot)\nFleabag (Phoebe Waller-Bridge)\nPatrick Bateman (American Psycho)\nThe Joker (The Dark Knight)\nElliot Alderson (Mr. Robot)\nArthur Fleck (Joker)\nTyler Durden\nJesse Pinkman (Breaking Bad)\nHarley Quinn (Batman)`,
+
+  intellectual: `Sherlock Holmes (any version)\nDr. House (House M.D.)\nLight Yagami (Death Note)\nLight Yagami\nPatrick Bateman (American Psycho)\nWill Graham (Hannibal)\nL (Death Note)\nMoriarty (Sherlock)\nTywin Lannister (Game of Thrones)\nMarty Byrde (Ozark)`,
+};
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DOM REFS
+   ════════════════════════════════════════════════════════════════════════════ */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const dom = {
+  textarea: $('#brainDump'),
+  playBtn: $('#playBtn'),
+  errorMsg: $('#errorMsg'),
+  pipelineStatus: $('#pipelineStatus'),
+  pipelineLabel: $('#pipelineLabel'),
+  beadGrid: $('#beadGrid'),
+  beadsPlaceholder: $('#beadsPlaceholder'),
+  threadList: $('#threadList'),
+  threadsPlaceholder: $('#threadsPlaceholder'),
+  radarContent: $('#radarContent'),
+  radarPlaceholder: $('#radarPlaceholder'),
+  radarSummary: $('#radarSummary'),
+  patternBars: $('#patternBars'),
+  outputContent: $('#outputContent'),
+  outputPlaceholder: $('#outputPlaceholder'),
+  outputContentPre: $('#outputContentPre'),
+  outputActions: $('#outputActions'),
+  streamingCursor: $('#streamingCursor'),
+  copiedToast: $('#copiedToast'),
+};
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HELPERS
+   ════════════════════════════════════════════════════════════════════════════ */
+function esc(s) {
+  if (typeof s !== 'string') return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
-// ── SSE HANDLER ───────────────────────────────────────────────────────────
-let _thinkingText = '';
+function escAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-function handleSSE(line, outputEl) {
-  if (!line.startsWith('data: ')) return;
-  const payload = line.slice(6);
-  if (!payload) return;
+function getTypeColor(type) {
+  return TYPE_COLORS[type] || TYPE_COLORS.default;
+}
 
-  let event;
-  try { event = JSON.parse(payload); } catch { return; }
+function getSentimentColor(sentiment) {
+  if (!sentiment) return SENTIMENT_MAP.neutral;
+  const s = String(sentiment).toLowerCase();
+  if (s.includes('pos') || s.includes('good') || s.includes('favor')) return SENTIMENT_MAP.positive;
+  if (s.includes('neg') || s.includes('bad') || s.includes('hostile')) return SENTIMENT_MAP.negative;
+  return SENTIMENT_MAP.neutral;
+}
 
+function getPatternColor(index) {
+  return PATTERN_COLORS[index % PATTERN_COLORS.length];
+}
+
+function showBadge(id, text) {
+  const badge = document.getElementById(id);
+  if (badge) {
+    badge.textContent = text;
+    badge.classList.add('visible');
+  }
+}
+
+function setPipelineStage(stage) {
+  ['dot1', 'dot2', 'dot3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active', 'done');
+    if (i + 1 < stage) el.classList.add('done');
+    else if (i + 1 === stage) el.classList.add('active');
+  });
+  ['conn1', 'conn2'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('done');
+    if (i + 1 < stage) el.classList.add('done');
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TAB SYSTEM
+   ════════════════════════════════════════════════════════════════════════════ */
+function initTabs() {
+  const tabBtns = $$('.tab-btn');
+  const panels = $$('.tab-panel');
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach((b) => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      panels.forEach((p) => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      const panelId = btn.getAttribute('aria-controls');
+      const panel = document.getElementById(panelId);
+      if (panel) panel.classList.add('active');
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LENS SELECTOR
+   ════════════════════════════════════════════════════════════════════════════ */
+function initLensSelector() {
+  const btns = $$('.lens-btn');
+  btns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btns.forEach((b) => {
+        b.classList.remove('active');
+        b.setAttribute('aria-checked', 'false');
+        b.setAttribute('tabindex', '-1');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-checked', 'true');
+      btn.setAttribute('tabindex', '0');
+      state.lens = btn.dataset.lens;
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EXAMPLES
+   ════════════════════════════════════════════════════════════════════════════ */
+function initExamples() {
+  $$('.example-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.example;
+      if (EXAMPLES[key]) {
+        dom.textarea.value = EXAMPLES[key];
+        dom.textarea.focus();
+      }
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RENDER: BEAD BOARD
+   ════════════════════════════════════════════════════════════════════════════ */
+function renderBeadBoard(entities) {
+  if (!entities || entities.length === 0) return;
+
+  dom.beadsPlaceholder.style.display = 'none';
+  dom.beadGrid.style.display = 'grid';
+
+  showBadge('badge-beads', String(entities.length));
+
+  dom.beadGrid.innerHTML = entities.map((e) => {
+    const typeColor = getTypeColor(e.type);
+    const sentimentColor = getSentimentColor(e.sentiment);
+    const domains = (e.domains || []).slice(0, 3);
+    const domainTags = domains.length > 0
+      ? `<div class="bead-domains">${domains.map((d) => `<span class="bead-domain-tag">${esc(d)}</span>`).join('')}</div>`
+      : '';
+
+    return `
+      <div class="bead-card">
+        <div class="bead-card-header">
+          <div>
+            <span class="bead-name">${esc(e.original || e.name)}</span>
+            ${e.source ? `<span class="bead-source">${esc(e.source)}</span>` : ''}
+          </div>
+          <span class="bead-sentiment" style="background: ${sentimentColor};" title="${escAttr(e.sentiment || 'neutral')}"></span>
+        </div>
+        <span class="bead-type-badge" style="color: ${typeColor}; border-color: ${typeColor};">${esc(e.type || 'entity')}</span>
+        ${domainTags}
+      </div>
+    `;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RENDER: THREAD VIEW
+   ════════════════════════════════════════════════════════════════════════════ */
+function renderThreads(threads) {
+  if (!threads || threads.length === 0) return;
+
+  dom.threadsPlaceholder.style.display = 'none';
+  dom.threadList.style.display = 'flex';
+
+  showBadge('badge-threads', String(threads.length));
+
+  dom.threadList.innerHTML = threads.map((t) => {
+    const strengthPct = Math.round((t.strength || 0) * 100);
+    const isCrossDomain = t.domains_bridged && t.domains_bridged.length > 0;
+    const isomorphic = t.isomorphic ? '<span class="thread-marker">ISO</span>' : '';
+    const crossMarker = isCrossDomain ? `<span class="thread-marker">CROSS</span>` : '';
+
+    return `
+      <div class="thread-item${isCrossDomain ? ' cross-domain' : ''}">
+        ${crossMarker}
+        ${isomorphic}
+        <div class="thread-participants">
+          <span class="thread-bead-name">${esc(t.bead_a)}</span>
+          <span class="thread-arrow" aria-hidden="true">&rarr;</span>
+          <span class="thread-relationship">${esc(t.relationship)}</span>
+          <span class="thread-arrow" aria-hidden="true">&rarr;</span>
+          <span class="thread-bead-name">${esc(t.bead_b)}</span>
+        </div>
+        <span class="thread-strength">${strengthPct}%</span>
+        <div class="thread-strength-bar">
+          <div class="thread-strength-fill" style="width: ${strengthPct}%; background: var(--accent);"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RENDER: PATTERN RADAR
+   ════════════════════════════════════════════════════════════════════════════ */
+function renderPatternRadar(graph) {
+  if (!graph) return;
+
+  dom.radarPlaceholder.style.display = 'none';
+  dom.radarContent.style.display = 'block';
+
+  const consensusScore = graph.consensus_score || 0;
+  const consensusPct = Math.round(consensusScore * 100);
+  const emergentTopic = graph.emergent_topic || 'Analyzing...';
+  const emergentTheme = graph.emergent_theme || '';
+
+  dom.radarSummary.innerHTML = `
+    <div>
+      <div class="radar-topic">${esc(emergentTopic)}</div>
+      ${emergentTheme ? `<div class="radar-theme">${esc(emergentTheme)}</div>` : ''}
+    </div>
+    <div class="radar-consensus">
+      <span class="radar-consensus-label">Consensus</span>
+      <div class="radar-consensus-track">
+        <div class="radar-consensus-fill" style="width: ${consensusPct}%;"></div>
+      </div>
+      <span class="radar-consensus-pct">${consensusPct}%</span>
+    </div>
+  `;
+
+  const patterns = (graph.patterns || []).filter((p) => (p.probability || 0) > 0.01);
+  dom.patternBars.innerHTML = patterns.map((p, i) => {
+    const pct = Math.round((p.probability || 0) * 100);
+    const color = p.color || getPatternColor(i);
+    return `
+      <div class="pattern-bar-row">
+        <span class="pattern-bar-rank">${i + 1}</span>
+        <span class="pattern-bar-name" title="${escAttr(p.name)}">${esc(p.name)}</span>
+        <div class="pattern-bar-track">
+          <div class="pattern-bar-fill" style="width: ${pct}%; background: ${escAttr(color)};"></div>
+        </div>
+        <span class="pattern-bar-pct">${pct}%</span>
+        <span class="pattern-bar-support" title="Supporting entities">${p.supporting_entities || 0}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SSE HANDLER
+   ════════════════════════════════════════════════════════════════════════════ */
+function handleSSEEvent(event, outputEl) {
   switch (event.type) {
-    case 'entities':
-      renderEntities(event.data);
-      setStage(1);
+    case 'stage1_entities':
+      state.entities = event.data || [];
+      renderBeadBoard(state.entities);
+      setPipelineStage(1);
+      dom.pipelineLabel.textContent = 'Stage 1: Entities extracted';
       break;
 
-    case 'graph':
-      renderGraph(event.data);
-      setStage(2);
-      break;
-
-    case 'thinking':
-      _thinkingText += event.content;
-      document.getElementById('thinkingSection').style.display = 'block';
-      document.getElementById('thinkingContent').textContent = _thinkingText;
+    case 'stage2_graph':
+      state.graph = event.data || {};
+      renderPatternRadar(state.graph);
+      renderThreads(state.graph.threads || []);
+      setPipelineStage(2);
+      dom.pipelineLabel.textContent = 'Stage 2: Pattern graph built';
       break;
 
     case 'soulmd_token':
-      if (document.getElementById('soulmdSection').style.display === 'none') {
-        document.getElementById('soulmdSection').style.display = 'block';
-        setStage(3);
+      if (dom.outputContent.style.display === 'none') {
+        dom.outputPlaceholder.style.display = 'none';
+        dom.outputContent.style.display = 'block';
+        setPipelineStage(3);
+        dom.pipelineLabel.textContent = 'Stage 3: Synthesizing SOUL.md';
+        showBadge('badge-output', '!');
       }
       const cursor = document.getElementById('streamingCursor');
       if (cursor) cursor.remove();
       outputEl.appendChild(document.createTextNode(event.content));
+      state.soulmdText += event.content;
       const newCursor = document.createElement('span');
       newCursor.className = 'streaming-cursor';
       newCursor.id = 'streamingCursor';
@@ -1240,84 +1596,61 @@ function handleSSE(line, outputEl) {
     case 'soulmd_done':
       const c = document.getElementById('streamingCursor');
       if (c) c.remove();
-      document.getElementById('soulmdActions').style.display = 'flex';
-      setStage(4);
+      dom.outputActions.style.display = 'flex';
+      dom.pipelineLabel.textContent = 'Complete';
+      setPipelineStage(3);
+      document.getElementById('dot1').classList.remove('active');
+      document.getElementById('dot1').classList.add('done');
+      document.getElementById('dot2').classList.remove('active');
+      document.getElementById('dot2').classList.add('done');
+      document.getElementById('dot3').classList.remove('active');
+      document.getElementById('dot3').classList.add('done');
+      document.getElementById('conn1').classList.add('done');
+      document.getElementById('conn2').classList.add('done');
       break;
 
-    case 'telemetry':
-      renderTelemetry(event.data);
+    case 'error':
+      showError(event.message || 'Pipeline error');
       break;
   }
 }
 
-function setStage(stageNum) {
-  const stages = ['stage1Indicator', 'stage2Indicator', 'stage3Indicator', 'stage4Indicator'];
-  const conns = ['conn1', 'conn2', 'conn3'];
-  stages.forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.classList.remove('active', 'done');
-    if (i + 1 < stageNum) el.classList.add('done');
-    else if (i + 1 === stageNum) el.classList.add('active');
-  });
-  conns.forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.classList.remove('done');
-    if (i + 1 < stageNum) el.classList.add('done');
-  });
-}
-
-// ── PIPELINE (streaming) ──────────────────────────────────────────────────
+/* ════════════════════════════════════════════════════════════════════════════
+   MAIN: RUN PIPELINE
+   ════════════════════════════════════════════════════════════════════════════ */
 async function runPipeline() {
-  const dump = document.getElementById('brainDump').value.trim();
-  const btn = document.getElementById('runBtn');
-  const errorEl = document.getElementById('demoError');
+  const text = dom.textarea.value.trim();
 
-  if (!dump) {
-    errorEl.textContent = 'Drop your brain dump first.';
-    errorEl.style.display = 'block';
+  if (!text) {
+    showError('Drop your brain dump first.');
     return;
   }
 
-  // Reset UI
-  errorEl.style.display = 'none';
-  document.getElementById('outputPlaceholder').style.display = 'none';
-  document.getElementById('analysisDashboard').style.display = 'block';
-  document.getElementById('bridgesSection').style.display = 'none';
-  document.getElementById('matrixSection').style.display = 'none';
-  document.getElementById('notesSection').style.display = 'none';
-  document.getElementById('thinkingSection').style.display = 'none';
-  document.getElementById('thinkingContent').classList.remove('visible');
-  document.getElementById('thinkingToggle').classList.remove('open');
-  document.getElementById('telemetrySection').style.display = 'none';
-  document.getElementById('telemetryPanel').classList.remove('visible');
-  document.getElementById('telemetryToggle').classList.remove('open');
-  document.getElementById('soulmdSection').style.display = 'none';
-  document.getElementById('soulmdActions').style.display = 'none';
-  document.getElementById('entityCards').innerHTML = '';
-  document.getElementById('patternGraph').innerHTML = '';
-  document.getElementById('bridgesList').innerHTML = '';
-  document.getElementById('entityMatrix').innerHTML = '';
-  document.getElementById('analysisNotes').innerHTML = '';
-  document.getElementById('thinkingContent').textContent = '';
-  document.getElementById('soulmdOutput').innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
+  if (state.loading) return;
 
-  // Show pipeline progress
-  const progress = document.getElementById('pipelineProgress');
-  progress.classList.add('active');
-  setStage(1);
+  // Reset
+  hideError();
+  resetPanels();
+  state.entities = [];
+  state.graph = null;
+  state.soulmdText = '';
 
-  btn.classList.add('loading');
-  btn.querySelector('.btn-text').textContent = 'Analyzing...';
-  btn.disabled = true;
+  // UI: loading
+  state.loading = true;
+  dom.playBtn.classList.add('loading');
+  dom.playBtn.disabled = true;
+  dom.playBtn.querySelector('.btn-label').textContent = 'Analyzing...';
+  dom.pipelineStatus.classList.add('active');
+  setPipelineStage(1);
+  dom.pipelineLabel.textContent = 'Stage 1: Extracting entities...';
 
-  const outputEl = document.getElementById('soulmdOutput');
-  _thinkingText = '';
+  const outputEl = dom.outputContentPre;
 
   try {
-    const resp = await fetch('/api/extract', {
+    const resp = await fetch('/api/game/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brain_dump: dump, stream: true })
+      body: JSON.stringify({ text: text, lens: state.lens }),
     });
 
     if (!resp.ok) {
@@ -1335,219 +1668,101 @@ async function runPipeline() {
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep incomplete line
+      buffer = lines.pop();
 
       for (const line of lines) {
-        handleSSE(line, outputEl);
+        if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6);
+        if (!payload) continue;
+        try {
+          const event = JSON.parse(payload);
+          handleSSEEvent(event, outputEl);
+        } catch {
+          // Ignore malformed SSE lines
+        }
       }
     }
-    // Process any remaining buffer
-    if (buffer.trim()) handleSSE(buffer, outputEl);
+
+    // Process remaining buffer
+    if (buffer.trim() && buffer.startsWith('data: ')) {
+      try {
+        const event = JSON.parse(buffer.slice(6));
+        handleSSEEvent(event, outputEl);
+      } catch {
+        // Ignore
+      }
+    }
 
     // Ensure final state
     const cursor = document.getElementById('streamingCursor');
     if (cursor) cursor.remove();
-    document.getElementById('soulmdActions').style.display = 'flex';
-  } catch(e) {
-    errorEl.textContent = 'Pipeline error: ' + e.message;
-    errorEl.style.display = 'block';
+    dom.outputActions.style.display = 'flex';
+  } catch (e) {
+    showError('Pipeline error: ' + e.message);
   } finally {
-    btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent = 'Find the Thread \u2192';
-    btn.disabled = false;
+    state.loading = false;
+    dom.playBtn.classList.remove('loading');
+    dom.playBtn.disabled = false;
+    dom.playBtn.querySelector('.btn-label').textContent = 'Play';
   }
 }
 
-// ── RENDER STAGES ─────────────────────────────────────────────────────────
-function esc(s) { if (typeof s !== 'string') return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function resetPanels() {
+  // Beads
+  dom.beadsPlaceholder.style.display = 'flex';
+  dom.beadGrid.style.display = 'none';
+  dom.beadGrid.innerHTML = '';
+  const beadBadge = document.getElementById('badge-beads');
+  beadBadge.classList.remove('visible');
 
-function renderEntities(entities) {
-  document.getElementById('entityCards').innerHTML = entities.map(e => {
-    const related = (e.related && e.related.length > 0)
-      ? `<div class="related-section">
-           <div class="related-chars">${e.related.map(r => `<span class="related-chip">${esc(r)}</span>`).join('')}</div>
-         </div>`
-      : '';
-    return `<div class="entity-chip type-${escAttr(e.type)}" style="flex-direction:column; align-items:flex-start; gap:0.2rem; padding:0.5rem 0.8rem;">
-      <div style="display:flex; align-items:center; gap:0.4rem;">
-        <span class="type-dot"></span>
-        <span>${esc(e.original)}${e.source ? ' <span style="color:#555;font-size:0.65rem;">(' + esc(e.source) + ')</span>' : ''}</span>
-      </div>
-      ${related}
-    </div>`;
-  }).join('');
+  // Threads
+  dom.threadsPlaceholder.style.display = 'flex';
+  dom.threadList.style.display = 'none';
+  dom.threadList.innerHTML = '';
+  const threadBadge = document.getElementById('badge-threads');
+  threadBadge.classList.remove('visible');
+
+  // Radar
+  dom.radarPlaceholder.style.display = 'flex';
+  dom.radarContent.style.display = 'none';
+  dom.radarSummary.innerHTML = '';
+  dom.patternBars.innerHTML = '';
+
+  // Output
+  dom.outputPlaceholder.style.display = 'flex';
+  dom.outputContent.style.display = 'none';
+  dom.outputActions.style.display = 'none';
+  dom.outputContentPre.innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
+  const outputBadge = document.getElementById('badge-output');
+  outputBadge.style.display = 'none';
+
+  // Pipeline
+  dom.pipelineStatus.classList.remove('active');
+  dom.pipelineLabel.textContent = 'Ready';
 }
 
-function renderGraph(graph) {
-  // Emergent topic
-  const topic = document.getElementById('emergentTopic');
-  topic.textContent = graph.emergent_topic;
-  topic.style.color = graph.emergent_color;
-  document.getElementById('emergentTheme').textContent = graph.emergent_theme;
-
-  // Consensus bar
-  const cs = graph.consensus_score;
-  document.getElementById('consensusFill').style.width = (cs * 100) + '%';
-  document.getElementById('consensusPct').textContent = Math.round(cs * 100) + '%';
-
-  // Pattern graph bars
-  const topPatterns = graph.patterns.filter(p => p.probability > 0.01);
-  document.getElementById('patternGraph').innerHTML = topPatterns.map((p, i) => {
-    const subs = (p.sub_patterns && p.sub_patterns.length > 0)
-      ? `<div class="sub-patterns">${p.sub_patterns.map(s => `<span class="sub-pattern-pill">${esc(s)}</span>`).join('')}</div>`
-      : '';
-    return `
-    <div class="pattern-row" style="flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:0.8rem; flex:1; min-width:0;">
-        <div class="pattern-rank">${i + 1}</div>
-        <div class="pattern-bar-wrap">
-          <div class="pattern-bar-track">
-            <div class="pattern-bar-fill" style="width: ${Math.round(p.probability * 100)}%; background: ${escAttr(p.color)};"></div>
-          </div>
-          <div class="pattern-name" title="${escAttr(p.name)}">${esc(p.name)}</div>
-          <div class="pattern-prob">${Math.round(p.probability * 100)}%</div>
-          <div class="pattern-confidence" title="${escAttr(p.supporting_entities)} entities">${p.supporting_entities}\u2193</div>
-        </div>
-      </div>
-      ${subs}
-    </div>`;
-  }).join('');
-
-  // Bridges
-  if (graph.bridges && graph.bridges.length > 0) {
-    document.getElementById('bridgesSection').style.display = 'block';
-    document.getElementById('bridgesList').innerHTML = graph.bridges.map(b => `
-      <div class="bridge-item">
-        <div class="bridge-entity">${esc(b.entity)}</div>
-        <div class="bridge-connection">
-          <span class="bridge-pill" style="background: ${escAttr(b.color_a)}22; color: ${escAttr(b.color_a)}; border: 1px solid ${escAttr(b.color_a)};">${esc(b.pattern_a)}</span>
-          <span class="bridge-arrow">\u2194</span>
-          <span class="bridge-pill" style="background: ${escAttr(b.color_b)}22; color: ${escAttr(b.color_b)}; border: 1px solid ${escAttr(b.color_b)};">${esc(b.pattern_b)}</span>
-          <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted);">
-            ${Math.round(b.score_a * 100)}% / ${Math.round(b.score_b * 100)}%
-          </span>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // Entity pattern matrix
-  if (graph.entity_scores && graph.entity_scores.length > 0) {
-    const relevantPatterns = graph.patterns.filter(p => p.probability > 0.05);
-    if (relevantPatterns.length > 1) {
-      document.getElementById('matrixSection').style.display = 'block';
-      document.getElementById('entityMatrix').innerHTML = graph.entity_scores.slice(0, 8).map(eps => {
-        const bars = relevantPatterns.map(p => {
-          const score = eps.votes[p.id] || 0;
-          const width = Math.round(score * 100);
-          return width > 5 ? `<div class="matrix-seg" style="width:${width}%; background:${escAttr(p.color)};" title="${escAttr(p.name)}: ${width}%"></div>` : '';
-        }).join('');
-        return `
-          <div class="matrix-row">
-            <div class="matrix-entity" title="${escAttr(eps.name)}">${esc(eps.name)}</div>
-            <div class="matrix-bars">${bars || '<span style="color:#333;font-size:0.7rem">no signal</span>'}</div>
-          </div>
-        `;
-      }).join('');
-    }
-  }
-
-  // Analysis notes
-  if (graph.analysis_notes && graph.analysis_notes.length > 0) {
-    document.getElementById('notesSection').style.display = 'block';
-    document.getElementById('analysisNotes').innerHTML = graph.analysis_notes.map(n =>
-      `<div class="analysis-note">${esc(n)}</div>`
-    ).join('');
-  }
+function showError(msg) {
+  dom.errorMsg.textContent = msg;
+  dom.errorMsg.classList.add('visible');
 }
 
-// ── THINKING TOGGLE ───────────────────────────────────────────────────────
-function toggleThinking() {
-  const toggle = document.getElementById('thinkingToggle');
-  const content = document.getElementById('thinkingContent');
-  const isOpen = toggle.classList.toggle('open');
-  content.classList.toggle('visible');
-  toggle.setAttribute('aria-expanded', isOpen);
+function hideError() {
+  dom.errorMsg.classList.remove('visible');
 }
 
-// ── TELEMETRY ─────────────────────────────────────────────────────────────
-function renderTelemetry(data) {
-  const section = document.getElementById('telemetrySection');
-  section.style.display = 'block';
-
-  // Model badge
-  document.getElementById('telemetryModelText').textContent =
-    `${data.model || 'unknown'} / ${data.provider || 'ollama'}`;
-
-  // Metrics grid
-  const grid = document.getElementById('telemetryGrid');
-  grid.innerHTML = [
-    { label: 'Prompt Tokens', value: data.tokens_prompt || 0, unit: 'tok' },
-    { label: 'Completion Tokens', value: data.tokens_completion || 0, unit: 'tok' },
-    { label: 'Total Tokens', value: data.tokens_total || 0, unit: 'tok' },
-    { label: 'Speed', value: data.tokens_per_sec || 0, unit: 'tok/s' },
-    { label: 'Total Time', value: ((data.total_ms || 0) / 1000).toFixed(1), unit: 's' },
-    { label: 'Reasoning', value: ((data.thinking_length || 0) / 1024).toFixed(1), unit: 'KB' },
-  ].map(m => `
-    <div class="telemetry-metric">
-      <div class="telemetry-metric-label">${m.label}</div>
-      <div class="telemetry-metric-value">${m.value}<span class="telemetry-metric-unit">${m.unit}</span></div>
-    </div>
-  `).join('');
-
-  // Stage timings
-  const timings = data.stage_timings_ms || {};
-  const totalMs = data.total_ms || Object.values(timings).reduce((a, b) => a + b, 0) || 1;
-  const stageNames = {
-    stage1_extract_ms: 'Extract',
-    stage1b_research_ms: 'Research',
-    stage2_graph_ms: 'Classify',
-    stage3_synthesis_ms: 'Synthesize',
-  };
-  const stageColors = {
-    stage1_extract_ms: '#ff6b00',
-    stage1b_research_ms: '#4ecdc4',
-    stage2_graph_ms: '#a855f7',
-    stage3_synthesis_ms: '#ffc200',
-  };
-  const timingsEl = document.getElementById('telemetryTimings');
-  timingsEl.innerHTML = Object.entries(stageNames).map(([key, name]) => {
-    const ms = timings[key] || 0;
-    const pct = Math.round((ms / totalMs) * 100);
-    const color = stageColors[key] || '#22d3ee';
-    return `
-      <div class="telemetry-stage">
-        <div class="telemetry-stage-name">${name}</div>
-        <div class="telemetry-stage-bar-track">
-          <div class="telemetry-stage-bar-fill" style="width:${pct}%; background:${color};"></div>
-        </div>
-        <div class="telemetry-stage-ms">${ms > 1000 ? (ms/1000).toFixed(1) + 's' : ms + 'ms'}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function toggleTelemetry() {
-  const toggle = document.getElementById('telemetryToggle');
-  const panel = document.getElementById('telemetryPanel');
-  const isOpen = toggle.classList.toggle('open');
-  panel.classList.toggle('visible');
-  toggle.setAttribute('aria-expanded', isOpen);
-}
-
-// ── COPY & DOWNLOAD ───────────────────────────────────────────────────────
+/* ════════════════════════════════════════════════════════════════════════════
+   COPY & DOWNLOAD
+   ════════════════════════════════════════════════════════════════════════════ */
 function copySoulmd() {
-  const text = document.getElementById('soulmdOutput').textContent;
+  const text = state.soulmdText || dom.outputContentPre.textContent;
   navigator.clipboard.writeText(text).then(() => {
-    const toast = document.getElementById('copiedToast');
-    toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 2000);
+    dom.copiedToast.classList.add('visible');
+    setTimeout(() => dom.copiedToast.classList.remove('visible'), 2000);
   });
 }
 
 function downloadSoulmd() {
-  const text = document.getElementById('soulmdOutput').textContent;
+  const text = state.soulmdText || dom.outputContentPre.textContent;
   const blob = new Blob([text], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1557,365 +1772,26 @@ function downloadSoulmd() {
   URL.revokeObjectURL(url);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STREAMING TRANSLATION SYSTEM
-// ═══════════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  initLensSelector();
+  initExamples();
 
-const UI_TEXTS = {
-  // Hero section
-  hero_eyebrow: "Kyanite Labs / OpenSoul Compatible",
-  hero_title_line1: "GIVE YOUR",
-  hero_title_line2_highlight: "SOUL",
-  hero_sub_part1: "Drop your references — characters, films, books, figures. Soulcraft finds the ",
-  hero_sub_highlight1: "latent pattern",
-  hero_sub_part2: " underneath and builds a ",
-  hero_sub_highlight2: "SOUL.md",
-  hero_sub_part3: " file. Not who the characters are. ",
-  hero_sub_highlight3: "What it means that you chose them.",
-  hero_demo_hint: "Drop your brain dump below",
+  dom.playBtn.addEventListener('click', runPipeline);
+  $('#copyBtn').addEventListener('click', copySoulmd);
+  $('#downloadBtn').addEventListener('click', downloadSoulmd);
 
-  // Problem section
-  problem_label: "The Problem",
-  problem_title: "WHO YOU ARE ISN'T\nIN THE PROMPT.",
-  problem_01_title: "Agents have no identity.",
-  problem_01_text: "You can describe what an agent does. You can't describe who it is. AGENTS.md handles operations. Nothing handles identity.",
-  problem_02_title: "Personality is an afterthought.",
-  problem_02_text: "Most agent personality is retrofitted via system prompts. That's not identity — that's costuming.",
-  problem_03_title: "The pattern is invisible.",
-  problem_03_text: "Tony Montana AND Hannah Montana AND The Godfather? There's a reason. But no tool finds it.",
-  problem_04_title: "It's not transferable.",
-  problem_04_text: "A good identity file works across frameworks. OpenClaw, Aeon, Nanobot, ZeroClaw — all read SOUL.md.",
-
-  // Process section
-  process_label: "The Process",
-  process_title: "THE GLASS BEAD\nGAME.",
-  step_01_num: "Stage 01",
-  step_01_title: "Extract Entities",
-  step_01_desc: "Parse your brain dump into typed references — characters, films, books, historical figures. One per line, freeform, doesn't matter.",
-  step_02_num: "Stage 02",
-  step_02_title: "Pattern Graph Engine",
-  step_02_desc: "Every entity votes on every pattern. Probabilities emerge — not a single answer, a full probability space with bridges connecting patterns. Consensus score tells you how defined the identity is.",
-  step_03_num: "Stage 03",
-  step_03_title: "SOUL.md Synthesis",
-  step_03_desc: "OpenClaw-spec identity document. Worldview, voice, principles, boundaries. Nothing that isn't identity. Readable by any framework that reads markdown.",
-
-  // Output section
-  output_label: "The Output",
-  output_title: "TWO THINGS.\nONE PROCESS.",
-  output_01_num: "01",
-  output_01_title: "Analysis Dashboard",
-  output_01_text: "Visual, beautiful, explorable. Pattern probability graph, entity contribution scores, bridge concepts, consensus confidence. This is the art — it's not the output file.",
-  output_02_num: "02",
-  output_02_title: "SOUL.md",
-  output_02_text: "The actual identity document. Clean, minimal, OpenClaw-spec. Worldview, voice, principles, boundaries, pet peeves. Works in OpenClaw, Aeon, Nanobot, ZeroClaw, any framework.",
-
-  // Demo section
-  demo_label: "Live Demo",
-  demo_title: "FIND THE THREAD.",
-  input_label: "Your brain dump",
-  input_placeholder: `Drop your references here. One per line.
-
-Tony Montana (Scarface)
-Hannah Montana
-The Godfather
-Don Draper (Mad Men)
-Tyler Durden
-Villanelle (Killing Eve)
-Fight Club
-Patrick Bateman (American Psycho)
-Jesse Pinkman (Breaking Bad)
-Fleabag`,
-  run_btn: "Find the Thread →",
-  run_btn_analyzing: "Analyzing...",
-  examples_label: "Examples",
-  placeholder_icon: "◉",
-  placeholder_text: "Run the pipeline to see the pattern graph analysis and generated SOUL.md",
-
-  // Analysis labels
-  stage_01_label: "Stage 01 — Entities Extracted",
-  stage_02_label: "Stage 02 — Pattern Probability Graph",
-  emergent_label: "Emergent Identity",
-  consensus_label: "Consensus",
-  stage_03_label: "SOUL.md — OpenClaw Compatible",
-  bridges_label: "Pattern Bridges",
-  bridges_subtitle: "Entities connecting two patterns",
-  matrix_label: "Entity × Pattern Matrix",
-  matrix_subtitle: "How each entity votes across patterns",
-  interpretation_label: "Interpretation",
-  reasoning_toggle: "Model Reasoning",
-  telemetry_toggle: "Pipeline Telemetry",
-
-  // Buttons
-  copy_btn: "Copy",
-  download_btn: "Download",
-  copied_toast: "Copied to clipboard",
-
-  // Footer
-  footer_built: "Built by",
-  footer_dev_shop: "Kyanite Labs",
-  footer_tagline: "— the dev shop that never sleeps.",
-  footer_inspired: "Inspired by",
-
-  // Nav
-  nav_how_it_works: "How it works",
-  nav_try_it: "Try it",
-  nav_github: "View on GitHub",
-
-  // Translation status
-  translating_status: "Translating...",
-  translation_done: "Translated",
-};
-
-// Collect all translatable text on the page
-function collectTranslatableText() {
-  const texts = [];
-  const keys = [];
-
-  for (const [key, value] of Object.entries(UI_TEXTS)) {
-    if (typeof value === 'string' && value.trim()) {
-      texts.push(value);
-      keys.push(key);
-    }
-  }
-
-  return { texts, keys };
-}
-
-// Current language state
-let currentLanguage = localStorage.getItem('soulcraft_language') || 'en';
-let isTranslating = false;
-
-// Initialize language selector
-function initLanguageSelector() {
-  const selector = document.getElementById('languageSelector');
-  if (!selector) return;
-
-  selector.value = currentLanguage;
-
-  selector.addEventListener('change', async (e) => {
-    const newLang = e.target.value;
-    if (newLang === currentLanguage) return;
-
-    await translatePage(newLang);
-    currentLanguage = newLang;
-    localStorage.setItem('soulcraft_language', currentLanguage);
-  });
-}
-
-// Translate the entire page using streaming
-async function translatePage(targetLang) {
-  if (isTranslating || targetLang === 'en') {
-    // For English, just restore original texts
-    if (targetLang === 'en') {
-      restoreOriginalTexts();
-      currentLanguage = 'en';
-      localStorage.setItem('soulcraft_language', 'en');
-    }
-    return;
-  }
-
-  isTranslating = true;
-  showTranslationStatus(true);
-
-  const { texts, keys } = collectTranslatableText();
-
-  // Combine texts with separators for efficient translation
-  const combinedText = texts.join('\n___SEP___\n');
-
-  try {
-    const response = await fetch('/api/translate-stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: combinedText,
-        target_lang: targetLang,
-        source_lang: 'en'
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Translation failed');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let translatedText = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const event = JSON.parse(line.slice(6));
-            if (event.type === 'token') {
-              translatedText += event.content;
-            } else if (event.type === 'done') {
-              // Apply translations
-              applyTranslations(event.translated_text || translatedText, keys);
-            }
-          } catch (e) {
-            // Ignore parse errors
-          }
-        }
-      }
-    }
-
-    showTranslationStatus(false);
-  } catch (error) {
-    console.error('Translation error:', error);
-    showTranslationStatus(false);
-    // Optionally show error to user
-  } finally {
-    isTranslating = false;
-  }
-}
-
-// Apply translated texts to the page
-function applyTranslations(translatedCombined, keys) {
-  const parts = translatedCombined.split(/___SEP___/);
-
-  keys.forEach((key, index) => {
-    if (parts[index]) {
-      updateElementText(key, parts[index].trim());
+  // Allow Ctrl+Enter to submit
+  dom.textarea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runPipeline();
     }
   });
-
-  // Update HTML lang attribute
-  document.documentElement.lang = currentLanguage;
-}
-
-// Update specific element text
-function updateElementText(key, text) {
-  // Handle different element types based on key prefix
-  const mapping = {
-    hero_eyebrow: '.hero-eyebrow',
-    hero_title_line1: () => {
-      const h1 = document.querySelector('.hero h1');
-      if (h1) {
-        const outline = h1.querySelector('.outline');
-        if (outline) outline.textContent = text;
-      }
-    },
-    hero_sub_part1: () => updateHeroSub(text, 0),
-    hero_sub_highlight1: () => updateHeroSub(text, 1, true),
-    hero_sub_part2: () => updateHeroSub(text, 2),
-    hero_sub_highlight2: () => updateHeroSub(text, 3, true),
-    hero_sub_part3: () => updateHeroSub(text, 4),
-    hero_sub_highlight3: () => updateHeroSub(text, 5, true),
-    hero_demo_hint: () => {
-      const hint = document.querySelector('.hero-demo-hint');
-      if (hint) {
-        // Preserve the arrow span
-        const arrow = hint.querySelector('.arrow');
-        hint.childNodes[0].textContent = text + ' ';
-      }
-    },
-    demo_label: () => updateSectionLabel('.demo-header .section-label', text),
-    demo_title: () => updateText('.demo-header .section-title', text),
-    input_label: () => updateText('label[for="brainDump"]', text),
-    input_placeholder: () => {
-      const textarea = document.getElementById('brainDump');
-      if (textarea) textarea.placeholder = text;
-    },
-    run_btn: () => {
-      const btn = document.getElementById('runBtn');
-      if (btn && !btn.classList.contains('loading')) {
-        btn.querySelector('.btn-text').textContent = text;
-      }
-    },
-    examples_label: '.input-label + div .input-label',
-    placeholder_text: () => updateText('.output-placeholder p', text),
-  };
-
-  if (typeof mapping[key] === 'function') {
-    mapping[key]();
-  } else if (typeof mapping[key] === 'string') {
-    const el = document.querySelector(mapping[key]);
-    if (el) el.textContent = text;
-  }
-}
-
-// Track translated segments for hero-sub (6 slots: text/strong alternating)
-const _heroSubSegments = [null, null, null, null, null, null];
-
-function updateHeroSub(text, index, isStrong = false) {
-  const sub = document.querySelector('.hero-sub');
-  if (!sub) return;
-  _heroSubSegments[index] = { text, isStrong };
-  // Rebuild from segments that have been set so far
-  sub.innerHTML = '';
-  for (let i = 0; i < _heroSubSegments.length; i++) {
-    const seg = _heroSubSegments[i];
-    if (seg === null) break;
-    if (seg.isStrong) {
-      const s = document.createElement('strong');
-      s.textContent = seg.text;
-      sub.appendChild(s);
-    } else {
-      sub.appendChild(document.createTextNode(seg.text));
-    }
-  }
-}
-
-function updateSectionLabel(selector, text) {
-  const el = document.querySelector(selector);
-  if (el) el.textContent = text;
-}
-
-function updateText(selector, text) {
-  const el = document.querySelector(selector);
-  if (el) el.textContent = text;
-}
-
-// Restore original English texts
-function restoreOriginalTexts() {
-  // Reload the page to restore original texts
-  // A more sophisticated approach would cache originals
-  location.reload();
-}
-
-// Show/hide translation status indicator
-function showTranslationStatus(active) {
-  let status = document.getElementById('translationStatus');
-  if (!status) {
-    status = document.createElement('div');
-    status.id = 'translationStatus';
-    status.className = 'translation-status';
-    status.innerHTML = '<span class="translation-spinner"></span><span class="translation-text">Translating...</span>';
-    document.body.appendChild(status);
-  }
-
-  if (active) {
-    status.classList.add('active');
-    status.querySelector('.translation-text').textContent = UI_TEXTS.translating_status;
-  } else {
-    status.classList.remove('active');
-  }
-}
-
-// Initialize translation system
-function initTranslation() {
-  initLanguageSelector();
-
-  // If language is not English, trigger translation on load
-  if (currentLanguage !== 'en') {
-    translatePage(currentLanguage);
-  }
-}
-
-// Start when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initTranslation);
-} else {
-  initTranslation();
-}
+});
 </script>
 </body>
 </html>

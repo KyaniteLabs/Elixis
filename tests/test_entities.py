@@ -1,159 +1,328 @@
-"""Tests for entity extraction pipeline."""
+"""Tests for soulcraft.entities — entity extraction, parsing, and type inference."""
 
-import unittest
-import sys
-import os
-
-# Add parent to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import pytest
+from unittest.mock import patch, MagicMock
 
 from soulcraft.entities import (
+    _infer_type,
     _parse_line_entity,
     _heuristic_extract,
     extract_entities,
+    _llm_extract_entities,
 )
 
 
-class TestParseLineEntity(unittest.TestCase):
-    """Test line-by-line entity parsing."""
+# ---------------------------------------------------------------------------
+# _infer_type
+# ---------------------------------------------------------------------------
 
+class TestInferType:
+    def test_mythological_without_source(self):
+        assert _infer_type("Zeus", "") == "mythological"
+
+    def test_mythological_with_source(self):
+        assert _infer_type("Zeus", "Greek Mythology") == "character"
+
+    def test_mythological_gandalf(self):
+        assert _infer_type("Gandalf", "") == "mythological"
+
+    def test_place_hints(self):
+        assert _infer_type("Dark City", "") == "place"
+
+    def test_place_with_source_not_place(self):
+        assert _infer_type("Dark City", "Film") == "character"
+
+    def test_archetype_exact(self):
+        assert _infer_type("hero", "") == "archetype"
+
+    def test_archetype_in_name(self):
+        assert _infer_type("Dark Knight", "") == "archetype"
+
+    def test_archetype_long_name_not_archetype(self):
+        assert _infer_type("The Great Warrior King of the North", "") == "concept"
+
+    def test_character_with_source(self):
+        assert _infer_type("Walter White", "Breaking Bad") == "character"
+
+    def test_concept_no_source(self):
+        assert _infer_type("Freedom", "") == "concept"
+
+    def test_yoda_is_mythological(self):
+        assert _infer_type("Yoda", "") == "mythological"
+
+
+# ---------------------------------------------------------------------------
+# _parse_line_entity
+# ---------------------------------------------------------------------------
+
+class TestParseLineEntity:
     def test_simple_name(self):
-        """Parse a simple name."""
-        result = _parse_line_entity("Kyan")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "Kyan")
-        self.assertEqual(result["type"], "concept")
+        result = _parse_line_entity("Mozart")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
 
-    def test_name_with_source_paren(self):
-        """Parse name with source in parentheses."""
-        result = _parse_line_entity("Arthur Dent (Hitchhiker's Guide)")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "Arthur Dent")
-        self.assertEqual(result["source"], "Hitchhiker's Guide")
-        self.assertEqual(result["type"], "character")
+    def test_name_with_parens_source(self):
+        result = _parse_line_entity("Walter White (Breaking Bad)")
+        assert result is not None
+        assert result["canonical"] == "Walter White"
+        assert result["source"] == "Breaking Bad"
 
-    def test_name_with_source_from(self):
-        """Parse name with 'from' source."""
-        result = _parse_line_entity("Frodo from Lord of the Rings")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "Frodo")
-        self.assertEqual(result["source"], "Lord of the Rings")
+    def test_name_with_dash_source(self):
+        result = _parse_line_entity("Mozart - Classical Composer")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+        assert result["source"] == "Classical Composer"
 
-    def test_name_with_source_dash(self):
-        """Parse name with dash separator."""
-        result = _parse_line_entity("Sherlock Holmes - detective stories")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "Sherlock Holmes")
-        self.assertEqual(result["source"], "detective stories")
+    def test_name_with_comma_source(self):
+        result = _parse_line_entity("Bach, Classical Music")
+        assert result is not None
+        assert result["canonical"] == "Bach"
+        assert result["source"] == "Classical Music"
 
-    def test_name_with_source_slash(self):
-        """Parse name with slash separator."""
-        result = _parse_line_entity("Batman / DC Comics")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "Batman")
-        self.assertEqual(result["source"], "DC Comics")
+    def test_name_with_from_source(self):
+        result = _parse_line_entity("Gandalf from Lord of the Rings")
+        assert result is not None
+        assert result["canonical"] == "Gandalf"
+        assert result["source"] == "Lord of the Rings"
 
-    def test_quoted_name(self):
-        """Parse quoted name."""
-        result = _parse_line_entity('"The Joker"')
-        self.assertIsNotNone(result)
-        self.assertEqual(result["canonical"], "The Joker")
+    def test_name_with_slash_source(self):
+        result = _parse_line_entity("Mozart / Classical Era")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+        assert result["source"] == "Classical Era"
+
+    def test_bullet_point(self):
+        result = _parse_line_entity("- Mozart")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+
+    def test_numbered_item(self):
+        result = _parse_line_entity("1. Mozart")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
 
     def test_empty_line(self):
-        """Empty line returns None."""
-        result = _parse_line_entity("")
-        self.assertIsNone(result)
+        assert _parse_line_entity("") is None
+
+    def test_short_text(self):
+        assert _parse_line_entity("A") is None
+
+    def test_none_like_input(self):
+        assert _parse_line_entity("  ") is None
+
+    def test_quotes_stripped(self):
+        result = _parse_line_entity('"Mozart"')
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+
+    def test_type_inferred(self):
+        result = _parse_line_entity("Zeus")
+        assert result is not None
+        assert result["type"] == "mythological"
+
+    def test_original_preserved(self):
+        result = _parse_line_entity("- Walter White (Breaking Bad)")
+        assert result is not None
+        assert "Walter White" in result["original"]
+
+    def test_em_dash(self):
+        result = _parse_line_entity("Mozart — Composer")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+
+    def test_comma_short_name_splits(self):
+        result = _parse_line_entity("Mozart, the great composer")
+        assert result is not None
+        assert result["canonical"] == "Mozart"
+        assert result["source"] == "the great composer"
+
+    def test_comma_long_name_not_split(self):
+        # comma_match only splits if left side has <= 4 words — 5+ words stays whole
+        result = _parse_line_entity("The Great Composer Wolfgang Mozart, of the classical era")
+        assert result is not None
+        assert "source" not in result or result.get("source", "") != "of the classical era"
+
+
+# ---------------------------------------------------------------------------
+# _heuristic_extract
+# ---------------------------------------------------------------------------
+
+class TestHeuristicExtract:
+    def test_single_line_entity(self):
+        result = _heuristic_extract("Mozart")
+        assert len(result) >= 1
+        assert result[0]["canonical"] == "Mozart"
+
+    def test_multiline(self):
+        text = "Mozart\nBeethoven\nBach"
+        result = _heuristic_extract(text)
+        assert len(result) == 3
+        names = {e["canonical"] for e in result}
+        assert "Mozart" in names
+        assert "Beethoven" in names
+
+    def test_deduplication(self):
+        result = _heuristic_extract("Mozart\nMozart\nMozart")
+        assert len(result) == 1
+
+    def test_empty_text(self):
+        assert _heuristic_extract("") == []
 
     def test_whitespace_only(self):
-        """Whitespace-only line returns None."""
-        result = _parse_line_entity("   ")
-        self.assertIsNone(result)
+        assert _heuristic_extract("   \n  \n  ") == []
 
-    def test_too_short(self):
-        """Single character returns None."""
-        result = _parse_line_entity("A")
-        self.assertIsNone(result)
+    def test_capitalized_fallback(self):
+        # No line breaks → line parser finds nothing → capitalized phrase extraction
+        result = _heuristic_extract("I love Sherlock Holmes and his methods")
+        assert len(result) >= 1
+        names = {e["canonical"] for e in result}
+        # Holmes is a mythological hint so type should be mythological
+        assert any("Holmes" in n for n in names)
 
-
-class TestHeuristicExtract(unittest.TestCase):
-    """Test heuristic entity extraction."""
-
-    def test_multi_line_input(self):
-        """Extract entities from multi-line text."""
-        text = """Kyan - AI builder
-Arthur Dent (Hitchhiker's Guide)
-The concept of emergence
-"""
-        entities = _heuristic_extract(text)
-        self.assertEqual(len(entities), 3)
-
-        names = [e["canonical"] for e in entities]
-        self.assertIn("Kyan", names)
-        self.assertIn("Arthur Dent", names)
-        self.assertIn("The concept of emergence", names)
-
-    def test_capitalized_phrases_fallback(self):
-        """Extract capitalized phrases when no line entities."""
-        # Use a text where capitalized words stand alone
-        text = "Sherlock Holmes. Hercule Poirot. detectives."
-        entities = _heuristic_extract(text)
-        # Should find some capitalized entities
-        names = [e["canonical"] for e in entities]
-        # At least one capitalized name should be found
-        self.assertGreater(len(names), 0)
-        # Check that common starters are filtered
-        for name in names:
-            self.assertNotIn(name.lower(), ["the", "this", "that", "i", "we"])
-
-    def test_excludes_common_starters(self):
-        """Common sentence starters are excluded."""
-        text = "The quick brown fox jumps over the lazy dog."
-        entities = _heuristic_extract(text)
-        # "The" should not be extracted
-        for e in entities:
-            self.assertNotEqual(e["canonical"].lower(), "the")
+    def test_capitalized_filters_starters(self):
+        result = _heuristic_extract("The cat sat on the mat")
+        names = [e["canonical"] for e in result]
+        assert "The" not in names
 
 
-class TestExtractEntities(unittest.TestCase):
-    """Test main entity extraction pipeline."""
+# ---------------------------------------------------------------------------
+# _llm_extract_entities (mocked LLM)
+# ---------------------------------------------------------------------------
 
+class TestLlmExtractEntities:
+    @patch("soulcraft.llm.is_available", return_value=False)
+    def test_returns_empty_when_unavailable(self, mock_avail):
+        result = _llm_extract_entities("Mozart, Beethoven")
+        assert result == []
+
+    @patch("soulcraft.parsing.parse_llm_json_array", return_value=None)
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_returns_empty_on_parse_failure(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "this is not valid json output"}
+        result = _llm_extract_entities("test input")
+        assert result == []
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_extracts_dict_entities(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = [
+            {"name": "Mozart", "type": "historical_figure", "source": "",
+             "themes": ["creation"], "traits": ["genius"], "related": ["Beethoven"]},
+        ]
+        result = _llm_extract_entities("I like Mozart")
+        assert len(result) == 1
+        assert result[0]["canonical"] == "Mozart"
+        assert result[0]["confidence"] == 0.95
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_extracts_string_entities(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = ["Mozart"]
+        result = _llm_extract_entities("I like Mozart")
+        assert len(result) == 1
+        assert result[0]["canonical"] == "Mozart"
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_deduplicates(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = [
+            {"name": "Mozart", "type": "historical_figure"},
+            {"name": "Mozart", "type": "historical_figure"},
+        ]
+        result = _llm_extract_entities("Mozart Mozart")
+        assert len(result) == 1
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_filters_short_names(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = [
+            {"name": "A", "type": "concept"},
+            {"name": "Mozart", "type": "historical_figure"},
+        ]
+        result = _llm_extract_entities("test")
+        assert len(result) == 1
+        assert result[0]["canonical"] == "Mozart"
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_handles_comma_separated_themes(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = [
+            {"name": "Mozart", "themes": "creation, wisdom", "traits": "genius"},
+        ]
+        result = _llm_extract_entities("test")
+        assert result[0]["themes"] == ["creation", "wisdom"]
+        assert result[0]["traits"] == ["genius"]
+
+    @patch("soulcraft.llm.chat", side_effect=Exception("LLM down"))
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_handles_chat_exception(self, mock_avail, mock_chat):
+        result = _llm_extract_entities("test input")
+        assert result == []
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_truncates_long_input(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "[]"}
+        mock_parse.return_value = []
+        long_text = "x" * 5000
+        _llm_extract_entities(long_text)
+        call_args = mock_chat.call_args[0][0][1]["content"]
+        assert "truncated" in call_args
+
+    @patch("soulcraft.parsing.parse_llm_json_array")
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_skips_non_string_non_dict_items(self, mock_avail, mock_chat, mock_parse):
+        mock_chat.return_value = {"content": "a valid json response array"}
+        mock_parse.return_value = [123, None, True]
+        result = _llm_extract_entities("test")
+        assert result == []
+
+    @patch("soulcraft.llm.chat")
+    @patch("soulcraft.llm.is_available", return_value=True)
+    def test_short_response_rejected(self, mock_avail, mock_chat):
+        mock_chat.return_value = {"content": "ab"}
+        result = _llm_extract_entities("test")
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# extract_entities (integration: LLM with heuristic fallback)
+# ---------------------------------------------------------------------------
+
+class TestExtractEntities:
     def test_empty_input(self):
-        """Empty input returns empty list."""
-        result = extract_entities("")
-        self.assertEqual(result, [])
+        assert extract_entities("") == []
 
     def test_whitespace_input(self):
-        """Whitespace-only input returns empty list."""
-        result = extract_entities("   \n\t  ")
-        self.assertEqual(result, [])
+        assert extract_entities("   ") == []
 
-    def test_basic_extraction(self):
-        """Basic entity extraction works."""
-        text = """Kyan builds AI
-The concept of flow states
-Miyamoto Musashi - Book of Five Rings"""
-        entities = extract_entities(text)
-        # Should extract something (LLM or heuristic)
-        self.assertGreater(len(entities), 0)
+    @patch("soulcraft.entities._llm_extract_entities", return_value=[])
+    def test_falls_back_to_heuristic(self, mock_llm):
+        result = extract_entities("Mozart\nBeethoven")
+        assert len(result) >= 1
+        names = {e["canonical"] for e in result}
+        assert "Mozart" in names
 
-
-class TestEntityStructure(unittest.TestCase):
-    """Test that extracted entities have required fields."""
-
-    def test_entity_has_required_fields(self):
-        """All entities must have required fields."""
-        text = "Test Entity (Source Work)"
-        entities = _heuristic_extract(text)
-
-        for entity in entities:
-            self.assertIn("original", entity)
-            self.assertIn("canonical", entity)
-            self.assertIn("source", entity)
-            self.assertIn("type", entity)
-            self.assertIn("themes", entity)
-            self.assertIn("traits", entity)
-            self.assertIn("confidence", entity)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    @patch("soulcraft.entities._llm_extract_entities")
+    def test_uses_llm_result_when_available(self, mock_llm):
+        mock_llm.return_value = [
+            {"canonical": "Mozart", "original": "Mozart", "type": "historical_figure",
+             "source": "", "themes": [], "traits": [], "confidence": 0.95,
+             "description": "", "related": []},
+        ]
+        result = extract_entities("I like Mozart")
+        assert len(result) == 1
+        assert result[0]["canonical"] == "Mozart"
