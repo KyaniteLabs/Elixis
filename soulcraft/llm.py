@@ -45,13 +45,24 @@ class _Config:
 
 cfg = _Config()
 
-# Backward-compatible aliases (read at access time via properties)
-OLLAMA_BASE = cfg.base_url
-FALLBACK_BASE_URL = cfg.fallback_url
-DEFAULT_MODEL = cfg.default_model
-CLASSIFY_MODEL = cfg.classify_model
-PROVIDER = cfg.provider
-API_KEY = cfg.api_key
+# Module-level __getattr__ resolves backward-compatible aliases live.
+# This ensures `from soulcraft.llm import DEFAULT_MODEL` always returns
+# the current env var value, not the import-time snapshot.
+_ALIASES = {
+    "OLLAMA_BASE": "base_url",
+    "FALLBACK_BASE_URL": "fallback_url",
+    "DEFAULT_MODEL": "default_model",
+    "CLASSIFY_MODEL": "classify_model",
+    "PROVIDER": "provider",
+    "API_KEY": "api_key",
+}
+
+
+def __getattr__(name):
+    prop = _ALIASES.get(name)
+    if prop is not None:
+        return getattr(cfg, prop)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 # Cached availability check (avoids hammering Ollama on every call)
 _availability_cache = {"result": None, "expires": 0}

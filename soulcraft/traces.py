@@ -12,6 +12,7 @@ Structure:
 
 import json
 import os
+import tempfile
 import threading
 import time
 from datetime import datetime, timezone
@@ -45,7 +46,7 @@ def _rotate_directory(directory, max_files):
 
 
 def _rotate_request_log():
-    """Truncate request log if it exceeds the size cap."""
+    """Truncate request log if it exceeds the size cap. Uses atomic write."""
     with _request_log_lock:
         try:
             if not os.path.isfile(_REQUESTS_LOG):
@@ -56,8 +57,18 @@ def _rotate_request_log():
             with open(_REQUESTS_LOG) as f:
                 lines = f.readlines()
             keep = lines[-10000:]
-            with open(_REQUESTS_LOG, "w") as f:
-                f.writelines(keep)
+            # Write to temp file then atomically replace
+            log_dir = os.path.dirname(_REQUESTS_LOG) or "."
+            fd, tmp_path = tempfile.mkstemp(dir=log_dir, suffix=".log")
+            try:
+                with os.fdopen(fd, "w") as f:
+                    f.writelines(keep)
+                os.replace(tmp_path, _REQUESTS_LOG)
+            except OSError:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
         except OSError:
             pass
 

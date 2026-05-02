@@ -5,12 +5,16 @@ Manages backup creation, rotation, and restoration of .soulcraft/ data.
 
 import json
 import os
+import re
 import shutil
 import tarfile
 import gzip
+import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
+
+_SAFE_NAME_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
 
 
 # Backup configuration
@@ -130,6 +134,15 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
     Returns:
         Restore result dictionary
     """
+    # Validate backup_name: only safe characters allowed
+    if not backup_name or not _SAFE_NAME_RE.match(backup_name):
+        return {
+            "success": False,
+            "backup_name": backup_name,
+            "files_restored": 0,
+            "error": "Invalid backup name",
+        }
+
     backup_dir = get_backup_dir()
     data_dir = get_data_dir()
 
@@ -140,7 +153,7 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
         "error": None,
     }
 
-    # Find backup file
+    # Find backup file (path stays within backup_dir after validation)
     backup_path = backup_dir / f"{backup_name}.tar.gz"
     if not backup_path.exists():
         result["error"] = f"Backup not found: {backup_name}"

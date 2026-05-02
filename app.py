@@ -210,6 +210,11 @@ class Handler(BaseHTTPRequestHandler):
             self._log("DELETE", self.path, 200, start)
         elif self.path.startswith("/api/backups/"):
             name = self.path[len("/api/backups/"):]
+            # Validate name to prevent path traversal
+            import re as _re
+            if not name or not _re.match(r'^[a-zA-Z0-9_-]+$', name):
+                self._json_response({"removed": 0, "error": "Invalid backup name"}, 400)
+                return
             result = {"removed": 0, "error": None}
             backups = list_backups()
             target = next((b for b in backups if b["name"] == name), None)
