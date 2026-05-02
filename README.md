@@ -1,5 +1,10 @@
 # SoulCraft
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/KyaniteLabs/SoulCraft/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/SoulCraft/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/SoulCraft.svg)](https://github.com/KyaniteLabs/SoulCraft/stargazers)
+
 > AI-powered identity synthesis for OpenClaw-compatible SOUL.md documents. Transform brain dump text into structured AI agent personas.
 
 SoulCraft is a companion tool for the [OpenClaw](https://github.com/openclaw/openclaw) and [Soul Spec](https://github.com/clawsouls/soulspec) ecosystem. It transforms raw brain dump text — references, influences, values, context — into structured **SOUL.md** identity documents through a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs.
@@ -64,6 +69,25 @@ cp .env.example .env
 pip install -r requirements.txt
 python -m unittest discover tests/ -v
 ```
+
+## MCP Server (AI Agent Native)
+
+SoulCraft exposes an MCP server so any MCP-compatible AI assistant can use it directly:
+
+```json
+{
+  "mcpServers": {
+    "soulcraft": {
+      "command": "python",
+      "args": ["-m", "soulcraft.mcp_server"]
+    }
+  }
+}
+```
+
+Available tools: `create_soul`, `extract_entities`, `analyze_patterns`, `translate_text`, `research_name`.
+
+Works with Claude Code, Cursor, Windsurf, and any MCP client.
 
 ## Best for
 
