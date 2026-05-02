@@ -1352,17 +1352,20 @@ async function runPipeline() {
 }
 
 // ── RENDER STAGES ─────────────────────────────────────────────────────────
+function esc(s) { if (typeof s !== 'string') return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function renderEntities(entities) {
   document.getElementById('entityCards').innerHTML = entities.map(e => {
     const related = (e.related && e.related.length > 0)
       ? `<div class="related-section">
-           <div class="related-chars">${e.related.map(r => `<span class="related-chip">${r}</span>`).join('')}</div>
+           <div class="related-chars">${e.related.map(r => `<span class="related-chip">${esc(r)}</span>`).join('')}</div>
          </div>`
       : '';
-    return `<div class="entity-chip type-${e.type}" style="flex-direction:column; align-items:flex-start; gap:0.2rem; padding:0.5rem 0.8rem;">
+    return `<div class="entity-chip type-${escAttr(e.type)}" style="flex-direction:column; align-items:flex-start; gap:0.2rem; padding:0.5rem 0.8rem;">
       <div style="display:flex; align-items:center; gap:0.4rem;">
         <span class="type-dot"></span>
-        <span>${e.original}${e.source ? ' <span style="color:#555;font-size:0.65rem;">(' + e.source + ')</span>' : ''}</span>
+        <span>${esc(e.original)}${e.source ? ' <span style="color:#555;font-size:0.65rem;">(' + esc(e.source) + ')</span>' : ''}</span>
       </div>
       ${related}
     </div>`;
@@ -1385,7 +1388,7 @@ function renderGraph(graph) {
   const topPatterns = graph.patterns.filter(p => p.probability > 0.01);
   document.getElementById('patternGraph').innerHTML = topPatterns.map((p, i) => {
     const subs = (p.sub_patterns && p.sub_patterns.length > 0)
-      ? `<div class="sub-patterns">${p.sub_patterns.map(s => `<span class="sub-pattern-pill">${s}</span>`).join('')}</div>`
+      ? `<div class="sub-patterns">${p.sub_patterns.map(s => `<span class="sub-pattern-pill">${esc(s)}</span>`).join('')}</div>`
       : '';
     return `
     <div class="pattern-row" style="flex-wrap:wrap;">
@@ -1393,11 +1396,11 @@ function renderGraph(graph) {
         <div class="pattern-rank">${i + 1}</div>
         <div class="pattern-bar-wrap">
           <div class="pattern-bar-track">
-            <div class="pattern-bar-fill" style="width: ${p.probability * 100}%; background: ${p.color};"></div>
+            <div class="pattern-bar-fill" style="width: ${Math.round(p.probability * 100)}%; background: ${escAttr(p.color)};"></div>
           </div>
-          <div class="pattern-name" title="${p.name}">${p.name}</div>
+          <div class="pattern-name" title="${escAttr(p.name)}">${esc(p.name)}</div>
           <div class="pattern-prob">${Math.round(p.probability * 100)}%</div>
-          <div class="pattern-confidence" title="${p.supporting_entities} entities">${p.supporting_entities}\u2193</div>
+          <div class="pattern-confidence" title="${escAttr(p.supporting_entities)} entities">${p.supporting_entities}\u2193</div>
         </div>
       </div>
       ${subs}
@@ -1409,11 +1412,11 @@ function renderGraph(graph) {
     document.getElementById('bridgesSection').style.display = 'block';
     document.getElementById('bridgesList').innerHTML = graph.bridges.map(b => `
       <div class="bridge-item">
-        <div class="bridge-entity">${b.entity}</div>
+        <div class="bridge-entity">${esc(b.entity)}</div>
         <div class="bridge-connection">
-          <span class="bridge-pill" style="background: ${b.color_a}22; color: ${b.color_a}; border: 1px solid ${b.color_a};">${b.pattern_a}</span>
+          <span class="bridge-pill" style="background: ${escAttr(b.color_a)}22; color: ${escAttr(b.color_a)}; border: 1px solid ${escAttr(b.color_a)};">${esc(b.pattern_a)}</span>
           <span class="bridge-arrow">\u2194</span>
-          <span class="bridge-pill" style="background: ${b.color_b}22; color: ${b.color_b}; border: 1px solid ${b.color_b};">${b.pattern_b}</span>
+          <span class="bridge-pill" style="background: ${escAttr(b.color_b)}22; color: ${escAttr(b.color_b)}; border: 1px solid ${escAttr(b.color_b)};">${esc(b.pattern_b)}</span>
           <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted);">
             ${Math.round(b.score_a * 100)}% / ${Math.round(b.score_b * 100)}%
           </span>
@@ -1431,11 +1434,11 @@ function renderGraph(graph) {
         const bars = relevantPatterns.map(p => {
           const score = eps.votes[p.id] || 0;
           const width = Math.round(score * 100);
-          return width > 5 ? `<div class="matrix-seg" style="width:${width}%; background:${p.color};" title="${p.name}: ${width}%"></div>` : '';
+          return width > 5 ? `<div class="matrix-seg" style="width:${width}%; background:${escAttr(p.color)};" title="${escAttr(p.name)}: ${width}%"></div>` : '';
         }).join('');
         return `
           <div class="matrix-row">
-            <div class="matrix-entity" title="${eps.name}">${eps.name}</div>
+            <div class="matrix-entity" title="${escAttr(eps.name)}">${esc(eps.name)}</div>
             <div class="matrix-bars">${bars || '<span style="color:#333;font-size:0.7rem">no signal</span>'}</div>
           </div>
         `;
@@ -1447,7 +1450,7 @@ function renderGraph(graph) {
   if (graph.analysis_notes && graph.analysis_notes.length > 0) {
     document.getElementById('notesSection').style.display = 'block';
     document.getElementById('analysisNotes').innerHTML = graph.analysis_notes.map(n =>
-      `<div class="analysis-note">${n}</div>`
+      `<div class="analysis-note">${esc(n)}</div>`
     ).join('');
   }
 }
