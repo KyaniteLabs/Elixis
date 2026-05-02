@@ -7,6 +7,7 @@ Uses LLM (Ollama) for synthesis when available, template fallback otherwise.
 
 from datetime import datetime
 from .llm import chat, chat_stream, is_available as llm_available
+from .traces import save_run
 
 # Template-based fallback content (used when no LLM is available)
 

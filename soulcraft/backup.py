@@ -159,12 +159,14 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
         if data_dir.exists():
             shutil.rmtree(data_dir)
 
-        # Extract backup with path traversal protection
+        # Extract backup with path traversal and symlink protection
         with tarfile.open(backup_path, "r:gz") as tar:
             extract_dir = data_dir.parent
             members = []
             for member in tar.getmembers():
                 if member.name.startswith("/") or ".." in member.name.split("/"):
+                    continue
+                if member.issym() or member.islnk():
                     continue
                 members.append(member)
             tar.extractall(path=extract_dir, members=members)

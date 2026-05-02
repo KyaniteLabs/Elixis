@@ -49,6 +49,7 @@ CSP_HEADER = get_content_security_policy()
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "*")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
+MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
 
 logger = get_logger("soulcraft.server")
 
@@ -206,7 +207,7 @@ class Handler(BaseHTTPRequestHandler):
     def _read_json_body(self):
         """Read and parse JSON body, returning (data, error_response)."""
         try:
-            length = int(self.headers.get("Content-Length", 0))
+            length = max(0, min(int(self.headers.get("Content-Length", 0)), MAX_BODY_SIZE))
             body = self.rfile.read(length).decode("utf-8")
             return json.loads(body), None
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
@@ -241,6 +242,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = run_pipeline(brain_dump)
             finally:
                 _pipeline_semaphore.release()
+            status = 200 if "error" not in result else 500
             self._json_response(result, status)
             self._log("POST", self.path, status, start, extra={
                 "entity_count": len(result.get("stage1_entities", [])),
@@ -320,6 +322,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
+        self.send_header("Content-Security-Policy", CSP_HEADER)
         self._send_cors_headers()
         self.end_headers()
 
@@ -422,6 +425,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
+        self.send_header("Content-Security-Policy", CSP_HEADER)
         self._send_cors_headers()
         self.end_headers()
 
