@@ -526,7 +526,7 @@ class Handler(BaseHTTPRequestHandler):
         logger.info(f"[{rid}] {method} {path} {status} {duration_ms:.0f}ms")
 
     def _serve_file(self, filename, content_type):
-        filepath = os.path.join(TEMPLATE_DIR, filename)
+        filepath = filename if os.path.isabs(filename) else os.path.join(TEMPLATE_DIR, filename)
         if not os.path.isfile(filepath):
             self.send_response(404)
             self._send_cors_headers()
@@ -576,7 +576,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_cors_headers()
             self.end_headers()
             return
-        self._serve_file(filename, content_type)
+        self._serve_file(resolved, content_type)
 
     def do_OPTIONS(self):
         self.send_response(204)

@@ -44,7 +44,7 @@ EXPOSE 3110
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request, json; r=urllib.request.urlopen('http://localhost:3110/api/health'); d=json.loads(r.read()); exit(1) if d.get('status')=='degraded' else None" || exit 1
+    CMD python -c "import urllib.request, json; r=urllib.request.urlopen('http://localhost:3110/api/health'); d=json.loads(r.read()); exit(0 if d.get('status')=='ok' else 1)"
 
 # Run the application
 CMD ["python", "app.py"]

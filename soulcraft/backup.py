@@ -177,11 +177,19 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
             extract_dir = data_dir.parent
             members = []
             for member in tar.getmembers():
-                if member.name.startswith("/") or ".." in member.name.split("/"):
+                if member.name.startswith("/") or ".." in member.name.replace("\\", "/").split("/"):
                     continue
                 if member.issym() or member.islnk():
                     continue
                 members.append(member)
+
+            # Tar bomb protection: check total uncompressed size
+            total_size = sum(m.size for m in members if m.isfile())
+            max_bytes = MAX_BACKUP_SIZE_MB * 1024 * 1024
+            if total_size > max_bytes:
+                result["error"] = f"Backup too large uncompressed ({total_size // (1024*1024)}MB > {MAX_BACKUP_SIZE_MB}MB)"
+                return result
+
             tar.extractall(path=extract_dir, members=members)
 
             result["files_restored"] = sum(1 for m in members if m.isfile())
