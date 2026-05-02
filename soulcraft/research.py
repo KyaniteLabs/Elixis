@@ -18,13 +18,11 @@ _MAX_ENTITIES = 15
 
 def _wiki_summary(title):
     """Fetch a Wikipedia summary for a title. Returns empty string on failure."""
-    # Clean the title for URL
     slug = re.sub(r'\s+', '_', title.strip())
-    slug = re.sub(r'[^\w(),.\-]', '', slug)
     if not slug:
         return ""
 
-    url = _WIKI_API + urllib.request.quote(slug, safe='')
+    url = _WIKI_API + urllib.request.quote(slug, safe='()')
     req = urllib.request.Request(url, headers={
         "User-Agent": "Soulcraft/1.0 (https://github.com/KyaniteLabs/SoulCraft)",
         "Accept": "application/json",

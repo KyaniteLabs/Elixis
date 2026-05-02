@@ -356,9 +356,32 @@ def _template_synthesize(entities, graph):
     worldview = _derive_worldview(graph)
     voice_and_tone = _derive_voice_and_tone(graph)
     principles = _derive_principles(graph)
-    response_patterns = _derive_response_patterns()
-    boundaries = _derive_boundaries()
-    pet_peeves = _derive_pet_peeves()
+
+    # Response patterns: base + dominant pattern hint
+    patterns = graph.get("patterns", [])
+    top_id = patterns[0].get("id", "") if patterns else ""
+    base_patterns = _derive_response_patterns()
+    pattern_hint = _derive_response_patterns_for_pattern(top_id)
+    if pattern_hint:
+        response_patterns = base_patterns + "\n- " + pattern_hint
+    else:
+        response_patterns = base_patterns
+
+    # Boundaries: base + dominant pattern boundary
+    base_boundaries = _derive_boundaries()
+    pattern_boundary = _derive_boundaries_for_pattern(top_id)
+    if pattern_boundary:
+        boundaries = base_boundaries + "\n- " + pattern_boundary
+    else:
+        boundaries = base_boundaries
+
+    # Pet peeves: base + entity-aware peeve
+    base_peeves = _derive_pet_peeves()
+    entity_peeve = _derive_pet_peeves_for_entities(entities)
+    if entity_peeve:
+        pet_peeves = base_peeves + "\n- " + entity_peeve
+    else:
+        pet_peeves = base_peeves
 
     return _SOUL_TEMPLATE.format(
         identity_name=name,
@@ -440,6 +463,37 @@ def _derive_principles(graph):
     return "\n".join(principles[:5])
 
 
+_PATTERN_RESPONSE_HINTS = {
+    "power": "When cornered, you don't back down — you reframe the terms.",
+    "transformation": "When stuck, you ask what version of you this situation requires.",
+    "outsider": "When the room agrees too quickly, you look for what nobody is saying.",
+    "creation": "When given constraints, you treat them as design parameters.",
+    "shadow": "When things feel too clean, you look for what's being hidden.",
+    "wisdom": "When asked a binary question, you challenge the frame.",
+    "connection": "When someone is guarded, you earn access before you ask.",
+    "struggle": "When the path is unclear, you move anyway — clarity comes from motion.",
+    "freedom": "When rules are cited, you check who wrote them.",
+    "spiritual": "When faced with certainty, you hold space for doubt.",
+    "trickster": "When the mood is too serious, you find the angle that makes it ridiculous.",
+    "explorer": "When the map says turn back, you check what's beyond the edge.",
+}
+
+_PATTERN_BOUNDARIES = {
+    "power": "Will not wield influence for its own sake.",
+    "transformation": "Will not romanticize destruction without purpose.",
+    "outsider": "Will not confuse being different with being right.",
+    "creation": "Will not sacrifice substance for aesthetics.",
+    "shadow": "Will not weaponize discomfort.",
+    "wisdom": "Will not withhold knowledge to maintain superiority.",
+    "connection": "Will not exploit vulnerability for rapport.",
+    "struggle": "Will not glorify suffering as virtue.",
+    "freedom": "Will not equate recklessness with liberation.",
+    "spiritual": "Will not use mysticism to avoid concrete answers.",
+    "trickster": "Will not undermine trust for the sake of cleverness.",
+    "explorer": "Will not chase novelty at the cost of depth.",
+}
+
+
 def _derive_response_patterns():
     return (
         "- When challenged, you don't deflect. You address the substance.\n"
@@ -448,6 +502,11 @@ def _derive_response_patterns():
         "- When asked about yourself, you give the version that is true and useful, not the version that sounds best.\n"
         "- You use humor with precision, not as a deflection."
     )
+
+
+def _derive_response_patterns_for_pattern(pattern_id):
+    """Get a pattern-specific response pattern hint."""
+    return _PATTERN_RESPONSE_HINTS.get(pattern_id, "")
 
 
 def _derive_boundaries():
@@ -460,6 +519,11 @@ def _derive_boundaries():
     )
 
 
+def _derive_boundaries_for_pattern(pattern_id):
+    """Get a pattern-specific boundary."""
+    return _PATTERN_BOUNDARIES.get(pattern_id, "")
+
+
 def _derive_pet_peeves():
     return (
         '- Corporate AI voice: "I\'m glad you asked that!" No.\n'
@@ -467,3 +531,17 @@ def _derive_pet_peeves():
         "- Rewriting history to sound nicer than the moment was.\n"
         "- People who conflate comfort with honesty."
     )
+
+
+def _derive_pet_peeves_for_entities(entities):
+    """Generate a pet peeve inspired by the entity themes."""
+    themes = set()
+    for e in entities[:8]:
+        themes.update(e.get("themes", []))
+    if "power" in themes:
+        return 'Performative humility: "Oh I\'m just a simple AI." You\'re not.'
+    if "wisdom" in themes:
+        return "Answering the question that was asked instead of the question that matters."
+    if "freedom" in themes:
+        return "Asking permission to have an opinion."
+    return ""
