@@ -1,23 +1,41 @@
 # SoulCraft
 
-> Language, naming, and narrative synthesis workbench.
+> AI-powered identity synthesis companion for OpenClaw and Soul Spec.
 
-SoulCraft helps transform research notes, cultural context, constraints, and creative intent into meaningful names, story patterns, and positioning language. It includes entity extraction, pattern analysis, LLM-assisted synthesis, translation checks, validation, trace logging, and backup utilities.
+SoulCraft transforms brain dump text into structured SOUL.md identity documents for AI agents. It is a companion tool for the OpenClaw ecosystem that provides a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
 
 ## Use cases
-- Brand and product naming
-- Creative project naming
-- Symbolic research synthesis
-- Multilingual naming risk review
-- Narrative and positioning development
-- Meaning-centered language exploration
+
+- Generate SOUL.md personas for OpenClaw, SoulClaw, and compatible systems
+- Synthesize AI agent identity from cultural references, values, and influences
+- Analyze archetypal patterns (transformation, power, shadow, trickster, etc.) in text
+- Check cross-language naming risks across 28+ languages
+- Create portable persona files for Claude Code, Cursor, ChatGPT, and Gemini
+- Preserve creative reasoning with trace logging and backups
+
+## Ecosystem
+
+- [OpenClaw](https://github.com/openclaw/openclaw): Open-source AI assistant that reads SOUL.md natively
+- [Soul Spec](https://github.com/clawsouls/soulspec): Open standard for AI agent personas (v0.5)
+- [SoulClaw](https://github.com/clawsouls/soulclaw): Soul-driven AI agent framework built on OpenClaw
+- [ClawSouls Registry](https://github.com/clawsouls/registry): Open registry for AI agent personas
 
 ## Key paths
-- `README.md`: public-facing overview
-- `soulcraft/`: core Python package
-- `tests/`: verification suite
-- `app.py`: HTTP server entry point (stdlib)
-- `traefik/`: deployment examples
+
+- [README.md](https://github.com/KyaniteLabs/SoulCraft/blob/main/README.md): Public-facing overview with FAQ and compatibility table
+- [soulcraft/](https://github.com/KyaniteLabs/SoulCraft/tree/main/soulcraft/): Core Python package
+- [tests/](https://github.com/KyaniteLabs/SoulCraft/tree/main/tests/): Verification suite (80 tests, unittest)
+- [app.py](https://github.com/KyaniteLabs/SoulCraft/blob/main/app.py): HTTP server entry point (stdlib, port 3110)
+- [Dockerfile](https://github.com/KyaniteLabs/SoulCraft/blob/main/Dockerfile): Multi-stage production build
+- [traefik/](https://github.com/KyaniteLabs/SoulCraft/tree/main/traefik/): Reverse-proxy deployment examples
+
+## Optional
+
+- [docker-compose.yml](https://github.com/KyaniteLabs/SoulCraft/blob/main/docker-compose.yml): Production Docker Compose config
+- [.env.example](https://github.com/KyaniteLabs/SoulCraft/blob/main/.env.example): Environment variable template
+- [.github/workflows/ci.yml](https://github.com/KyaniteLabs/SoulCraft/blob/main/.github/workflows/ci.yml): CI/CD pipeline with Blacksmith runners
+- [soulcraft/templates/landing.html](https://github.com/KyaniteLabs/SoulCraft/blob/main/soulcraft/templates/landing.html): Interactive UI with SSE streaming demo
 
 ## Keywords
-AI naming tool, brand naming assistant, symbolic language synthesis, product naming research, multilingual naming validation, narrative synthesis, creative research assistant, meaning-centered brand strategy.
+
+SOUL.md generator, AI persona synthesis, OpenClaw companion, Soul Spec tool, AI agent identity, entity extraction, pattern analysis, LLM synthesis, persona document generator, AI identity builder, archetypal pattern analysis, cross-language translation check.

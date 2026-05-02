@@ -159,11 +159,15 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
         if data_dir.exists():
             shutil.rmtree(data_dir)
 
-        # Extract backup
+        # Extract backup with path traversal protection
         with tarfile.open(backup_path, "r:gz") as tar:
-            # Extract to parent directory (preserves .soulcraft/ structure)
             extract_dir = data_dir.parent
-            tar.extractall(path=extract_dir)
+            members = []
+            for member in tar.getmembers():
+                if member.name.startswith("/") or ".." in member.name.split("/"):
+                    continue
+                members.append(member)
+            tar.extractall(path=extract_dir, members=members)
 
             # Count restored files
             for member in tar.getmembers():

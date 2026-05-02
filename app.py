@@ -170,10 +170,20 @@ class Handler(BaseHTTPRequestHandler):
 
     # --- Endpoint handlers ---
 
+    def _read_json_body(self):
+        """Read and parse JSON body, returning (data, error_response)."""
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            return json.loads(body), None
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
+            return None, {"error": f"Invalid request body: {e}"}
+
     def _handle_extract(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
         brain_dump = data.get("brain_dump", "")
 
         is_valid, error, _ = validate_brain_dump(brain_dump)
@@ -196,9 +206,10 @@ class Handler(BaseHTTPRequestHandler):
             })
 
     def _handle_translate(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
 
         text = data.get("text", "")
         target_lang = data.get("target_lang", "")
@@ -227,9 +238,10 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def _handle_detect_language(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
 
         text = data.get("text", "")
         if not text:
@@ -244,9 +256,10 @@ class Handler(BaseHTTPRequestHandler):
         self._log("POST", self.path, 200, start)
 
     def _handle_translate_stream(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
 
         text = data.get("text", "")
         target_lang = data.get("target_lang", "")
@@ -278,9 +291,10 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def _handle_naming(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
 
         name = data.get("name", "")
         context = data.get("context", "")
@@ -305,9 +319,10 @@ class Handler(BaseHTTPRequestHandler):
         self._log("POST", self.path, status, start, extra={"backup_status": result["status"]})
 
     def _handle_backup_restore(self, start):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        data = json.loads(body)
+        data, err = self._read_json_body()
+        if err:
+            self._json_response(err, 400)
+            return
 
         backup_name = data.get("name", "")
         force = data.get("force", False)
@@ -407,6 +422,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def _serve_static(self, path):
         filename = path.lstrip("/")
+        resolved = os.path.realpath(os.path.join(TEMPLATE_DIR, filename))
+        if not resolved.startswith(os.path.realpath(TEMPLATE_DIR)):
+            self.send_response(403)
+            self._send_cors_headers()
+            self.end_headers()
+            return
         content_types = {
             ".css": "text/css",
             ".js": "application/javascript",
