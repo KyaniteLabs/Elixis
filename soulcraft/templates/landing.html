@@ -8,6 +8,7 @@
 <meta name="keywords" content="SOUL.md, OpenClaw, AI identity, persona synthesis, entity extraction, pattern analysis, LLM, archetypal patterns, identity document, AI agent">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
+<meta name="theme-color" content="#080808">
 <link rel="canonical" href="https://github.com/KyaniteLabs/SoulCraft">
 
 <!-- OpenGraph -->
@@ -259,7 +260,7 @@ nav {
 .section { padding: 8rem 3rem; }
 .section-dark { background: var(--surface); }
 .section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
-.section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 6rem); letter-spacing: -1px; line-height: 0.9; color: var(--text); margin-bottom: 2rem; }
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 6vw, 6rem); letter-spacing: -1px; line-height: 0.9; color: var(--text); margin: 0 0 2rem 0; }
 
 /* ── PROBLEM GRID ── */
 .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 3rem; }
@@ -734,7 +735,7 @@ nav {
 .pipeline-step { background: var(--bg); padding: 2.5rem; position: relative; }
 .pipeline-step::before { content: attr(data-step); font-family: 'Bebas Neue', sans-serif; font-size: 6rem; color: var(--border); line-height: 1; position: absolute; top: 1rem; right: 1.5rem; }
 .step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
-.step-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.8rem; }
+.step-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0 0 0.8rem 0; }
 .step-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
 
 /* ── SOUL FILE ── */
@@ -893,7 +894,7 @@ button, a, [onclick] { cursor: pointer; }
 <!-- ── THE PROBLEM ── -->
 <section class="section section-dark">
   <div class="section-label">The Problem</div>
-  <div class="section-title">WHO YOU ARE ISN'T<br>IN THE PROMPT.</div>
+  <h2 class="section-title">WHO YOU ARE ISN'T<br>IN THE PROMPT.</h2>
   <div class="problem-grid">
     <div class="problem-cell no-before">
       <div class="num">01</div>
@@ -921,22 +922,22 @@ button, a, [onclick] { cursor: pointer; }
 <!-- ── HOW IT WORKS ── -->
 <section class="section" id="how-it-works">
   <div class="section-label">The Process</div>
-  <div class="section-title">THE GLASS BEAD<br>GAME.</div>
+  <h2 class="section-title">THE GLASS BEAD<br>GAME.</h2>
 
   <div class="pipeline-steps">
     <div class="pipeline-step" data-step="01">
       <div class="step-num">Stage 01</div>
-      <div class="step-title">Extract Entities</div>
+      <h3 class="step-title">Extract Entities</h3>
       <div class="step-desc">Parse your brain dump into typed references — characters, films, books, historical figures. One per line, freeform, doesn't matter.</div>
     </div>
     <div class="pipeline-step" data-step="02">
       <div class="step-num">Stage 02</div>
-      <div class="step-title">Pattern Graph Engine</div>
+      <h3 class="step-title">Pattern Graph Engine</h3>
       <div class="step-desc">Every entity votes on every pattern. Probabilities emerge — not a single answer, a full probability space with bridges connecting patterns. Consensus score tells you how defined the identity is.</div>
     </div>
     <div class="pipeline-step" data-step="03">
       <div class="step-num">Stage 03</div>
-      <div class="step-title">SOUL.md Synthesis</div>
+      <h3 class="step-title">SOUL.md Synthesis</h3>
       <div class="step-desc">OpenClaw-spec identity document. Worldview, voice, principles, boundaries. Nothing that isn't identity. Readable by any framework that reads markdown.</div>
     </div>
   </div>
@@ -945,7 +946,7 @@ button, a, [onclick] { cursor: pointer; }
 <!-- ── WHAT YOU GET ── -->
 <section class="section section-dark">
   <div class="section-label">The Output</div>
-  <div class="section-title">TWO THINGS.<br>ONE PROCESS.</div>
+  <h2 class="section-title">TWO THINGS.<br>ONE PROCESS.</h2>
 
   <div class="soul-file-grid">
     <div class="soul-file-card">
@@ -965,7 +966,7 @@ button, a, [onclick] { cursor: pointer; }
 <section class="demo-section" id="demo">
   <div class="demo-header">
     <div class="section-label">Live Demo</div>
-    <div class="section-title" style="margin-bottom:0">FIND THE THREAD.</div>
+    <h2 class="section-title" style="margin-bottom:0">FIND THE THREAD.</h2>
   </div>
 
   <!-- Input (centered, max-width) -->
