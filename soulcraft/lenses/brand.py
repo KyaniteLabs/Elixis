@@ -205,8 +205,8 @@ def generate_brand(entities: list, graph: dict) -> str:
 
     top = patterns[:3]
     primary = top[0]
-    pid = primary["id"]
-    topic = graph.get("emergent_topic", primary["name"])
+    pid = primary.get("id", primary.get("name", "unknown"))
+    topic = graph.get("emergent_topic", primary.get("name", "Unknown"))
     tones = _TONE_MAP.get(pid, ("formal", "bold", "accessible", "direct"))
 
     # Core Identity

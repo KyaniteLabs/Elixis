@@ -147,8 +147,8 @@ def generate_design(entities: list, graph: dict) -> str:
         return "# Design System: Unknown\n\nInsufficient pattern data."
 
     top = patterns[:2]
-    pid = top[0]["id"]
-    topic = graph.get("emergent_topic", top[0]["name"])
+    pid = top[0].get("id", top[0].get("name", "unknown"))
+    topic = graph.get("emergent_topic", top[0].get("name", "Unknown"))
 
     palette = _derive_palette(top)
     principles = _DESIGN_PRINCIPLES.get(pid, _DESIGN_PRINCIPLES["wisdom"])
