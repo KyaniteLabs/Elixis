@@ -14,12 +14,44 @@ import time
 import urllib.request
 import urllib.error
 
-OLLAMA_BASE = os.environ.get("LLM_BASE_URL", "http://localhost:11434")
-FALLBACK_BASE_URL = os.environ.get("LLM_FALLBACK_URL", "")  # Redundant inference server
-DEFAULT_MODEL = os.environ.get("LLM_MODEL", "gemma-4b")
-CLASSIFY_MODEL = os.environ.get("LLM_CLASSIFY_MODEL", "")
-PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
-API_KEY = os.environ.get("LLM_API_KEY", "")
+
+class _Config:
+    """Live configuration that reads env vars on each access."""
+
+    @property
+    def base_url(self):
+        return os.environ.get("LLM_BASE_URL", "http://localhost:11434")
+
+    @property
+    def fallback_url(self):
+        return os.environ.get("LLM_FALLBACK_URL", "")
+
+    @property
+    def default_model(self):
+        return os.environ.get("LLM_MODEL", "gemma-4b")
+
+    @property
+    def classify_model(self):
+        return os.environ.get("LLM_CLASSIFY_MODEL", "")
+
+    @property
+    def provider(self):
+        return os.environ.get("LLM_PROVIDER", "ollama")
+
+    @property
+    def api_key(self):
+        return os.environ.get("LLM_API_KEY", "")
+
+
+cfg = _Config()
+
+# Backward-compatible aliases (read at access time via properties)
+OLLAMA_BASE = cfg.base_url
+FALLBACK_BASE_URL = cfg.fallback_url
+DEFAULT_MODEL = cfg.default_model
+CLASSIFY_MODEL = cfg.classify_model
+PROVIDER = cfg.provider
+API_KEY = cfg.api_key
 
 # Cached availability check (avoids hammering Ollama on every call)
 _availability_cache = {"result": None, "expires": 0}
@@ -30,9 +62,9 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
     """Call Ollama's chat API. Returns a result dict with content + telemetry."""
     from .traces import save_trace
 
-    url = f"{OLLAMA_BASE}/api/chat"
+    url = f"{cfg.base_url}/api/chat"
     payload = json.dumps({
-        "model": model or DEFAULT_MODEL,
+        "model": model or cfg.default_model,
         "messages": messages,
         "stream": False,
         "think": think,
@@ -50,7 +82,7 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
             tokens_out = data.get("eval_count", 0) or 0
             tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
             prompt_text = messages[-1].get("content", "") if messages else ""
-            used_model = model or DEFAULT_MODEL
+            used_model = model or cfg.default_model
             save_trace(
                 prompt=prompt_text,
                 response=content,
@@ -65,18 +97,18 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
                 "latency_ms": latency_ms,
                 "tokens_per_sec": tps,
                 "model": used_model,
-                "provider": PROVIDER,
+                "provider": cfg.provider,
             }
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         import logging
         logging.getLogger("soulcraft.llm").warning(f"Ollama call failed: {e}")
-        return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": model or DEFAULT_MODEL, "provider": PROVIDER}
+        return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": model or cfg.default_model, "provider": cfg.provider}
 
 
 def _call_openai_compat_single(base_url, messages, model=None, max_tokens=2048):
     """Call a single OpenAI-compatible endpoint."""
     url = f"{base_url}/chat/completions"
-    used_model = model or DEFAULT_MODEL
+    used_model = model or cfg.default_model
     payload = json.dumps({
         "model": used_model,
         "messages": messages,
@@ -85,7 +117,7 @@ def _call_openai_compat_single(base_url, messages, model=None, max_tokens=2048):
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}",
+        "Authorization": f"Bearer {cfg.api_key}",
     }
     req = urllib.request.Request(url, data=payload, headers=headers)
     start = time.time()
@@ -114,8 +146,8 @@ def _call_openai_compat_single(base_url, messages, model=None, max_tokens=2048):
 
 def _call_openai_compat(messages, model=None, max_tokens=2048):
     """Call an OpenAI-compatible API with fallback to secondary server."""
-    primary_base = os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1")
-    fallback_base = os.environ.get("LLM_FALLBACK_URL", "")
+    primary_base = cfg.base_url
+    fallback_base = cfg.fallback_url
 
     # Try primary first
     try:
@@ -132,7 +164,7 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
             except (urllib.error.URLError, KeyError, TimeoutError):
                 pass
         # Both failed or no fallback
-        used_model = model or DEFAULT_MODEL
+        used_model = model or cfg.default_model
         import logging
         logging.getLogger("soulcraft.llm").warning(f"OpenAI-compatible call failed (primary): {e}")
         return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": used_model, "provider": "openai"}
@@ -151,7 +183,7 @@ def chat(messages, model=None, max_tokens=None, think=True):
         Dict with keys: content, tokens_in, tokens_out, latency_ms,
         tokens_per_sec, model, provider.
     """
-    if PROVIDER == "openai":
+    if cfg.provider == "openai":
         kw = {"max_tokens": max_tokens} if max_tokens else {}
         return _call_openai_compat(messages, model, **kw)
     kw = {}
@@ -168,9 +200,9 @@ def is_available():
     if _availability_cache["result"] is not None and now < _availability_cache["expires"]:
         return _availability_cache["result"]
     try:
-        url = f"{OLLAMA_BASE}/api/tags" if PROVIDER == "ollama" else None
+        url = f"{cfg.base_url}/api/tags" if cfg.provider == "ollama" else None
         if not url:
-            result = bool(API_KEY)
+            result = bool(cfg.api_key)
         else:
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req, timeout=3) as resp:
@@ -192,9 +224,9 @@ def chat_stream(messages, model=None):
 
     If Ollama is unavailable, yields nothing.
     """
-    url = f"{OLLAMA_BASE}/api/chat"
+    url = f"{cfg.base_url}/api/chat"
     payload = json.dumps({
-        "model": model or DEFAULT_MODEL,
+        "model": model or cfg.default_model,
         "messages": messages,
         "stream": True,
     }).encode()
@@ -253,7 +285,7 @@ def chat_stream(messages, model=None):
                     latency_ms = int((time.time() - start) * 1000)
                     full_text = "".join(full_response)
                     prompt_text = messages[-1].get("content", "") if messages else ""
-                    used_model = model or DEFAULT_MODEL
+                    used_model = model or cfg.default_model
                     tokens_in = chunk.get("prompt_eval_count", 0) or 0
                     tokens_out = chunk.get("eval_count", 0) or 0
                     tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
@@ -278,7 +310,7 @@ def chat_stream(messages, model=None):
                         "tokens_out": tokens_out,
                         "tokens_per_sec": tps,
                         "model": used_model,
-                        "provider": PROVIDER,
+                        "provider": cfg.provider,
                     }
 
     except (urllib.error.URLError, OSError) as e:
