@@ -3,9 +3,9 @@ info:
   title: Elixis API
   description: |
     AI-powered identity synthesis companion for OpenClaw and Soul Spec.
-    Transforms brain dump text into structured SOUL.md identity documents
-    through a 3-stage pipeline: entity extraction, archetypal pattern analysis,
-    and LLM-assisted synthesis.
+    Transforms brain dump text into structured identity documents
+    through a 4-phase pipeline: entity extraction, archetypal pattern analysis,
+    domain connection, and lens-based synthesis (SOUL.md, Brand Voice, or Design System).
   version: "1.0.0"
   license:
     name: MIT
@@ -18,12 +18,159 @@ servers:
     description: Local development server
 
 paths:
+  /api/game:
+    post:
+      summary: Run the full pipeline with lens selection
+      description: |
+        Runs the complete 4-phase Glass Bead Game pipeline (declare → elaborate →
+        connect → resolve) on a brain dump and returns structured output through
+        the chosen lens (identity, brand, or design).
+      operationId: runGame
+      tags: [Pipeline]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brain_dump]
+              properties:
+                brain_dump:
+                  type: string
+                  description: Raw text with references, influences, values
+                lens:
+                  type: string
+                  enum: [identity, brand, design]
+                  default: identity
+                  description: Output lens for synthesis
+      responses:
+        "200":
+          description: Pipeline result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lens:
+                    type: string
+                  stage1_entities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Entity"
+                  stage2_graph:
+                    $ref: "#/components/schemas/PatternGraph"
+                  stage3_output:
+                    type: string
+                  stage3_soulmd:
+                    type: string
+                    nullable: true
+                  threads:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Thread"
+                  tensions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tension"
+                  timings:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  quality:
+                    $ref: "#/components/schemas/QualityReport"
+        "400":
+          description: Invalid input
+        "503":
+          description: LLM unavailable or server busy
+
+  /api/game/stream:
+    post:
+      summary: Stream the full pipeline with SSE events
+      description: |
+        Runs the same pipeline as /api/game but streams results as Server-Sent Events.
+        Events are emitted as each phase completes: entities, graph, tensions, and
+        resolution chunks.
+      operationId: streamGame
+      tags: [Pipeline]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brain_dump]
+              properties:
+                brain_dump:
+                  type: string
+                lens:
+                  type: string
+                  enum: [identity, brand, design]
+                  default: identity
+      responses:
+        "200":
+          description: SSE stream of pipeline events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: Invalid input
+        "503":
+          description: LLM unavailable or server busy
+
+  /api/game/schema:
+    get:
+      summary: Get pipeline schema (phases, lenses, entity types)
+      description: Returns the available pipeline phases, output lenses, and recognized entity types.
+      operationId: getGameSchema
+      tags: [Pipeline]
+      responses:
+        "200":
+          description: Schema information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phases:
+                    type: array
+                    items:
+                      type: string
+                  lenses:
+                    type: array
+                    items:
+                      type: string
+                  entity_types:
+                    type: array
+                    items:
+                      type: string
+
+  /api/lenses:
+    get:
+      summary: List available output lenses
+      description: Returns the list of synthesis lenses (identity, brand, design).
+      operationId: getLenses
+      tags: [Pipeline]
+      responses:
+        "200":
+          description: Lens list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lenses:
+                    type: array
+                    items:
+                      type: string
+
   /api/extract:
     post:
-      summary: Run the full 3-stage pipeline on a brain dump
+      summary: Run the legacy 3-stage pipeline on a brain dump
       description: |
         Extracts entities, analyzes archetypal patterns, and synthesizes a
         SOUL.md document. Supports both JSON and SSE streaming responses.
+        Prefer /api/game for lens selection and structured output.
       operationId: extractSoul
       tags: [Pipeline]
       requestBody:
@@ -144,6 +291,9 @@ paths:
   /api/naming:
     post:
       summary: Research a name with semantic analysis
+      description: |
+        Analyzes a name's semantics, generates variants from taxonomy or general
+        sources, and returns a research report with recommendations.
       operationId: researchName
       tags: [Naming]
       requestBody:
@@ -158,6 +308,11 @@ paths:
                   type: string
                 context:
                   type: string
+                source:
+                  type: string
+                  enum: [general, taxonomy]
+                  default: general
+                  description: Variant generation source
                 generate_variants:
                   type: boolean
                   default: true
@@ -335,3 +490,47 @@ components:
           type: array
           items:
             type: object
+
+    Thread:
+      type: object
+      description: A narrative thread connecting entities through a pattern
+      properties:
+        pattern:
+          type: string
+        entities:
+          type: array
+          items:
+            type: string
+        narrative:
+          type: string
+
+    Tension:
+      type: object
+      description: A creative tension between opposing patterns
+      properties:
+        pattern_a:
+          type: string
+        pattern_b:
+          type: string
+        description:
+          type: string
+
+    QualityReport:
+      type: object
+      description: Output quality validation results
+      properties:
+        passed:
+          type: boolean
+        score:
+          type: number
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              passed:
+                type: boolean
+              message:
+                type: string
