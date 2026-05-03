@@ -356,12 +356,22 @@ def _parse_line_entity(line):
 
 
 def _heuristic_extract(text):
-    """Fallback: line-by-line + capitalized phrase extraction."""
+    """Fallback: line-by-line + period-split + capitalized phrase extraction."""
     entities = []
     seen = set()
 
-    # Line-by-line first
+    # Line-by-line first (also handles period-separated on single lines)
     lines = re.split(r'[\n\r]+', text)
+    expanded = []
+    for line in lines:
+        # Split on ". " period-space if the line is long and has multiple such breaks
+        parts = re.split(r'(?<=\.)\s+(?=[A-Z])', line)
+        if len(parts) > 1:
+            expanded.extend(parts)
+        else:
+            expanded.append(line)
+    lines = expanded
+
     for line in lines:
         entity = _parse_line_entity(line)
         if entity:
@@ -424,8 +434,14 @@ def extract_entities(text, telemetry=None):
     llm_tele = {}
     entities = _llm_extract_entities(text, telemetry=llm_tele)
 
-    # Fallback to heuristic if LLM returns empty
-    if not entities:
+    # Heuristic fallback: if LLM returns nothing, or returns a single bloated
+    # entity that clearly swallowed the whole input (long name with many periods).
+    needs_heuristic = not entities
+    if len(entities) == 1 and len(entities[0].get("canonical", "")) > 60:
+        needs_heuristic = True
+        llm_tele["fallback_reason"] = "single_bloated_entity"
+
+    if needs_heuristic:
         entities = _heuristic_extract(text)
         duration_ms = int((time.time() - t0) * 1000)
         if telemetry is not None:
