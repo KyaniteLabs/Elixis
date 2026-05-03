@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elixis — Cross-Domain Pattern Engine</title>
-<meta name="description" content="Elixis reveals the latent patterns connecting your references. Drop characters, films, books, figures — watch cross-domain connections emerge in real time.">
+<title>Elixis — Identity Synthesis Engine</title>
+<meta name="description" content="Elixis is an identity synthesis engine. Drop your references, influences, and values — watch entities, patterns, and identity documents emerge in real time.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0d0c11">
@@ -12,8 +12,8 @@
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Elixis — Cross-Domain Pattern Engine">
-<meta property="og:description" content="Drop your references. Elixis reveals the latent patterns connecting them — cross-domain connections emerge in real time.">
+<meta property="og:title" content="Elixis — Identity Synthesis Engine">
+<meta property="og:description" content="Drop your references. Elixis extracts entities, maps archetypal patterns, and synthesizes structured identity documents — in real time.">
 <meta property="og:url" content="https://github.com/KyaniteLabs/Elixis">
 <meta property="og:site_name" content="Elixis">
 <meta property="og:locale" content="en_US">
@@ -24,7 +24,7 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Elixis",
-  "description": "Cross-domain pattern engine that reveals latent connections between your cultural references. Drop characters, films, books, figures — watch isomorphic patterns emerge in real time.",
+  "description": "Identity synthesis engine that extracts entities, maps archetypal patterns, and generates structured identity documents from your references and influences.",
   "url": "https://github.com/KyaniteLabs/Elixis",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux",
@@ -1096,7 +1096,7 @@ body {
   <!-- ── Header ── -->
   <header class="header-bar" role="banner">
     <a href="/" class="header-brand" aria-label="Elixis home">
-      FU<span class="header-brand-accent">GAX</span>
+      ELI<span class="header-brand-accent">XIS</span>
     </a>
     <nav class="header-links" aria-label="Main navigation">
       <a href="https://github.com/KyaniteLabs/Elixis" target="_blank" rel="noopener" class="header-link header-github">GitHub</a>
@@ -1107,7 +1107,7 @@ body {
   <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
     <div class="sidebar-section">
       <span class="sidebar-label">Theme Declaration</span>
-      <p class="sidebar-description">Drop your references. Characters, films, books, figures. Elixis reveals the fleeting patterns connecting them.</p>
+      <p class="sidebar-description">Drop your references. Characters, films, books, figures — anything that shapes an identity. Elixis extracts entities, maps archetypal patterns, and synthesizes a structured identity through the lens you choose.</p>
       <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
       <textarea
         class="theme-textarea"
@@ -1164,7 +1164,7 @@ Fleabag"
 
     <div class="sidebar-footer">
       <a href="https://github.com/KyaniteLabs/Elixis" target="_blank" rel="noopener">Elixis</a> by <a href="https://kyanitelabs.tech" target="_blank" rel="noopener">Kyanite Labs</a><br>
-      Cross-domain pattern recognition. Companion to <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
+      Identity synthesis engine. Companion to <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
     </div>
   </aside>
 
@@ -1192,7 +1192,7 @@ Fleabag"
       <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
         <div class="panel-placeholder" id="beadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
-          <p>Run the game to see extracted beads — the concepts that surface from your input.</p>
+          <p>Run the pipeline to see extracted entities — people, works, concepts, and values surfaced from your input.</p>
         </div>
         <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
@@ -1201,7 +1201,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-threads" aria-labelledby="tab-threads">
         <div class="panel-placeholder" id="threadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#10697;</div>
-          <p>Cross-domain threads will emerge here — isomorphic bridges between your references.</p>
+          <p>Cross-domain threads will emerge here — isomorphic bridges connecting your references across different worlds.</p>
         </div>
         <div class="thread-list" id="threadList" style="display:none;"></div>
       </div>
@@ -1210,7 +1210,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-radar" aria-labelledby="tab-radar">
         <div class="panel-placeholder" id="radarPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9881;</div>
-          <p>Pattern scores will emerge here once the engine maps your references.</p>
+          <p>Archetypal pattern probabilities will appear here once the engine maps your references.</p>
         </div>
         <div id="radarContent" style="display:none;">
           <div class="radar-summary" id="radarSummary"></div>
@@ -1222,7 +1222,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
         <div class="panel-placeholder" id="outputPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9997;</div>
-          <p>The generated document will stream here — fleeting patterns, captured in text.</p>
+          <p>The synthesized output will stream here — identity, brand voice, or design tokens, depending on your lens.</p>
         </div>
         <div id="outputContent" style="display:none;">
           <div class="output-header">
@@ -1231,7 +1231,7 @@ Fleabag"
               <button class="output-btn" id="copyBtn" aria-label="Copy SOUL.md to clipboard">
                 <span aria-hidden="true">&#9135;</span> Copy
               </button>
-              <button class="output-btn" id="downloadBtn" aria-label="Download SOUL.md file">
+              <button class="output-btn" id="downloadBtn" aria-label="Download output file">
                 <span aria-hidden="true">&#8595;</span> Download
               </button>
               <span class="copied-toast" id="copiedToast">Copied</span>
@@ -1277,6 +1277,12 @@ const TYPE_COLORS = {
   event: 'var(--type-event)',
   emotion: 'var(--type-emotion)',
   skill: 'var(--type-skill)',
+};
+
+const LENS_TITLES = {
+  identity: 'SOUL.md',
+  brand: 'Brand Voice',
+  design: 'Design System',
 };
 
 const SENTIMENT_MAP = {
@@ -1418,6 +1424,8 @@ function initLensSelector() {
       btn.setAttribute('aria-checked', 'true');
       btn.setAttribute('tabindex', '0');
       state.lens = btn.dataset.lens;
+      const titleEl = document.querySelector('.output-title');
+      if (titleEl) titleEl.textContent = LENS_TITLES[state.lens] || 'Output';
     });
   });
 }
@@ -1768,7 +1776,8 @@ function downloadSoulmd() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'SOUL.md';
+  const titles = { identity: 'SOUL.md', brand: 'brand-voice.md', design: 'design-system.md' };
+  a.download = titles[state.lens] || 'output.md';
   a.click();
   URL.revokeObjectURL(url);
 }
