@@ -10,7 +10,7 @@ import math
 import time
 from collections import defaultdict
 
-logger = logging.getLogger("fugax.patterns")
+logger = logging.getLogger("elixis.patterns")
 
 # Archetypal pattern definitions with keyword associations
 PATTERNS = [

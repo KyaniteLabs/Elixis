@@ -1,4 +1,4 @@
-"""Fugax — The Glass Bead Game for AI Personas.
+"""Elixis — The Glass Bead Game for AI Personas.
 
 Usage: python app.py [--port PORT]
 """
@@ -14,7 +14,7 @@ import uuid
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 
-from fugax.backup import (
+from elixis.backup import (
     create_backup,
     list_backups,
     restore_backup,
@@ -22,12 +22,12 @@ from fugax.backup import (
     get_backup_status,
     auto_backup_if_enabled,
 )
-from fugax.engine import GameEngine
-from fugax.logging_config import get_logger, configure_root_logger
-from fugax.naming import research_name
-from fugax.quality import validate_output
-from fugax.traces import save_run, log_request, get_diagnostics, get_recent_runs
-from fugax.translate import (
+from elixis.engine import GameEngine
+from elixis.logging_config import get_logger, configure_root_logger
+from elixis.naming import research_name
+from elixis.quality import validate_output
+from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
+from elixis.translate import (
     translate_text,
     translate_soulmd,
     get_supported_languages,
@@ -36,13 +36,13 @@ from fugax.translate import (
     get_cache_stats,
     clear_cache,
 )
-from fugax.validation import (
+from elixis.validation import (
     validate_brain_dump,
     get_content_security_policy,
 )
 
 PORT = 3110
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "fugax", "templates")
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "elixis", "templates")
 CSP_HEADER = get_content_security_policy()
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3110")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
@@ -50,7 +50,7 @@ SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
 VALID_LENSES = {"identity", "brand", "design"}
 
-logger = get_logger("fugax.server")
+logger = get_logger("elixis.server")
 
 # Semaphore to prevent resource exhaustion from too many simultaneous LLM calls
 _pipeline_semaphore = threading.Semaphore(MAX_CONCURRENT_PIPELINES)
@@ -154,7 +154,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/health":
             llm_ok = False
             try:
-                from fugax.llm import is_available as llm_available
+                from elixis.llm import is_available as llm_available
                 llm_ok = llm_available()
             except Exception:
                 pass
@@ -191,7 +191,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json_response({"lenses": sorted(VALID_LENSES)})
             self._log("GET", self.path, 200, start)
         elif self.path == "/api/game/schema":
-            from fugax.bead import VALID_TYPES
+            from elixis.bead import VALID_TYPES
             self._json_response({
                 "phases": ["declaration", "elaboration", "connection", "resolution"],
                 "lenses": sorted(VALID_LENSES),
@@ -857,7 +857,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
 
-    logger.info(f"Fugax running on http://localhost:{port} (PID: {os.getpid()})")
+    logger.info(f"Elixis running on http://localhost:{port} (PID: {os.getpid()})")
 
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True

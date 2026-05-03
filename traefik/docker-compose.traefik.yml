@@ -1,4 +1,4 @@
-# Traefik + Fugax stack
+# Traefik + Elixis stack
 # Usage: docker-compose -f docker-compose.traefik.yml up -d
 
 version: "3.8"
@@ -30,7 +30,7 @@ services:
       - ./traefik/:/etc/traefik/dynamic/:ro
       - traefik-certs:/letsencrypt
     networks:
-      - fugax-net
+      - elixis-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN:-tailnet}`)"
@@ -44,12 +44,12 @@ services:
       timeout: 5s
       retries: 3
 
-  fugax:
+  elixis:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: fugax
+    container_name: elixis
     restart: unless-stopped
     environment:
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
@@ -59,17 +59,17 @@ services:
       - LLM_API_KEY=${LLM_API_KEY:-}
       - PYTHONUNBUFFERED=1
     volumes:
-      - fugax-data:/app/.fugax
+      - elixis-data:/app/.elixis
     networks:
-      - fugax-net
+      - elixis-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fugax.rule=Host(`fugax.${TRAEFIK_DOMAIN:-tailnet}`)"
-      - "traefik.http.routers.fugax.entrypoints=websecure"
-      - "traefik.http.routers.fugax.tls=true"
-      - "traefik.http.routers.fugax.tls.certresolver=tailscale"
-      - "traefik.http.routers.fugax.middlewares=tailscale-only,fugax-ratelimit"
-      - "traefik.http.services.fugax.loadbalancer.server.port=3110"
+      - "traefik.http.routers.elixis.rule=Host(`elixis.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.elixis.entrypoints=websecure"
+      - "traefik.http.routers.elixis.tls=true"
+      - "traefik.http.routers.elixis.tls.certresolver=tailscale"
+      - "traefik.http.routers.elixis.middlewares=tailscale-only,elixis-ratelimit"
+      - "traefik.http.services.elixis.loadbalancer.server.port=3110"
     deploy:
       resources:
         limits:
@@ -83,9 +83,9 @@ services:
       start_period: 10s
 
 volumes:
-  fugax-data:
+  elixis-data:
   traefik-certs:
 
 networks:
-  fugax-net:
+  elixis-net:
     driver: bridge

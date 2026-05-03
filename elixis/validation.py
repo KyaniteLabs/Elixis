@@ -1,4 +1,4 @@
-"""Input validation and sanitization for Fugax.
+"""Input validation and sanitization for Elixis.
 
 Provides validators for brain dump inputs, API requests, and entity data.
 """

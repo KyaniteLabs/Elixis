@@ -1,8 +1,8 @@
-"""Tests for fugax.entities — entity extraction, parsing, and type inference."""
+"""Tests for elixis.entities — entity extraction, parsing, and type inference."""
 
 from unittest.mock import patch
 
-from fugax.entities import (
+from elixis.entities import (
     _infer_type,
     _parse_line_entity,
     _heuristic_extract,
@@ -193,22 +193,22 @@ class TestHeuristicExtract:
 # ---------------------------------------------------------------------------
 
 class TestLlmExtractEntities:
-    @patch("fugax.llm.is_available", return_value=False)
+    @patch("elixis.llm.is_available", return_value=False)
     def test_returns_empty_when_unavailable(self, mock_avail):
         result = _llm_extract_entities("Mozart, Beethoven")
         assert result == []
 
-    @patch("fugax.parsing.parse_llm_json_array", return_value=None)
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array", return_value=None)
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_returns_empty_on_parse_failure(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "this is not valid json output"}
         result = _llm_extract_entities("test input")
         assert result == []
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_extracts_dict_entities(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = [
@@ -220,9 +220,9 @@ class TestLlmExtractEntities:
         assert result[0]["canonical"] == "Mozart"
         assert result[0]["confidence"] == 0.95
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_extracts_string_entities(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = ["Mozart"]
@@ -230,9 +230,9 @@ class TestLlmExtractEntities:
         assert len(result) == 1
         assert result[0]["canonical"] == "Mozart"
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_deduplicates(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = [
@@ -242,9 +242,9 @@ class TestLlmExtractEntities:
         result = _llm_extract_entities("Mozart Mozart")
         assert len(result) == 1
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_filters_short_names(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = [
@@ -255,9 +255,9 @@ class TestLlmExtractEntities:
         assert len(result) == 1
         assert result[0]["canonical"] == "Mozart"
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_handles_comma_separated_themes(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = [
@@ -267,15 +267,15 @@ class TestLlmExtractEntities:
         assert result[0]["themes"] == ["creation", "wisdom"]
         assert result[0]["traits"] == ["genius"]
 
-    @patch("fugax.llm.chat", side_effect=Exception("LLM down"))
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.llm.chat", side_effect=Exception("LLM down"))
+    @patch("elixis.llm.is_available", return_value=True)
     def test_handles_chat_exception(self, mock_avail, mock_chat):
         result = _llm_extract_entities("test input")
         assert result == []
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_truncates_long_input(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "[]"}
         mock_parse.return_value = []
@@ -284,17 +284,17 @@ class TestLlmExtractEntities:
         call_args = mock_chat.call_args[0][0][1]["content"]
         assert "truncated" in call_args
 
-    @patch("fugax.parsing.parse_llm_json_array")
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.parsing.parse_llm_json_array")
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_skips_non_string_non_dict_items(self, mock_avail, mock_chat, mock_parse):
         mock_chat.return_value = {"content": "a valid json response array"}
         mock_parse.return_value = [123, None, True]
         result = _llm_extract_entities("test")
         assert result == []
 
-    @patch("fugax.llm.chat")
-    @patch("fugax.llm.is_available", return_value=True)
+    @patch("elixis.llm.chat")
+    @patch("elixis.llm.is_available", return_value=True)
     def test_short_response_rejected(self, mock_avail, mock_chat):
         mock_chat.return_value = {"content": "ab"}
         result = _llm_extract_entities("test")
@@ -317,14 +317,14 @@ class TestExtractEntities:
         extract_entities("", telemetry=tele)
         assert tele["source"] == "empty_input"
 
-    @patch("fugax.entities._llm_extract_entities", return_value=[])
+    @patch("elixis.entities._llm_extract_entities", return_value=[])
     def test_falls_back_to_heuristic(self, mock_llm):
         result = extract_entities("Mozart\nBeethoven")
         assert len(result) >= 1
         names = {e["canonical"] for e in result}
         assert "Mozart" in names
 
-    @patch("fugax.entities._llm_extract_entities", return_value=[])
+    @patch("elixis.entities._llm_extract_entities", return_value=[])
     def test_heuristic_telemetry(self, mock_llm):
         tele = {}
         extract_entities("Mozart\nBeethoven", telemetry=tele)
@@ -333,7 +333,7 @@ class TestExtractEntities:
         assert tele["entity_count"] >= 1
         assert tele["llm_attempted"] is True
 
-    @patch("fugax.entities._llm_extract_entities")
+    @patch("elixis.entities._llm_extract_entities")
     def test_uses_llm_result_when_available(self, mock_llm):
         mock_llm.return_value = [
             {"canonical": "Mozart", "original": "Mozart", "type": "historical_figure",
@@ -344,7 +344,7 @@ class TestExtractEntities:
         assert len(result) == 1
         assert result[0]["canonical"] == "Mozart"
 
-    @patch("fugax.entities._llm_extract_entities")
+    @patch("elixis.entities._llm_extract_entities")
     def test_llm_telemetry_propagated(self, mock_llm):
         def fake_llm(text, telemetry=None):
             if telemetry is not None:

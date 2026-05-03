@@ -1,64 +1,59 @@
 #!/bin/bash
-# Fugax deployment script
-# Usage: ./scripts/deploy.sh [environment]
+# Elixis deployment script
+# Deploys to /docker/elixis on the VPS via SSH
 
 set -e
 
-ENVIRONMENT=${1:-production}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-
-echo "🚀 Deploying Fugax to $ENVIRONMENT..."
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Check if .env exists
-if [ ! -f "$PROJECT_DIR/.env" ]; then
-    echo -e "${RED}Error: .env file not found${NC}"
-    echo "Create one from .env.example"
-    exit 1
-fi
+VPS_HOST="${VPS_HOST:-187.124.238.235}"
+VPS_USER="${VPS_USER:-root}"
+REMOTE_DIR="/docker/elixis"
 
-# Load environment variables
-export $(grep -v '^#' "$PROJECT_DIR/.env" | xargs)
+echo "Deploying Elixis to ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}..."
 
-# Validate required variables
-if [ -z "$TRAEFIK_DOMAIN" ]; then
-    echo -e "${RED}Error: TRAEFIK_DOMAIN not set in .env${NC}"
-    exit 1
-fi
+# Build image locally
+echo -e "${YELLOW}Building image...${NC}"
+docker build -t elixis:latest --target production "${PROJECT_DIR}"
 
-cd "$PROJECT_DIR"
+# Save and transfer image
+echo -e "${YELLOW}Transferring image to VPS...${NC}"
+docker save elixis:latest | gzip | ssh "${VPS_USER}@${VPS_HOST}" "gunzip | docker load"
 
-# Pull latest images
-echo -e "${YELLOW}Pulling latest images...${NC}"
-docker-compose -f docker-compose.traefik.yml pull
+# Transfer compose file
+echo -e "${YELLOW}Uploading compose file...${NC}"
+scp "${PROJECT_DIR}/docker-compose.yml" "${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/docker-compose.yml"
 
-# Deploy with zero downtime
+# Deploy on VPS
 echo -e "${YELLOW}Starting deployment...${NC}"
-docker-compose -f docker-compose.traefik.yml up -d --remove-orphans
+ssh "${VPS_USER}@${VPS_HOST}" << EOF
+  cd ${REMOTE_DIR}
+  docker compose up -d --remove-orphans
+EOF
 
 # Wait for health check
 echo -e "${YELLOW}Waiting for health check...${NC}"
 sleep 5
 
-# Check if services are healthy
-if docker-compose -f docker-compose.traefik.yml ps | grep -q "healthy"; then
-    echo -e "${GREEN}✓ Deployment successful!${NC}"
-    echo -e "${GREEN}✓ Fugax available at: https://fugax.$TRAEFIK_DOMAIN${NC}"
+# Verify
+if ssh "${VPS_USER}@${VPS_HOST}" "docker compose -f ${REMOTE_DIR}/docker-compose.yml ps | grep -q healthy" 2>/dev/null; then
+    echo -e "${GREEN}Deployment successful!${GREEN}"
+    echo -e "${GREEN}Elixis available at: https://elixis.kyanitelabs.tech${NC}"
 else
-    echo -e "${RED}✗ Health check failed${NC}"
-    echo "Checking logs..."
-    docker-compose -f docker-compose.traefik.yml logs --tail=50 fugax
+    echo -e "${RED}Health check failed — checking logs...${NC}"
+    ssh "${VPS_USER}@${VPS_HOST}" "docker compose -f ${REMOTE_DIR}/docker-compose.yml logs --tail=50 elixis"
     exit 1
 fi
 
-# Cleanup old images
+# Cleanup
 echo -e "${YELLOW}Cleaning up old images...${NC}"
-docker system prune -f
+ssh "${VPS_USER}@${VPS_HOST}" "docker system prune -f"
 
-echo -e "${GREEN}✓ Deployment complete!${NC}"
+echo -e "${GREEN}Deployment complete!${NC}"

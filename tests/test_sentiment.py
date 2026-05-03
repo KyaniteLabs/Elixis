@@ -1,8 +1,8 @@
-"""Tests for fugax.sentiment — sentiment/intensity detection and annotation."""
+"""Tests for elixis.sentiment — sentiment/intensity detection and annotation."""
 
 import pytest
 
-from fugax.sentiment import (
+from elixis.sentiment import (
     POSITIVE_WORDS,
     NEGATIVE_WORDS,
     NEGATION_WORDS,

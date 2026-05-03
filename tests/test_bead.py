@@ -1,7 +1,7 @@
-"""Tests for fugax.bead — Bead class, _clamp helper, and constants."""
+"""Tests for elixis.bead — Bead class, _clamp helper, and constants."""
 
 
-from fugax.bead import (
+from elixis.bead import (
     VALID_TYPES,
     VALID_DOMAINS,
     VALID_THEMES,

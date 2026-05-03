@@ -1,4 +1,4 @@
-"""Tests for output lenses (fugax.lenses).
+"""Tests for output lenses (elixis.lenses).
 
 Covers __init__.py (registry), brand.py, and design.py.
 """
@@ -9,9 +9,9 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.lenses import LENS_REGISTRY, AVAILABLE_LENSES
-from fugax.lenses.brand import generate_brand
-from fugax.lenses.design import (
+from elixis.lenses import LENS_REGISTRY, AVAILABLE_LENSES
+from elixis.lenses.brand import generate_brand
+from elixis.lenses.design import (
     generate_design,
     _hex_to_hsl,
     _hsl_to_hex,

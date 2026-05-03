@@ -1,6 +1,6 @@
-"""Tests for fugax.parsing — LLM JSON response parsing."""
+"""Tests for elixis.parsing — LLM JSON response parsing."""
 
-from fugax.parsing import parse_llm_json_array, parse_llm_json_object
+from elixis.parsing import parse_llm_json_array, parse_llm_json_object
 
 
 class TestParseLlmJsonArray:

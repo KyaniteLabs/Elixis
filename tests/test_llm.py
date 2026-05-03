@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax import llm
+from elixis import llm
 
 
 class TestLLMConfiguration(unittest.TestCase):

@@ -343,6 +343,32 @@ class GameEngine:
             yield {"type": "soulmd_token", "content": output}
             yield {"type": "soulmd_done", "data": {"length": len(output), "source": lens}}
 
+    # ── Phase 5: Naming (optional) ─────────────────────────────────────
+
+    def name(self, source="taxonomy"):
+        """Generate naming suggestions grounded in the synthesized identity.
+
+        Must be called after connect_domains(). Consumes the entity data
+        and pattern graph to produce identity-aligned name candidates.
+
+        Args:
+            source: "taxonomy" (scientific names) or "general" (LLM freeform).
+
+        Returns:
+            Naming report dict with variants, semantics, identity_context.
+        """
+        state = self._state
+        if not state or state.phase not in ("connection", "elaboration"):
+            raise RuntimeError("Must connect_domains() before name().")
+
+        entity_dicts = [b.to_dict() for b in state.beads]
+        graph = state.metadata.get("pattern_graph", {})
+
+        from .naming import research_name_from_identity
+        report = research_name_from_identity(entity_dicts, graph, source=source)
+        state.metadata["naming_report"] = report
+        return report
+
     # ── Convenience: full pipeline ────────────────────────────────────
 
     def run_full(self, raw_input, lens="identity"):

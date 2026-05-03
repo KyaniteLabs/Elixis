@@ -1,4 +1,4 @@
-"""Tests for triple verification (fugax.verification)."""
+"""Tests for triple verification (elixis.verification)."""
 
 import unittest
 import sys
@@ -6,8 +6,8 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.verification import verify_pattern, verify_bead, verify_graph
-from fugax.bead import Bead
+from elixis.verification import verify_pattern, verify_bead, verify_graph
+from elixis.bead import Bead
 
 
 def _make_good_pattern():

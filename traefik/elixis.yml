@@ -1,24 +1,24 @@
-# Traefik dynamic configuration for Fugax
-# Place in: /opt/traefik/dynamic/fugax.yml
+# Traefik dynamic configuration for Elixis
+# Place in: /opt/traefik/dynamic/elixis.yml
 
 http:
   routers:
-    fugax:
-      rule: "Host(`fugax.{{ env "TRAEFIK_DOMAIN" }}`)"
+    elixis:
+      rule: "Host(`elixis.{{ env "TRAEFIK_DOMAIN" }}`)"
       entryPoints:
         - websecure
-      service: fugax
+      service: elixis
       tls:
         certResolver: tailscale
       middlewares:
         - tailscale-only
-        - fugax-ratelimit
+        - elixis-ratelimit
 
   services:
-    fugax:
+    elixis:
       loadBalancer:
         servers:
-          - url: "http://fugax:3110"
+          - url: "http://elixis:3110"
         healthCheck:
           path: /api/health
           interval: 10s
@@ -34,14 +34,14 @@ http:
           - "fd7a:115c:a1e0::/48"  # Tailscale IPv6
           - "127.0.0.1/32"   # Localhost for health checks
 
-    fugax-ratelimit:
+    elixis-ratelimit:
       rateLimit:
         average: 10
         burst: 20
         period: 1m
 
     # Optional: Add CORS headers for API access
-    fugax-cors:
+    elixis-cors:
       headers:
         accessControlAllowMethods:
           - GET

@@ -8,7 +8,7 @@ import logging
 import re
 import time
 
-logger = logging.getLogger("fugax.entities")
+logger = logging.getLogger("elixis.entities")
 
 
 def _llm_extract_entities(text, telemetry=None):

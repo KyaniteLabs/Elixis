@@ -1,14 +1,14 @@
-"""Fugax MCP Server — stdio transport, zero external dependencies.
+"""Elixis MCP Server — stdio transport, zero external dependencies.
 
-Exposes Fugax's pipeline as MCP tools for Claude Code, Cursor,
+Exposes Elixis's pipeline as MCP tools for Claude Code, Cursor,
 and any MCP-compatible AI assistant.
 
 Usage in Claude Code settings:
   {
     "mcpServers": {
-      "fugax": {
+      "elixis": {
         "command": "python",
-        "args": ["-m", "fugax.mcp_server"]
+        "args": ["-m", "elixis.mcp_server"]
       }
     }
   }
@@ -26,7 +26,7 @@ from .synthesis import synthesize_soulmd
 from .translate import translate_text
 from .validation import validate_brain_dump
 
-_SERVER_NAME = "fugax"
+_SERVER_NAME = "elixis"
 _SERVER_VERSION = "1.0.0"
 _PROTOCOL_VERSION = "2024-11-05"
 
@@ -111,8 +111,25 @@ _TOOLS = [
                 "name": {"type": "string", "description": "Name to research."},
                 "context": {"type": "string", "description": "Context for the name (e.g. 'AI startup', 'creative agency')."},
                 "generate_variants": {"type": "boolean", "description": "Whether to generate name variants (default: true)."},
+                "source": {"type": "string", "description": "Variant source: 'general' (LLM freeform) or 'taxonomy' (scientific names). Default: 'general'.", "enum": ["general", "taxonomy"]},
             },
             "required": ["name"],
+        },
+    },
+    {
+        "name": "name_from_identity",
+        "description": (
+            "Generate product/brand name suggestions grounded in the identity synthesized from a brain dump. "
+            "Runs the full pipeline (entity extraction, pattern analysis) and produces names aligned with "
+            "the emergent identity themes. Use when: naming a persona, brand, or project from scattered influences."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "brain_dump": {"type": "string", "description": "Raw text containing references, influences, and values to synthesize and name."},
+                "source": {"type": "string", "description": "Variant source: 'taxonomy' (scientific names) or 'general' (LLM freeform). Default: 'taxonomy'.", "enum": ["general", "taxonomy"]},
+            },
+            "required": ["brain_dump"],
         },
     },
 ]
@@ -159,6 +176,8 @@ def _handle_tools_call(params):
             return _tool_translate(arguments)
         elif name == "research_name":
             return _tool_research_name(arguments)
+        elif name == "name_from_identity":
+            return _tool_name_from_identity(arguments)
         else:
             return {"content": [{"type": "text", "text": f"Unknown tool: {name}"}], "isError": True}
     except Exception as e:
@@ -244,13 +263,41 @@ def _tool_research_name(args):
     name = args.get("name", "")
     context = args.get("context", "")
     generate_variants = args.get("generate_variants", True)
+    source = args.get("source", "general")
     if not name or not name.strip():
         return {"content": [{"type": "text", "text": "Error: 'name' must be a non-empty string"}], "isError": True}
-    report = research_name(name, context, generate_variants)
+    report = research_name(name, context, generate_variants, source=source)
     summary = {
         "input_name": report.get("input_name"),
         "semantics": report.get("semantics"),
         "variants": [v.get("name") for v in report.get("variants", [])[:5]],
+        "recommendations": report.get("recommendations", [])[:3],
+    }
+    return {"content": [{"type": "text", "text": json.dumps(summary, indent=2)}]}
+
+
+def _tool_name_from_identity(args):
+    brain_dump = args.get("brain_dump", "")
+    source = args.get("source", "taxonomy")
+    if not brain_dump or not brain_dump.strip():
+        return {"content": [{"type": "text", "text": "Error: 'brain_dump' must be a non-empty string"}], "isError": True}
+
+    from .engine import GameEngine
+    engine = GameEngine()
+    engine.declare_themes(brain_dump)
+    engine.elaborate()
+    engine.connect_domains()
+    report = engine.name(source=source)
+
+    summary = {
+        "emergent_theme": report.get("identity_context", {}).get("emergent_theme"),
+        "dominant_patterns": [
+            p.get("name") for p in report.get("identity_context", {}).get("dominant_patterns", [])
+        ],
+        "variants": [
+            {"name": v.get("name"), "fit": f"{v.get('identity_fit', 0):.0%}", "style": v.get("style")}
+            for v in report.get("variants", [])[:5]
+        ],
         "recommendations": report.get("recommendations", [])[:3],
     }
     return {"content": [{"type": "text", "text": json.dumps(summary, indent=2)}]}
