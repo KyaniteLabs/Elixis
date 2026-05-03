@@ -1,126 +1,105 @@
 # Elixis Deployment Guide
 
-## Prerequisites
+## Architecture
 
-- Docker & Docker Compose
-- Tailscale (for secure access)
-- VPS with ports 80/443 available
-
-## Quick Start
-
-### 1. Clone and Configure
-
-```bash
-git clone <repo-url>
-cd Elixis
-cp .env.example .env
-# Edit .env with your settings
+```
+[Internet] → [Traefik (443)] → [Elixis (3110)]
+                                   ↕
+                    [llama-local (8085)] ← primary LLM
+                    [LM Studio (1234)]  ← fallback (via Tailscale)
 ```
 
-### 2. Deploy with Traefik
+- **VPS**: `srv1542844.hstgr.cloud` (Ubuntu 24.04, Docker + Traefik)
+- **Domain**: `elixis.kyanitelabs.tech` (Let's Encrypt via Traefik)
+- **LLM primary**: `llama-local` on VPS (Qwen3.5-0.8B via llama.cpp)
+- **LLM fallback**: LM Studio via Tailscale (`100.66.225.85:1234`)
+
+## Quick Deploy
+
+### From local machine
 
 ```bash
-# Using the deploy script
 ./scripts/deploy.sh
-
-# Or manually
-docker-compose -f docker-compose.traefik.yml up -d
 ```
 
-### 3. Access
+Builds the image locally, transfers it to the VPS, and restarts the container.
 
-- **Elixis**: https://elixis.YOUR_TAILNET.ts.net
-- **Traefik Dashboard**: https://traefik.YOUR_TAILNET.ts.net
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLM_BASE_URL` | Primary inference server | `http://172.17.0.1:8085/v1` |
-| `LLM_FALLBACK_URL` | Backup inference server | (optional) |
-| `LLM_MODEL` | Model to use | `gemma-4b` |
-| `TRAEFIK_DOMAIN` | Your Tailnet domain | (required) |
-
-### Tailscale Setup
-
-1. Install Tailscale on VPS:
-   ```bash
-   curl -fsSL https://tailscale.com/install.sh | sh
-   sudo tailscale up
-   ```
-
-2. Enable HTTPS certificates:
-   ```bash
-   sudo tailscale cert YOUR_TAILNET.ts.net
-   ```
-
-3. Note your Tailnet domain (e.g., `tail1234.ts.net`)
-
-## CI/CD Setup
-
-### GitHub Actions
-
-1. Add secrets to your repository:
-   - `VPS_HOST` - Your VPS IP or Tailscale IP
-   - `VPS_USER` - SSH user for deployment
-   - `VPS_SSH_KEY` - Private key for SSH access
-
-2. Push to `main` branch triggers auto-deployment
-
-### Manual Deployment
+### Manual deploy on VPS
 
 ```bash
-# Build and push image
-docker build -t ghcr.io/USER/elixis:latest .
-docker push ghcr.io/USER/elixis:latest
-
-# Deploy on VPS
-docker-compose pull
-docker-compose up -d
+cd /docker/elixis
+docker compose up -d --build --remove-orphans
 ```
+
+## First-Time Setup
+
+```bash
+# On VPS, create the project directory
+mkdir -p /docker/elixis
+
+# Clone the repo
+cd /docker/elixis
+git clone <repo-url> .
+
+# Build and start
+docker compose up -d --build
+```
+
+## CI/CD
+
+Push to `main` triggers auto-deployment via GitHub Actions.
+Required secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
 
 ## Monitoring
 
-### Health Endpoints
-
-- `/api/health` - Service health
-- `/api/diagnostics` - Runtime metrics
-
-### Logs
-
 ```bash
-# View Elixis logs
-docker-compose logs -f elixis
+# Health check
+curl https://elixis.kyanitelabs.tech/api/health
 
-# View Traefik logs
-docker-compose logs -f traefik
+# View logs
+ssh root@srv1542844.hstgr.cloud "docker compose -f /docker/elixis/docker-compose.yml logs -f elixis"
+
+# Diagnostics
+curl https://elixis.kyanitelabs.tech/api/diagnostics
 ```
 
-## Security
+## Configuration
 
-- **Tailscale-only access**: All endpoints require Tailscale connection
-- **Rate limiting**: 10 req/min per IP (configurable in Traefik)
-- **No exposed ports**: Only 80/443 exposed, internal services isolated
+All config is in `docker-compose.yml` environment variables:
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `LLM_BASE_URL` | `http://172.19.0.1:8085/v1` | Docker bridge → llama-local |
+| `LLM_FALLBACK_URL` | `http://100.66.225.85:1234/v1` | Tailscale → LM Studio |
+| `LLM_MODEL` | `Qwen3.5-0.8B-Q4_K_M.gguf` | Model file in llama.cpp |
+| `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
+
+## Data
+
+Persistent data lives in the `elixis-data` Docker volume (`/app/.elixis` inside container).
+
+```bash
+# Inspect
+docker volume inspect elixis_elixis-data
+
+# Backup
+docker run --rm -v elixis_elixis-data:/data -v $(pwd):/backup alpine tar czf /backup/elixis-data.tar.gz -C /data .
+```
 
 ## Troubleshooting
 
 ### Container won't start
-
 ```bash
-docker-compose logs elixis
+docker compose -f /docker/elixis/docker-compose.yml logs elixis
 ```
 
-### Inference server unreachable
-
+### LLM unreachable
 ```bash
 # Test from inside container
-docker exec -it elixis python -c "from elixis.llm import is_available; print(is_available())"
+docker exec elixis python -c "from elixis.llm import is_available; print(is_available())"
 ```
 
 ### Reset data
-
 ```bash
 docker volume rm elixis_elixis-data
 ```

@@ -112,13 +112,13 @@ jobs:
 
           # Copy compose file to VPS
           scp -i deploy_key -o StrictHostKeyChecking=no \
-            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/opt/elixis/
+            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/docker/elixis/
 
           # Deploy via SSH
           ssh -i deploy_key -o StrictHostKeyChecking=no \
             ${VPS_USER}@${VPS_HOST} << 'EOF'
-            cd /opt/elixis
-            docker-compose pull
-            docker-compose up -d
+            cd /docker/elixis
+            docker compose pull
+            docker compose up -d --remove-orphans
             docker system prune -f
           EOF
