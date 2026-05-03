@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.naming import (
+from fugax.naming import (
     research_name,
     format_research_report,
     _default_semantics,

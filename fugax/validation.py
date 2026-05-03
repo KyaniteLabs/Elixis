@@ -1,4 +1,4 @@
-"""Input validation and sanitization for SoulCraft.
+"""Input validation and sanitization for Fugax.
 
 Provides validators for brain dump inputs, API requests, and entity data.
 """

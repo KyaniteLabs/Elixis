@@ -73,14 +73,14 @@ def _hex_to_hsl(hex_color):
 
     max_val = max(r, g, b)
     min_val = min(r, g, b)
-    l = (max_val + min_val) / 2.0
+    lum = (max_val + min_val) / 2.0
 
     if max_val == min_val:
         h = 0.0
         s = 0.0
     else:
         d = max_val - min_val
-        s = d / (2.0 - max_val - min_val) if l > 0.5 else d / (max_val + min_val)
+        s = d / (2.0 - max_val - min_val) if lum > 0.5 else d / (max_val + min_val)
         if max_val == r:
             h = (g - b) / d + (6.0 if g < b else 0.0)
         elif max_val == g:
@@ -89,17 +89,17 @@ def _hex_to_hsl(hex_color):
             h = (r - g) / d + 4.0
         h *= 60.0
 
-    return (h, s * 100.0, l * 100.0)
+    return (h, s * 100.0, lum * 100.0)
 
 
-def _hsl_to_hex(h, s, l):
+def _hsl_to_hex(h, s, lum):
     """Convert HSL values to hex color string."""
     s = max(0.0, min(100.0, s)) / 100.0
-    l = max(0.0, min(100.0, l)) / 100.0
+    lum = max(0.0, min(100.0, lum)) / 100.0
 
-    c = (1.0 - abs(2.0 * l - 1.0)) * s
+    c = (1.0 - abs(2.0 * lum - 1.0)) * s
     x = c * (1.0 - abs((h / 60.0) % 2 - 1.0))
-    m = l - c / 2.0
+    m = lum - c / 2.0
 
     if h < 60:
         r, g, b = c, x, 0.0
@@ -123,13 +123,13 @@ def _hsl_to_hex(h, s, l):
 def _derive_palette(patterns):
     """Derive a 5-color palette from the top patterns."""
     primary_hex = patterns[0].get("color", "#666666")
-    h, s, l = _hex_to_hsl(primary_hex)
+    h, s, lum = _hex_to_hsl(primary_hex)
 
     primary = primary_hex
-    secondary = _hsl_to_hex((h + 30) % 360, min(s + 10, 100), l)
-    accent = _hsl_to_hex((h + 180) % 360, min(s, 80), min(l + 10, 85))
-    background = _hsl_to_hex(h, max(s - 60, 5), min(l + 40, 97))
-    text = _hsl_to_hex(h, max(s - 50, 5), max(l - 60, 10))
+    secondary = _hsl_to_hex((h + 30) % 360, min(s + 10, 100), lum)
+    accent = _hsl_to_hex((h + 180) % 360, min(s, 80), min(lum + 10, 85))
+    background = _hsl_to_hex(h, max(s - 60, 5), min(lum + 40, 97))
+    text = _hsl_to_hex(h, max(s - 50, 5), max(lum - 60, 10))
 
     return {
         "primary": primary,

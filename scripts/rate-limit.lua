@@ -1,4 +1,4 @@
--- Rate limiting middleware for SoulCraft
+-- Rate limiting middleware for Fugax
 -- Can be used with OpenResty/Nginx for additional rate limiting layer
 
 local _M = {}

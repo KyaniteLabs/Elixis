@@ -4,10 +4,7 @@ Provides systematic name research with availability checks,
 similarity analysis, and semantic clustering.
 """
 
-import json
-import urllib.request
-import urllib.error
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 
 def generate_name_variants(base_name: str, industry: str = "") -> List[Dict]:

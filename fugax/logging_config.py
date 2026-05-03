@@ -1,4 +1,4 @@
-"""Structured logging configuration for SoulCraft.
+"""Structured logging configuration for Fugax.
 
 Provides JSON logging for production observability.
 """
@@ -9,7 +9,7 @@ import logging.handlers
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Optional
 import threading
 
 
@@ -89,11 +89,11 @@ def get_logger(name: str) -> logging.Logger:
 
     # File handler (rotating)
     try:
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".soulcraft", "logs")
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".fugax", "logs")
         os.makedirs(log_dir, exist_ok=True)
 
         file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(log_dir, "soulcraft.log"),
+            os.path.join(log_dir, "fugax.log"),
             maxBytes=MAX_LOG_SIZE,
             backupCount=MAX_LOG_BACKUPS,
         )
@@ -131,7 +131,7 @@ class RequestContextFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = get_request_id()
-        record.service = "soulcraft"
+        record.service = "fugax"
         return True
 
 
@@ -160,11 +160,11 @@ def configure_root_logger():
 
     # File handler
     try:
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".soulcraft", "logs")
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".fugax", "logs")
         os.makedirs(log_dir, exist_ok=True)
 
         file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(log_dir, "soulcraft.log"),
+            os.path.join(log_dir, "fugax.log"),
             maxBytes=MAX_LOG_SIZE,
             backupCount=MAX_LOG_BACKUPS,
         )
@@ -176,5 +176,5 @@ def configure_root_logger():
 
 
 # Structured log event helpers
-# NOTE: Pipeline and request logging is handled by soulcraft/traces.py
+# NOTE: Pipeline and request logging is handled by fugax/traces.py
 # which writes to both JSONL files and the structured logger.

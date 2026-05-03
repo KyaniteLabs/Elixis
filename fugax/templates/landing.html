@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoulCraft — Glass Bead Game</title>
-<meta name="description" content="Interactive Glass Bead Game interface for SoulCraft. Transform brain dump text into structured SOUL.md identity documents through entity extraction, pattern analysis, and synthesis.">
+<title>Fugax — Cross-Domain Pattern Engine</title>
+<meta name="description" content="Fugax reveals the latent patterns connecting your references. Drop characters, films, books, figures — watch cross-domain connections emerge in real time.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#0a0a0f">
-<link rel="canonical" href="https://github.com/KyaniteLabs/SoulCraft">
+<meta name="theme-color" content="#0d0c11">
+<link rel="canonical" href="https://github.com/KyaniteLabs/Fugax">
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="SoulCraft — Glass Bead Game">
-<meta property="og:description" content="Transform brain dump text into structured SOUL.md identity documents. Interactive Glass Bead Game interface.">
-<meta property="og:url" content="https://github.com/KyaniteLabs/SoulCraft">
-<meta property="og:site_name" content="SoulCraft">
+<meta property="og:title" content="Fugax — Cross-Domain Pattern Engine">
+<meta property="og:description" content="Drop your references. Fugax reveals the latent patterns connecting them — cross-domain connections emerge in real time.">
+<meta property="og:url" content="https://github.com/KyaniteLabs/Fugax">
+<meta property="og:site_name" content="Fugax">
 <meta property="og:locale" content="en_US">
 
 <!-- JSON-LD Structured Data -->
@@ -23,14 +23,14 @@
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "SoulCraft",
-  "description": "AI-powered identity synthesis companion for OpenClaw and Soul Spec. Interactive Glass Bead Game interface transforms brain dump text into structured SOUL.md identity documents.",
-  "url": "https://github.com/KyaniteLabs/SoulCraft",
+  "name": "Fugax",
+  "description": "Cross-domain pattern engine that reveals latent connections between your cultural references. Drop characters, films, books, figures — watch isomorphic patterns emerge in real time.",
+  "url": "https://github.com/KyaniteLabs/Fugax",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux",
   "programmingLanguage": "Python",
   "license": "https://opensource.org/licenses/MIT",
-  "codeRepository": "https://github.com/KyaniteLabs/SoulCraft",
+  "codeRepository": "https://github.com/KyaniteLabs/Fugax",
   "author": {
     "@type": "Organization",
     "name": "Kyanite Labs",
@@ -50,9 +50,9 @@
    ════════════════════════════════════════════════════════════════════════════ */
 :root {
   /* Background */
-  --bg-primary: #0a0a0f;
-  --bg-surface: #101018;
-  --bg-surface-elevated: #16161f;
+  --bg-primary: #0d0c11;
+  --bg-surface: #111019;
+  --bg-surface-elevated: #17161f;
   --bg-glass: rgba(255, 255, 255, 0.03);
   --bg-glass-hover: rgba(255, 255, 255, 0.06);
 
@@ -68,9 +68,9 @@
   --text-dim: #4b5563;
 
   /* Accent */
-  --accent: #6ee7b7;
-  --accent-dim: rgba(110, 231, 183, 0.15);
-  --accent-glow: rgba(110, 231, 183, 0.25);
+  --accent: #c9956b;
+  --accent-dim: rgba(201, 149, 107, 0.12);
+  --accent-glow: rgba(201, 149, 107, 0.25);
 
   /* Sentiment */
   --sentiment-positive: #4ade80;
@@ -154,7 +154,7 @@
   --transition-slow: 400ms ease;
 
   /* Shadow */
-  --shadow-glow: 0 0 20px rgba(110, 231, 183, 0.15);
+  --shadow-glow: 0 0 20px rgba(201, 149, 107, 0.15);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -175,6 +175,7 @@ html, body {
 
 body {
   background: var(--bg-primary);
+  background-image: radial-gradient(ellipse at 25% 50%, rgba(201, 149, 107, 0.02) 0%, transparent 60%);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
@@ -238,7 +239,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-lg);
-  background: rgba(10, 10, 15, 0.85);
+  background: rgba(13, 12, 17, 0.85);
   backdrop-filter: blur(var(--blur-heavy));
   border-bottom: 1px solid var(--border-subtle);
   z-index: 100;
@@ -474,7 +475,7 @@ body {
 
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.25; }
 }
 
 .pipeline-connector {
@@ -552,7 +553,7 @@ body {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(10, 10, 15, 0.6);
+  background: rgba(13, 12, 17, 0.6);
   backdrop-filter: blur(var(--blur-glass));
   flex-shrink: 0;
   padding: 0 var(--space-base);
@@ -1094,11 +1095,11 @@ body {
 <div class="app-shell">
   <!-- ── Header ── -->
   <header class="header-bar" role="banner">
-    <a href="/" class="header-brand" aria-label="SoulCraft home">
-      SOUL<span class="header-brand-accent">CRAFT</span>
+    <a href="/" class="header-brand" aria-label="Fugax home">
+      FU<span class="header-brand-accent">GAX</span>
     </a>
     <nav class="header-links" aria-label="Main navigation">
-      <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" rel="noopener" class="header-link header-github">GitHub</a>
+      <a href="https://github.com/KyaniteLabs/Fugax" target="_blank" rel="noopener" class="header-link header-github">GitHub</a>
     </nav>
   </header>
 
@@ -1106,7 +1107,7 @@ body {
   <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
     <div class="sidebar-section">
       <span class="sidebar-label">Theme Declaration</span>
-      <p class="sidebar-description">Drop your references. Characters, films, books, figures. SoulCraft finds the latent pattern.</p>
+      <p class="sidebar-description">Drop your references. Characters, films, books, figures. Fugax reveals the fleeting patterns connecting them.</p>
       <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
       <textarea
         class="theme-textarea"
@@ -1132,7 +1133,7 @@ Fleabag"
         <button class="lens-btn" data-lens="design" role="radio" aria-checked="false" tabindex="-1">Design</button>
       </div>
 
-      <button class="play-btn" id="playBtn" aria-label="Run SoulCraft analysis">
+      <button class="play-btn" id="playBtn" aria-label="Run Fugax analysis">
         <span class="spinner"></span>
         <span class="btn-label">Play</span>
       </button>
@@ -1162,8 +1163,8 @@ Fleabag"
     </div>
 
     <div class="sidebar-footer">
-      <a href="https://github.com/KyaniteLabs/SoulCraft" target="_blank" rel="noopener">SoulCraft</a> by <a href="https://kyanitelabs.tech" target="_blank" rel="noopener">Kyanite Labs</a><br>
-      Inspired by <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
+      <a href="https://github.com/KyaniteLabs/Fugax" target="_blank" rel="noopener">Fugax</a> by <a href="https://kyanitelabs.tech" target="_blank" rel="noopener">Kyanite Labs</a><br>
+      Cross-domain pattern recognition. Companion to <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
     </div>
   </aside>
 
@@ -1191,7 +1192,7 @@ Fleabag"
       <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
         <div class="panel-placeholder" id="beadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
-          <p>Run the game to see extracted beads appear here as cards.</p>
+          <p>Run the game to see extracted beads — the concepts that surface from your input.</p>
         </div>
         <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
@@ -1200,7 +1201,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-threads" aria-labelledby="tab-threads">
         <div class="panel-placeholder" id="threadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#10697;</div>
-          <p>Connections between beads will appear here after analysis.</p>
+          <p>Cross-domain threads will emerge here — isomorphic bridges between your references.</p>
         </div>
         <div class="thread-list" id="threadList" style="display:none;"></div>
       </div>
@@ -1209,7 +1210,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-radar" aria-labelledby="tab-radar">
         <div class="panel-placeholder" id="radarPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9881;</div>
-          <p>Pattern scores will visualize here once the graph engine runs.</p>
+          <p>Pattern scores will emerge here once the engine maps your references.</p>
         </div>
         <div id="radarContent" style="display:none;">
           <div class="radar-summary" id="radarSummary"></div>
@@ -1221,7 +1222,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
         <div class="panel-placeholder" id="outputPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9997;</div>
-          <p>The generated SOUL.md document will stream here in real time.</p>
+          <p>The generated document will stream here — fleeting patterns, captured in text.</p>
         </div>
         <div id="outputContent" style="display:none;">
           <div class="output-header">
@@ -1563,7 +1564,7 @@ function handleSSEEvent(event, outputEl) {
       state.entities = event.data || [];
       renderBeadBoard(state.entities);
       setPipelineStage(1);
-      dom.pipelineLabel.textContent = 'Stage 1: Entities extracted';
+      dom.pipelineLabel.textContent = 'Stage 1: Beads surfaced';
       break;
 
     case 'stage2_graph':
@@ -1571,7 +1572,7 @@ function handleSSEEvent(event, outputEl) {
       renderPatternRadar(state.graph);
       renderThreads(state.graph.threads || []);
       setPipelineStage(2);
-      dom.pipelineLabel.textContent = 'Stage 2: Pattern graph built';
+      dom.pipelineLabel.textContent = 'Stage 2: Threads woven';
       break;
 
     case 'soulmd_token':
@@ -1579,7 +1580,7 @@ function handleSSEEvent(event, outputEl) {
         dom.outputPlaceholder.style.display = 'none';
         dom.outputContent.style.display = 'block';
         setPipelineStage(3);
-        dom.pipelineLabel.textContent = 'Stage 3: Synthesizing SOUL.md';
+        dom.pipelineLabel.textContent = 'Stage 3: Pattern resolved';
         showBadge('badge-output', '!');
       }
       const cursor = document.getElementById('streamingCursor');
@@ -1642,7 +1643,7 @@ async function runPipeline() {
   dom.playBtn.querySelector('.btn-label').textContent = 'Analyzing...';
   dom.pipelineStatus.classList.add('active');
   setPipelineStage(1);
-  dom.pipelineLabel.textContent = 'Stage 1: Extracting entities...';
+  dom.pipelineLabel.textContent = 'Stage 1: Surfacing beads...';
 
   const outputEl = dom.outputContentPre;
 

@@ -1,7 +1,6 @@
-"""Tests for soulcraft.parsing — LLM JSON response parsing."""
+"""Tests for fugax.parsing — LLM JSON response parsing."""
 
-import pytest
-from soulcraft.parsing import parse_llm_json_array, parse_llm_json_object
+from fugax.parsing import parse_llm_json_array, parse_llm_json_object
 
 
 class TestParseLlmJsonArray:

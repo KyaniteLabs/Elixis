@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  soulcraft:
+  fugax:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: soulcraft
+    container_name: fugax
     restart: unless-stopped
 
     # Environment configuration
@@ -28,7 +28,7 @@ services:
 
     # Persistent volume for data
     volumes:
-      - soulcraft-data:/app/.soulcraft
+      - fugax-data:/app/.fugax
 
     # Resource limits
     deploy:
@@ -42,21 +42,21 @@ services:
 
     # Network
     networks:
-      - soulcraft-net
+      - fugax-net
 
     # Labels for Traefik routing (Tailscale-only)
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.soulcraft.rule=Host(`soulcraft.${TRAEFIK_DOMAIN:-tailnet}`)"
-      - "traefik.http.routers.soulcraft.entrypoints=websecure"
-      - "traefik.http.routers.soulcraft.tls=true"
-      - "traefik.http.routers.soulcraft.tls.certresolver=tailscale"
-      - "traefik.http.routers.soulcraft.middlewares=tailscale-only@file"
-      - "traefik.http.services.soulcraft.loadbalancer.server.port=3110"
+      - "traefik.http.routers.fugax.rule=Host(`fugax.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.fugax.entrypoints=websecure"
+      - "traefik.http.routers.fugax.tls=true"
+      - "traefik.http.routers.fugax.tls.certresolver=tailscale"
+      - "traefik.http.routers.fugax.middlewares=tailscale-only@file"
+      - "traefik.http.services.fugax.loadbalancer.server.port=3110"
 
       # Health check
-      - "traefik.http.services.soulcraft.loadbalancer.healthcheck.path=/api/health"
-      - "traefik.http.services.soulcraft.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.fugax.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.fugax.loadbalancer.healthcheck.interval=10s"
 
     logging:
       driver: "json-file"
@@ -67,19 +67,19 @@ services:
   # Optional: Redis for caching (if needed later)
   # redis:
   #   image: redis:7-alpine
-  #   container_name: soulcraft-redis
+  #   container_name: fugax-redis
   #   restart: unless-stopped
   #   volumes:
   #     - redis-data:/data
   #   networks:
-  #     - soulcraft-net
+  #     - fugax-net
 
 volumes:
-  soulcraft-data:
+  fugax-data:
     driver: local
   # redis-data:
   #   driver: local
 
 networks:
-  soulcraft-net:
+  fugax-net:
     driver: bridge

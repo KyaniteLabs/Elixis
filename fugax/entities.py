@@ -4,12 +4,11 @@ Extracts named entities from raw brain dump text using LLM (primary)
 with heuristic line-by-line parsing as fallback.
 """
 
-import json
 import logging
 import re
 import time
 
-logger = logging.getLogger("soulcraft.entities")
+logger = logging.getLogger("fugax.entities")
 
 
 def _llm_extract_entities(text, telemetry=None):

@@ -1,9 +1,8 @@
-"""Tests for soulcraft.resolution — name normalization, similarity, dedup, entity resolution."""
+"""Tests for fugax.resolution — name normalization, similarity, dedup, entity resolution."""
 
-import pytest
 
-from soulcraft.bead import Bead
-from soulcraft.resolution import (
+from fugax.bead import Bead
+from fugax.resolution import (
     normalize_name,
     name_similarity,
     _levenshtein,

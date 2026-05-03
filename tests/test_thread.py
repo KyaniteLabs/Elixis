@@ -1,8 +1,7 @@
-"""Tests for soulcraft.thread — Thread class and RELATIONSHIPS constant."""
+"""Tests for fugax.thread — Thread class and RELATIONSHIPS constant."""
 
-import pytest
 
-from soulcraft.thread import RELATIONSHIPS, Thread
+from fugax.thread import RELATIONSHIPS, Thread
 
 
 # ---------------------------------------------------------------------------

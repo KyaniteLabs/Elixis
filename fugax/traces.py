@@ -1,10 +1,10 @@
-"""Trace and diagnostics system for Soulcraft.
+"""Trace and diagnostics system for Fugax.
 
 Saves LLM traces, pipeline runs, and request logs to disk.
-All data goes to the .soulcraft/ directory next to app.py.
+All data goes to the .fugax/ directory next to app.py.
 
 Structure:
-  .soulcraft/
+  .fugax/
     traces/       — One JSON per LLM call
     runs/         — One JSON per pipeline run (brain dump → SOUL.md)
     requests.log  — HTTP request log (JSONL)
@@ -14,10 +14,9 @@ import json
 import os
 import tempfile
 import threading
-import time
 from datetime import datetime, timezone
 
-_BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".soulcraft")
+_BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".fugax")
 _TRACES_DIR = os.path.join(_BASE_DIR, "traces")
 _RUNS_DIR = os.path.join(_BASE_DIR, "runs")
 _REQUESTS_LOG = os.path.join(_BASE_DIR, "requests.log")

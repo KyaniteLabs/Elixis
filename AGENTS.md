@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues tracked in GitHub (KyaniteLabs/SoulCraft) via `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues tracked in GitHub (KyaniteLabs/Fugax) via `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

@@ -1,15 +1,11 @@
-"""Backup and restore functionality for SoulCraft data.
+"""Backup and restore functionality for Fugax data.
 
-Manages backup creation, rotation, and restoration of .soulcraft/ data.
+Manages backup creation, rotation, and restoration of .fugax/ data.
 """
 
-import json
-import os
 import re
 import shutil
 import tarfile
-import gzip
-import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
@@ -34,11 +30,11 @@ def get_backup_dir() -> Path:
 def get_data_dir() -> Path:
     """Get data directory path."""
     base_dir = Path(__file__).parent.parent
-    return base_dir / ".soulcraft"
+    return base_dir / ".fugax"
 
 
 def create_backup() -> Dict:
-    """Create a new backup of all SoulCraft data.
+    """Create a new backup of all Fugax data.
 
     Returns:
         Backup metadata dictionary
@@ -50,7 +46,7 @@ def create_backup() -> Dict:
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    backup_name = f"soulcraft_backup_{timestamp}"
+    backup_name = f"fugax_backup_{timestamp}"
     backup_path = backup_dir / f"{backup_name}.tar.gz"
 
     backup_info = {
@@ -106,7 +102,7 @@ def list_backups() -> List[Dict]:
     if not backup_dir.exists():
         return backups
 
-    for backup_file in sorted(backup_dir.glob("soulcraft_backup_*.tar.gz"), reverse=True):
+    for backup_file in sorted(backup_dir.glob("fugax_backup_*.tar.gz"), reverse=True):
         try:
             stat = backup_file.stat()
             backups.append({
@@ -220,7 +216,7 @@ def cleanup_old_backups() -> Dict:
     if not backup_dir.exists():
         return result
 
-    for backup_file in backup_dir.glob("soulcraft_backup_*.tar.gz"):
+    for backup_file in backup_dir.glob("fugax_backup_*.tar.gz"):
         try:
             stat = backup_file.stat()
             mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
@@ -242,7 +238,6 @@ def get_backup_status() -> Dict:
     Returns:
         Status dictionary
     """
-    backup_dir = get_backup_dir()
     data_dir = get_data_dir()
 
     backups = list_backups()

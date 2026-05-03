@@ -1,8 +1,8 @@
-"""Tests for soulcraft.sentiment — sentiment/intensity detection and annotation."""
+"""Tests for fugax.sentiment — sentiment/intensity detection and annotation."""
 
 import pytest
 
-from soulcraft.sentiment import (
+from fugax.sentiment import (
     POSITIVE_WORDS,
     NEGATIVE_WORDS,
     NEGATION_WORDS,

@@ -1,4 +1,4 @@
-"""Tests for expression DNA analysis (soulcraft.expression_dna)."""
+"""Tests for expression DNA analysis (fugax.expression_dna)."""
 
 import unittest
 import sys
@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.expression_dna import (
+from fugax.expression_dna import (
     analyze_text,
     compare_styles,
     detect_caricature,

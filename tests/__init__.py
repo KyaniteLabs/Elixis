@@ -1,1 +1,1 @@
-"""SoulCraft test suite."""
+"""Fugax test suite."""

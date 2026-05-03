@@ -1,6 +1,5 @@
 """Entity deduplication and canonical name resolution for the Glass Bead Game."""
 
-from .bead import Bead
 
 
 def normalize_name(name: str) -> str:

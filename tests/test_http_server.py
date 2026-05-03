@@ -7,9 +7,9 @@ without starting a real HTTP server.
 import io
 import json
 import unittest
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 
-from app import Handler, _request_enter, _request_leave, _shutdown_requested
+from app import Handler, _shutdown_requested
 
 
 class _FakeSocket:

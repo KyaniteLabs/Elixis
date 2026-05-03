@@ -1,4 +1,4 @@
-# SoulCraft Deployment Guide
+# Fugax Deployment Guide
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@
 
 ```bash
 git clone <repo-url>
-cd SoulCraft
+cd Fugax
 cp .env.example .env
 # Edit .env with your settings
 ```
@@ -29,7 +29,7 @@ docker-compose -f docker-compose.traefik.yml up -d
 
 ### 3. Access
 
-- **SoulCraft**: https://soulcraft.YOUR_TAILNET.ts.net
+- **Fugax**: https://fugax.YOUR_TAILNET.ts.net
 - **Traefik Dashboard**: https://traefik.YOUR_TAILNET.ts.net
 
 ## Configuration
@@ -73,8 +73,8 @@ docker-compose -f docker-compose.traefik.yml up -d
 
 ```bash
 # Build and push image
-docker build -t ghcr.io/USER/soulcraft:latest .
-docker push ghcr.io/USER/soulcraft:latest
+docker build -t ghcr.io/USER/fugax:latest .
+docker push ghcr.io/USER/fugax:latest
 
 # Deploy on VPS
 docker-compose pull
@@ -91,8 +91,8 @@ docker-compose up -d
 ### Logs
 
 ```bash
-# View SoulCraft logs
-docker-compose logs -f soulcraft
+# View Fugax logs
+docker-compose logs -f fugax
 
 # View Traefik logs
 docker-compose logs -f traefik
@@ -109,18 +109,18 @@ docker-compose logs -f traefik
 ### Container won't start
 
 ```bash
-docker-compose logs soulcraft
+docker-compose logs fugax
 ```
 
 ### Inference server unreachable
 
 ```bash
 # Test from inside container
-docker exec -it soulcraft python -c "from soulcraft.llm import is_available; print(is_available())"
+docker exec -it fugax python -c "from fugax.llm import is_available; print(is_available())"
 ```
 
 ### Reset data
 
 ```bash
-docker volume rm soulcraft_soulcraft-data
+docker volume rm fugax_fugax-data
 ```

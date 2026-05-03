@@ -6,7 +6,7 @@ Register new lenses by adding them to LENS_REGISTRY.
 
 from .brand import generate_brand
 from .design import generate_design
-from .identity import generate_identity, generate_identity_stream
+from .identity import generate_identity, generate_identity_stream as generate_identity_stream
 
 LENS_REGISTRY = {
     "identity": generate_identity,

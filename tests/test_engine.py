@@ -1,13 +1,12 @@
-"""Comprehensive tests for soulcraft.engine — GameState, GameEngine, and helpers."""
+"""Comprehensive tests for fugax.engine — GameState, GameEngine, and helpers."""
 
-import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from soulcraft.engine import GameState, GameEngine, _infer_domains, _check_isomorphism
-from soulcraft.bead import Bead
-from soulcraft.thread import Thread
+from fugax.engine import GameState, GameEngine, _infer_domains, _check_isomorphism
+from fugax.bead import Bead
+from fugax.thread import Thread
 
 
 # ---------------------------------------------------------------------------
@@ -465,7 +464,7 @@ class TestConnectDomains:
 class TestResolve:
     """Tests for GameEngine.resolve."""
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# SOUL.md\nTest output."})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# SOUL.md\nTest output."})
     def test_generates_output(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -475,7 +474,7 @@ class TestResolve:
         assert "SOUL.md" in output
         assert engine.state.phase == "resolution"
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "result", "brand": lambda e, g: "brand result"})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "result", "brand": lambda e, g: "brand result"})
     def test_different_lenses(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -492,7 +491,7 @@ class TestResolve:
         with pytest.raises(RuntimeError, match="connect_domains"):
             engine.resolve()
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "ok"})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "ok"})
     def test_records_timing(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -501,7 +500,7 @@ class TestResolve:
         engine.resolve()
         assert "resolution_ms" in engine.state.timings
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "output text"})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "output text"})
     def test_stores_output_in_metadata(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -520,8 +519,8 @@ class TestResolve:
 class TestResolveStream:
     """Tests for GameEngine.resolve_stream."""
 
-    @patch("soulcraft.lenses.identity.generate_identity_stream")
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback"})
+    @patch("fugax.lenses.identity.generate_identity_stream")
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback"})
     def test_identity_stream_yields_events(self, mock_stream):
         mock_stream.return_value = iter([
             {"type": "stage_start", "stage": "header"},
@@ -536,7 +535,7 @@ class TestResolveStream:
         assert events[0]["type"] == "stage_start"
         assert events[1]["type"] == "soulmd_done"
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback", "brand": lambda e, g: "brand text"})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback", "brand": lambda e, g: "brand text"})
     def test_non_identity_stream_yields_token_and_done(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -563,26 +562,26 @@ class TestResolveStream:
 class TestRunFull:
     """Tests for GameEngine.run_full and run_full_stream."""
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# Full pipeline output"})
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# Full pipeline output"})
     def test_run_full(self):
         engine = _make_engine()
         output = engine.run_full("test input", lens="identity")
         assert "Full pipeline output" in output
         assert engine.state.phase == "resolution"
 
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "streamed"})
-    def test_run_full_stream(self):
+    @patch("fugax.lenses.identity.generate_identity_stream")
+    def test_run_full_stream(self, mock_stream):
+        mock_stream.return_value = iter([
+            {"type": "soulmd_token", "content": "Hello"},
+            {"type": "soulmd_done", "data": {"length": 5}},
+        ])
         engine = _make_engine()
         events = list(engine.run_full_stream("test input", lens="identity"))
-        # Non-identity lens in resolve_stream yields 2 events
-        # But lens is "identity", so it goes through generate_identity_stream
-        # which is lazy-imported. Since we patched LENS_REGISTRY, resolve_stream
-        # will try to import generate_identity_stream from lenses.identity.
-        # Let's just verify events are yielded.
-        assert len(events) >= 1
+        assert len(events) == 2
+        assert events[0]["content"] == "Hello"
 
-    @patch("soulcraft.lenses.identity.generate_identity_stream")
-    @patch("soulcraft.lenses.LENS_REGISTRY", {"identity": lambda e, g: "irrelevant"})
+    @patch("fugax.lenses.identity.generate_identity_stream")
+    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "irrelevant"})
     def test_run_full_stream_yields_identity_events(self, mock_stream):
         mock_stream.return_value = iter([
             {"type": "soulmd_token", "content": "Hello"},
@@ -654,7 +653,7 @@ class TestInferDomains:
 
     def test_only_valid_domains_returned(self):
         result = _infer_domains(_make_entity(etype="character"))
-        from soulcraft.knowledge import domain_ids
+        from fugax.knowledge import domain_ids
         valid = set(domain_ids())
         assert all(d in valid for d in result)
 

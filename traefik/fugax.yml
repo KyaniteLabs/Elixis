@@ -1,24 +1,24 @@
-# Traefik dynamic configuration for SoulCraft
-# Place in: /opt/traefik/dynamic/soulcraft.yml
+# Traefik dynamic configuration for Fugax
+# Place in: /opt/traefik/dynamic/fugax.yml
 
 http:
   routers:
-    soulcraft:
-      rule: "Host(`soulcraft.{{ env "TRAEFIK_DOMAIN" }}`)"
+    fugax:
+      rule: "Host(`fugax.{{ env "TRAEFIK_DOMAIN" }}`)"
       entryPoints:
         - websecure
-      service: soulcraft
+      service: fugax
       tls:
         certResolver: tailscale
       middlewares:
         - tailscale-only
-        - soulcraft-ratelimit
+        - fugax-ratelimit
 
   services:
-    soulcraft:
+    fugax:
       loadBalancer:
         servers:
-          - url: "http://soulcraft:3110"
+          - url: "http://fugax:3110"
         healthCheck:
           path: /api/health
           interval: 10s
@@ -34,14 +34,14 @@ http:
           - "fd7a:115c:a1e0::/48"  # Tailscale IPv6
           - "127.0.0.1/32"   # Localhost for health checks
 
-    soulcraft-ratelimit:
+    fugax-ratelimit:
       rateLimit:
         average: 10
         burst: 20
         period: 1m
 
     # Optional: Add CORS headers for API access
-    soulcraft-cors:
+    fugax-cors:
       headers:
         accessControlAllowMethods:
           - GET

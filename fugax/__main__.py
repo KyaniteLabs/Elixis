@@ -1,4 +1,4 @@
-"""Entry point for `python -m soulcraft` and `soulcraft` CLI command."""
+"""Entry point for `python -m fugax` and `fugax` CLI command."""
 
 import sys
 import os

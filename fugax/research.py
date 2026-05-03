@@ -13,7 +13,7 @@ import urllib.request
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-logger = logging.getLogger("soulcraft.research")
+logger = logging.getLogger("fugax.research")
 
 _WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
 _TIMEOUT = 4  # seconds per request
@@ -28,7 +28,7 @@ def _wiki_summary(title):
 
     url = _WIKI_API + urllib.request.quote(slug, safe='()')
     req = urllib.request.Request(url, headers={
-        "User-Agent": "Soulcraft/1.0 (https://github.com/KyaniteLabs/SoulCraft)",
+        "User-Agent": "Fugax/1.0 (https://github.com/KyaniteLabs/Fugax)",
         "Accept": "application/json",
     })
 
@@ -110,7 +110,7 @@ def _wikidata_lookup(name):
         _WIKI_SPARQL,
         data=params,
         headers={
-            "User-Agent": "Soulcraft/1.0 (https://github.com/KyaniteLabs/SoulCraft)",
+            "User-Agent": "Fugax/1.0 (https://github.com/KyaniteLabs/Fugax)",
             "Accept": "application/json",
         },
     )

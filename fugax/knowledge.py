@@ -1,6 +1,6 @@
-"""Data loader for SoulCraft knowledge files.
+"""Data loader for Fugax knowledge files.
 
-Loads and caches JSON data from soulcraft/data/ on first access.
+Loads and caches JSON data from fugax/data/ on first access.
 All accessors return plain Python data structures (dicts, lists).
 """
 
@@ -20,7 +20,7 @@ def _load_json(filename):
         return {}
     except json.JSONDecodeError as exc:
         import logging
-        logging.getLogger("soulcraft.knowledge").error("Invalid JSON in %s: %s", filename, exc)
+        logging.getLogger("fugax.knowledge").error("Invalid JSON in %s: %s", filename, exc)
         return {}
 
 

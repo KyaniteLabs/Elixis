@@ -13,7 +13,7 @@ dist/
 build/
 
 # Local data (will be mounted as volume)
-.soulcraft/
+.fugax/
 
 # IDE
 .vscode/

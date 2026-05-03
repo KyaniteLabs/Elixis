@@ -10,7 +10,7 @@ import math
 import time
 from collections import defaultdict
 
-logger = logging.getLogger("soulcraft.patterns")
+logger = logging.getLogger("fugax.patterns")
 
 # Archetypal pattern definitions with keyword associations
 PATTERNS = [
@@ -576,7 +576,6 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
 
     # Consensus: how concentrated is the probability distribution
     if result_patterns:
-        top_prob = result_patterns[0]["probability"]
         entropy = -sum(
             p["probability"] * math.log(p["probability"] + 1e-10)
             for p in result_patterns
@@ -585,7 +584,6 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
         max_entropy = math.log(len(result_patterns)) if len(result_patterns) > 1 else 1
         consensus = 1.0 - (entropy / max_entropy) if max_entropy > 0 else 1.0
     else:
-        top_prob = 0
         consensus = 0.0
 
     # Emergent topic

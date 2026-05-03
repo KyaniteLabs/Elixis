@@ -33,10 +33,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest
 
       - name: Run tests
         run: |
-          python -m unittest discover tests/ -v
+          python -m pytest tests/ -v
 
       - name: Upload coverage (optional)
         if: github.event_name == 'push'
@@ -111,12 +112,12 @@ jobs:
 
           # Copy compose file to VPS
           scp -i deploy_key -o StrictHostKeyChecking=no \
-            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/opt/soulcraft/
+            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/opt/fugax/
 
           # Deploy via SSH
           ssh -i deploy_key -o StrictHostKeyChecking=no \
             ${VPS_USER}@${VPS_HOST} << 'EOF'
-            cd /opt/soulcraft
+            cd /opt/fugax
             docker-compose pull
             docker-compose up -d
             docker system prune -f

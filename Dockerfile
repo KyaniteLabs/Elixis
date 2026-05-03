@@ -1,4 +1,4 @@
-# SoulCraft - AI Persona Synthesis Pipeline
+# Fugax - AI Persona Synthesis Pipeline
 # Multi-stage build for production efficiency
 
 # --- Build stage ---
@@ -21,23 +21,23 @@ FROM python:3.12-slim AS production
 WORKDIR /app
 
 # Create non-root user for security
-RUN groupadd -r soulcraft && useradd -r -g soulcraft soulcraft
+RUN groupadd -r fugax && useradd -r -g fugax fugax
 
 # Copy installed packages from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 
 # Copy application code
-COPY soulcraft/ ./soulcraft/
+COPY fugax/ ./fugax/
 COPY app.py .
 COPY requirements.txt .
 
 # Create data directory and set permissions
-RUN mkdir -p /app/.soulcraft && \
-    chown -R soulcraft:soulcraft /app
+RUN mkdir -p /app/.fugax && \
+    chown -R fugax:fugax /app
 
 # Switch to non-root user
-USER soulcraft
+USER fugax
 
 # Expose the application port
 EXPOSE 3110

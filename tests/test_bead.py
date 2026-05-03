@@ -1,8 +1,7 @@
-"""Tests for soulcraft.bead — Bead class, _clamp helper, and constants."""
+"""Tests for fugax.bead — Bead class, _clamp helper, and constants."""
 
-import pytest
 
-from soulcraft.bead import (
+from fugax.bead import (
     VALID_TYPES,
     VALID_DOMAINS,
     VALID_THEMES,

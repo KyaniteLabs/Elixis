@@ -1,8 +1,7 @@
-"""Comprehensive tests for soulcraft.knowledge — data loaders and lookup helpers."""
+"""Comprehensive tests for fugax.knowledge — data loaders and lookup helpers."""
 
-import pytest
 
-from soulcraft.knowledge import (
+from fugax.knowledge import (
     traits,
     archetypes,
     domains,

@@ -7,12 +7,12 @@ without requiring a running LLM backend.
 
 import json
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from soulcraft.entities import extract_entities
-from soulcraft.patterns import build_pattern_graph, PATTERNS
-from soulcraft.synthesis import synthesize_soulmd
-from soulcraft.parsing import parse_llm_json_array
+from fugax.entities import extract_entities
+from fugax.patterns import build_pattern_graph
+from fugax.synthesis import synthesize_soulmd
+from fugax.parsing import parse_llm_json_array
 
 
 class TestParseLlmJsonArray(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestParseLlmJsonArray(unittest.TestCase):
 class TestEntityExtractionMocked(unittest.TestCase):
     """Test entity extraction with mocked LLM responses."""
 
-    @patch('soulcraft.llm.chat')
+    @patch('fugax.llm.chat')
     def test_extracts_entities_from_mock_response(self, mock_chat):
         mock_chat.return_value = {
             "content": json.dumps([
@@ -81,7 +81,7 @@ class TestEntityExtractionMocked(unittest.TestCase):
         self.assertIn(entities[0]["type"], ("character", "concept"))
         self.assertEqual(entities[1]["canonical"], "Fight Club")
 
-    @patch('soulcraft.llm.chat')
+    @patch('fugax.llm.chat')
     def test_handles_code_fence_response(self, mock_chat):
         mock_chat.return_value = {
             "content": '```json\n' + json.dumps([
@@ -98,7 +98,7 @@ class TestEntityExtractionMocked(unittest.TestCase):
         self.assertEqual(len(entities), 1)
         self.assertEqual(entities[0]["canonical"], "Sherlock Holmes")
 
-    @patch('soulcraft.llm.chat')
+    @patch('fugax.llm.chat')
     def test_returns_empty_on_llm_failure(self, mock_chat):
         mock_chat.return_value = {
             "content": "",
@@ -113,7 +113,7 @@ class TestEntityExtractionMocked(unittest.TestCase):
         # LLM failure triggers heuristic fallback, which may extract items
         self.assertIsInstance(entities, list)
 
-    @patch('soulcraft.llm.chat')
+    @patch('fugax.llm.chat')
     def test_deduplicates_entities(self, mock_chat):
         mock_chat.return_value = {
             "content": json.dumps([
@@ -135,7 +135,7 @@ class TestEntityExtractionMocked(unittest.TestCase):
 class TestPatternGraphMocked(unittest.TestCase):
     """Test pattern graph building with mocked LLM classification."""
 
-    @patch('soulcraft.patterns.llm_classify_patterns')
+    @patch('fugax.patterns.llm_classify_patterns')
     def test_builds_pattern_graph(self, mock_classify):
         mock_classify.return_value = {
             "Tony Montana": {"power": 0.8, "transformation": 0.3},
@@ -159,7 +159,7 @@ class TestPatternGraphMocked(unittest.TestCase):
         self.assertEqual(graph["consensus_score"], 0.0)
         self.assertEqual(graph["emergent_topic"], "Unknown")
 
-    @patch('soulcraft.patterns.llm_classify_patterns')
+    @patch('fugax.patterns.llm_classify_patterns')
     def test_dominant_pattern_has_highest_probability(self, mock_classify):
         mock_classify.return_value = {
             "Test": {"power": 0.9, "wisdom": 0.1},
@@ -176,7 +176,7 @@ class TestPatternGraphMocked(unittest.TestCase):
 class TestSynthesisMocked(unittest.TestCase):
     """Test SOUL.md synthesis with mocked LLM."""
 
-    @patch('soulcraft.synthesis.chat')
+    @patch('fugax.synthesis.chat')
     def test_produces_soulmd(self, mock_chat):
         mock_chat.return_value = {
             "content": "# The Constructed Self\n\n## Worldview\nTest worldview.\n\n## Voice\nTest voice.",
@@ -206,7 +206,7 @@ class TestSynthesisMocked(unittest.TestCase):
         self.assertIn("Worldview", result)
         self.assertGreater(len(result), 50)
 
-    @patch('soulcraft.synthesis.chat')
+    @patch('fugax.synthesis.chat')
     def test_falls_back_on_llm_failure(self, mock_chat):
         mock_chat.return_value = {
             "content": "",
@@ -241,12 +241,12 @@ class TestSynthesisMocked(unittest.TestCase):
 class TestLlmErrorReporting(unittest.TestCase):
     """Test that LLM errors are properly reported."""
 
-    @patch('soulcraft.llm.urllib.request.urlopen')
+    @patch('fugax.llm.urllib.request.urlopen')
     def test_ollama_failure_includes_error_field(self, mock_urlopen):
         import urllib.error
         mock_urlopen.side_effect = urllib.error.URLError("Connection refused")
 
-        from soulcraft.llm import _call_ollama
+        from fugax.llm import _call_ollama
         result = _call_ollama([{"role": "user", "content": "test"}])
 
         self.assertEqual(result["content"], "")

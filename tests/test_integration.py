@@ -6,9 +6,9 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.entities import extract_entities
-from soulcraft.patterns import build_pattern_graph
-from soulcraft.synthesis import synthesize_soulmd
+from fugax.entities import extract_entities
+from fugax.patterns import build_pattern_graph
+from fugax.synthesis import synthesize_soulmd
 
 
 class TestFullPipeline(unittest.TestCase):

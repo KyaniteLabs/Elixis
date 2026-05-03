@@ -1,4 +1,4 @@
-"""Tests for output validation (soulcraft.quality)."""
+"""Tests for output validation (fugax.quality)."""
 
 import unittest
 import sys
@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.quality import validate_output, sanitize_output
+from fugax.quality import validate_output, sanitize_output
 
 
 def _make_good_identity_output():

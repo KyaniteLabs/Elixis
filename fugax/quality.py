@@ -96,7 +96,7 @@ def validate_output(output, lens="identity"):
     for pattern in _PII_PATTERNS:
         match = re.search(pattern, output)
         if match:
-            warnings.append(f"Potential PII detected")
+            warnings.append("Potential PII detected")
             score_parts.append(0.5)
             break
     else:

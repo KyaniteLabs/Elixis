@@ -5,7 +5,7 @@ __pycache__/
 dist/
 build/
 .omc/
-.soulcraft/
+.fugax/
 .backups/
 .playwright-mcp/
 

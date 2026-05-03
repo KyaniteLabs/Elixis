@@ -1,10 +1,9 @@
-"""Comprehensive tests for soulcraft.graph — relationship graph builder and helpers."""
+"""Comprehensive tests for fugax.graph — relationship graph builder and helpers."""
 
-import pytest
 from unittest.mock import patch
 
-from soulcraft.bead import Bead
-from soulcraft.graph import (
+from fugax.bead import Bead
+from fugax.graph import (
     build_relationship_graph,
     find_bridges,
     _compute_relationship,
@@ -14,7 +13,7 @@ from soulcraft.graph import (
     _cluster_by_theme,
     _compute_centralities,
 )
-from soulcraft.thread import Thread
+from fugax.thread import Thread
 
 
 # ---------------------------------------------------------------------------
@@ -50,12 +49,12 @@ def _bead(
 class TestBuildRelationshipGraph:
     """Tests for build_relationship_graph."""
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_empty_beads_returns_empty_graph(self, _mock):
         result = build_relationship_graph([])
         assert result == {"nodes": [], "edges": [], "clusters": {}, "centralities": {}}
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_single_bead_returns_node_no_edges(self, _mock):
         bead = _bead(canonical="Solo")
         result = build_relationship_graph([bead])
@@ -64,7 +63,7 @@ class TestBuildRelationshipGraph:
         assert len(result["edges"]) == 0
         assert result["centralities"]["Solo"] == 0
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_two_beads_shared_themes_connected(self, _mock):
         a = _bead(canonical="A", themes=["power", "shadow"])
         b = _bead(canonical="B", themes=["power", "wisdom"])
@@ -73,7 +72,7 @@ class TestBuildRelationshipGraph:
         edge = result["edges"][0]
         assert "power" in edge["evidence"][0] if edge["evidence"] else True
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_two_beads_no_overlap_no_edge(self, _mock):
         a = _bead(canonical="A", themes=["power"], domains=["philosophy"])
         b = _bead(canonical="B", themes=["wisdom"], domains=["music"])
@@ -81,7 +80,7 @@ class TestBuildRelationshipGraph:
         result = build_relationship_graph([a, b])
         assert len(result["edges"]) == 0
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_cross_domain_beads_isomorphic_true(self, _mock):
         a = _bead(canonical="A", domains=["philosophy"], themes=["power", "shadow"])
         b = _bead(canonical="B", domains=["music"], themes=["power", "shadow"])
@@ -89,7 +88,7 @@ class TestBuildRelationshipGraph:
         if result["edges"]:
             assert result["edges"][0]["isomorphic"] is True
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_same_domain_beads_isomorphic_false(self, _mock):
         a = _bead(canonical="A", domains=["philosophy"], themes=["power"])
         b = _bead(canonical="B", domains=["philosophy"], themes=["power"])
@@ -97,7 +96,7 @@ class TestBuildRelationshipGraph:
         if result["edges"]:
             assert result["edges"][0]["isomorphic"] is False
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_nodes_include_all_fields(self, _mock):
         bead = _bead(
             canonical="X",
@@ -116,7 +115,7 @@ class TestBuildRelationshipGraph:
         assert node["sentiment"] == 0.3
         assert node["intensity"] == 0.8
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_edges_strength_clamped(self, _mock):
         a = _bead(canonical="A", themes=["power", "shadow", "wisdom", "freedom", "struggle"])
         b = _bead(canonical="B", themes=["power", "shadow", "wisdom", "freedom", "struggle"])
@@ -125,7 +124,7 @@ class TestBuildRelationshipGraph:
             for edge in result["edges"]:
                 assert 0.0 <= edge["strength"] <= 1.0
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_clusters_by_theme(self, _mock):
         a = _bead(canonical="A", themes=["power", "shadow"])
         b = _bead(canonical="B", themes=["power", "wisdom"])
@@ -138,13 +137,13 @@ class TestBuildRelationshipGraph:
         assert "B" in clusters["power"]
         assert "C" in clusters["wisdom"]
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_cluster_unclassified_for_no_themes(self, _mock):
         bead = _bead(canonical="X", themes=[])
         result = build_relationship_graph([bead])
         assert "unclassified" in result["clusters"]
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_centralities_computed(self, _mock):
         a = _bead(canonical="A", themes=["power"])
         b = _bead(canonical="B", themes=["power"])
@@ -155,7 +154,7 @@ class TestBuildRelationshipGraph:
         assert "B" in centrals
         assert "C" in centrals
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_no_duplicate_edges(self, _mock):
         a = _bead(canonical="A", themes=["power"])
         b = _bead(canonical="B", themes=["power"])
@@ -172,7 +171,7 @@ class TestBuildRelationshipGraph:
 class TestComputeRelationship:
     """Tests for _compute_relationship."""
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_contrasts_with_high_sentiment_diff(self, _mock):
         a = _bead(canonical="A", sentiment=-0.8, themes=["power"])
         b = _bead(canonical="B", sentiment=0.8, themes=["power"])
@@ -180,21 +179,21 @@ class TestComputeRelationship:
         assert rel == "contrasts_with"
         assert strength > 0.1
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_parallels_same_domain(self, _mock):
         a = _bead(canonical="A", domains=["philosophy"], themes=["power"], sentiment=0.0)
         b = _bead(canonical="B", domains=["philosophy"], themes=["power"], sentiment=0.1)
         rel, strength = _compute_relationship(a, b)
         assert rel == "parallels"
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_complements_different_domain(self, _mock):
         a = _bead(canonical="A", domains=["philosophy"], themes=["power"], sentiment=0.0)
         b = _bead(canonical="B", domains=["music"], themes=["power"], sentiment=0.1)
         rel, strength = _compute_relationship(a, b)
         assert rel == "complements"
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_identifies_with_trait_overlap(self, _mock):
         a = _bead(
             canonical="A",
@@ -213,7 +212,7 @@ class TestComputeRelationship:
         rel, strength = _compute_relationship(a, b)
         assert rel == "identifies_with"
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_no_relationship_when_weak(self, _mock):
         a = _bead(canonical="A", themes=["power"], traits=[], domains=["philosophy"])
         b = _bead(canonical="B", themes=["wisdom"], traits=[], domains=["music"])
@@ -221,7 +220,7 @@ class TestComputeRelationship:
         assert rel is None
         assert strength == 0.0
 
-    @patch("soulcraft.graph.character_by_name", return_value=None)
+    @patch("fugax.graph.character_by_name", return_value=None)
     def test_strength_clamped_to_one(self, _mock):
         a = _bead(
             canonical="A",
@@ -238,7 +237,7 @@ class TestComputeRelationship:
         _, strength = _compute_relationship(a, b)
         assert strength <= 1.0
 
-    @patch("soulcraft.graph.character_by_name")
+    @patch("fugax.graph.character_by_name")
     def test_kb_match_boosts_strength(self, mock_kb):
         mock_kb.side_effect = lambda name: {
             "Alpha": {"archetype_scores": {"power": 0.9, "sage": 0.3}},

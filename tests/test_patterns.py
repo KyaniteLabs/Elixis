@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.patterns import build_pattern_graph
+from fugax.patterns import build_pattern_graph
 
 
 class TestPatternGraph(unittest.TestCase):

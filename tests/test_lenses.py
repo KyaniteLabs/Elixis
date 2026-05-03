@@ -1,4 +1,4 @@
-"""Tests for output lenses (soulcraft.lenses).
+"""Tests for output lenses (fugax.lenses).
 
 Covers __init__.py (registry), brand.py, and design.py.
 """
@@ -9,9 +9,9 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.lenses import LENS_REGISTRY, AVAILABLE_LENSES
-from soulcraft.lenses.brand import generate_brand
-from soulcraft.lenses.design import (
+from fugax.lenses import LENS_REGISTRY, AVAILABLE_LENSES
+from fugax.lenses.brand import generate_brand
+from fugax.lenses.design import (
     generate_design,
     _hex_to_hsl,
     _hsl_to_hex,
@@ -235,20 +235,20 @@ class TestHexToHsl(unittest.TestCase):
     """_hex_to_hsl conversion correctness."""
 
     def test_black(self):
-        h, s, l = _hex_to_hsl("#000000")
+        h, s, lum = _hex_to_hsl("#000000")
         self.assertAlmostEqual(h, 0.0)
         self.assertAlmostEqual(s, 0.0)
-        self.assertAlmostEqual(l, 0.0)
+        self.assertAlmostEqual(lum, 0.0)
 
     def test_white(self):
-        h, s, l = _hex_to_hsl("#ffffff")
-        self.assertAlmostEqual(l, 100.0)
+        h, s, lum = _hex_to_hsl("#ffffff")
+        self.assertAlmostEqual(lum, 100.0)
 
     def test_red(self):
-        h, s, l = _hex_to_hsl("#ff0000")
+        h, s, lum = _hex_to_hsl("#ff0000")
         self.assertAlmostEqual(h, 0.0)
         self.assertAlmostEqual(s, 100.0)
-        self.assertAlmostEqual(l, 50.0)
+        self.assertAlmostEqual(lum, 50.0)
 
 
 class TestHslToHex(unittest.TestCase):
@@ -274,8 +274,8 @@ class TestHslRoundtrip(unittest.TestCase):
     """_hex_to_hsl -> _hsl_to_hex should reproduce the original color."""
 
     def _assert_roundtrip(self, hex_color):
-        h, s, l = _hex_to_hsl(hex_color)
-        result = _hsl_to_hex(h, s, l)
+        h, s, lum = _hex_to_hsl(hex_color)
+        result = _hsl_to_hex(h, s, lum)
         self.assertEqual(result, hex_color, f"Roundtrip failed for {hex_color}")
 
     def test_red(self):

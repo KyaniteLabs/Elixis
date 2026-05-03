@@ -1,14 +1,14 @@
-"""SoulCraft MCP Server — stdio transport, zero external dependencies.
+"""Fugax MCP Server — stdio transport, zero external dependencies.
 
-Exposes SoulCraft's pipeline as MCP tools for Claude Code, Cursor,
+Exposes Fugax's pipeline as MCP tools for Claude Code, Cursor,
 and any MCP-compatible AI assistant.
 
 Usage in Claude Code settings:
   {
     "mcpServers": {
-      "soulcraft": {
+      "fugax": {
         "command": "python",
-        "args": ["-m", "soulcraft.mcp_server"]
+        "args": ["-m", "fugax.mcp_server"]
       }
     }
   }
@@ -23,10 +23,10 @@ from .naming import research_name
 from .patterns import build_pattern_graph
 from .research import enrich_entities
 from .synthesis import synthesize_soulmd
-from .translate import translate_text, get_supported_languages
+from .translate import translate_text
 from .validation import validate_brain_dump
 
-_SERVER_NAME = "soulcraft"
+_SERVER_NAME = "fugax"
 _SERVER_VERSION = "1.0.0"
 _PROTOCOL_VERSION = "2024-11-05"
 

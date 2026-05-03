@@ -81,13 +81,11 @@ def _compute_relationship(ba, bb):
     sentiment_diff = abs(ba.sentiment - bb.sentiment)
     sentiment_bonus = 0.1 if sentiment_diff > 0.5 else 0.0
 
-    kb_match = False
     kb_a = character_by_name(ba.canonical)
     kb_b = character_by_name(bb.canonical)
     if kb_a and kb_b:
         shared_archetypes = set(kb_a.get("archetype_scores", {}).keys()) & set(kb_b.get("archetype_scores", {}).keys())
         if shared_archetypes:
-            kb_match = True
             theme_strength += 0.2
 
     total = theme_strength + trait_strength + sentiment_bonus

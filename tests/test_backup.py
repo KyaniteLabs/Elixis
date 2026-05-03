@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soulcraft.backup import (
+from fugax.backup import (
     create_backup,
     list_backups,
     get_backup_status,
@@ -29,7 +29,7 @@ class TestBackup(unittest.TestCase):
         self.original_data_dir = None
 
         # Patch paths
-        import soulcraft.backup as backup
+        import fugax.backup as backup
         self.original_backup_dir = backup.BACKUP_DIR
         self.original_get_backup_dir = backup.get_backup_dir
         self.original_get_data_dir = backup.get_data_dir
@@ -39,7 +39,7 @@ class TestBackup(unittest.TestCase):
         backup.get_backup_dir = lambda: Path(backup.BACKUP_DIR)
 
         # Create test data directory
-        self.data_dir = os.path.join(self.temp_dir, ".soulcraft")
+        self.data_dir = os.path.join(self.temp_dir, ".fugax")
         os.makedirs(self.data_dir, exist_ok=True)
         backup.get_data_dir = lambda: Path(self.data_dir)
 
@@ -49,7 +49,7 @@ class TestBackup(unittest.TestCase):
 
     def tearDown(self):
         """Clean up temp directories."""
-        import soulcraft.backup as backup
+        import fugax.backup as backup
 
         # Restore original functions
         backup.get_backup_dir = self.original_get_backup_dir
@@ -98,7 +98,7 @@ class TestBackup(unittest.TestCase):
         create_backup()
 
         # Cleanup with 0 days retention (remove all)
-        import soulcraft.backup as backup
+        import fugax.backup as backup
         original_retention = backup.BACKUP_RETENTION_DAYS
         backup.BACKUP_RETENTION_DAYS = 0
 
