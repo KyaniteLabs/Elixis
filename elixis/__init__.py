@@ -1,2 +1,2 @@
-# Fugax - The Glass Bead Game for AI Personas
+# Elixis - The Glass Bead Game for AI Personas
 # Transforms brain dump text into structured SOUL.md personality files

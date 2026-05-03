@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.translate import (
+from elixis.translate import (
     translate_text,
     translate_soulmd,
     detect_language,
@@ -112,17 +112,17 @@ class TestTranslationCache(unittest.TestCase):
 
     def setUp(self):
         """Clear cache before each test."""
-        from fugax.translate import clear_cache
+        from elixis.translate import clear_cache
         clear_cache()
 
     def tearDown(self):
         """Clear cache after each test."""
-        from fugax.translate import clear_cache
+        from elixis.translate import clear_cache
         clear_cache()
 
     def test_cache_key_generation(self):
         """Cache keys are deterministic."""
-        from fugax.translate import _get_cache_key
+        from elixis.translate import _get_cache_key
 
         key1 = _get_cache_key("hello world", "es", "en")
         key2 = _get_cache_key("hello world", "es", "en")
@@ -133,7 +133,7 @@ class TestTranslationCache(unittest.TestCase):
 
     def test_cache_stats_empty(self):
         """Cache stats show empty when no entries."""
-        from fugax.translate import get_cache_stats
+        from elixis.translate import get_cache_stats
 
         stats = get_cache_stats()
         self.assertEqual(stats["entries"], 0)
@@ -141,7 +141,7 @@ class TestTranslationCache(unittest.TestCase):
 
     def test_cache_save_and_load(self):
         """Cache can save and load entries."""
-        from fugax.translate import _save_to_cache, _load_from_cache
+        from elixis.translate import _save_to_cache, _load_from_cache
 
         result = {
             "translated_text": "Hola mundo",
@@ -162,7 +162,7 @@ class TestTranslationCache(unittest.TestCase):
 
     def test_cache_stats_after_save(self):
         """Cache stats update after saving."""
-        from fugax.translate import _save_to_cache, get_cache_stats
+        from elixis.translate import _save_to_cache, get_cache_stats
 
         result = {
             "translated_text": "Hola mundo",
@@ -179,7 +179,7 @@ class TestTranslationCache(unittest.TestCase):
 
     def test_clear_cache(self):
         """Cache can be cleared."""
-        from fugax.translate import _save_to_cache, get_cache_stats, clear_cache
+        from elixis.translate import _save_to_cache, get_cache_stats, clear_cache
 
         result = {
             "translated_text": "Hola mundo",
@@ -196,7 +196,7 @@ class TestTranslationCache(unittest.TestCase):
 
     def test_cache_miss_returns_none(self):
         """Cache miss returns None."""
-        from fugax.translate import _load_from_cache
+        from elixis.translate import _load_from_cache
 
         cached = _load_from_cache("nonexistent text", "es", "en")
         self.assertIsNone(cached)

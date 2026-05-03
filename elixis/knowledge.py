@@ -1,6 +1,6 @@
-"""Data loader for Fugax knowledge files.
+"""Data loader for Elixis knowledge files.
 
-Loads and caches JSON data from fugax/data/ on first access.
+Loads and caches JSON data from elixis/data/ on first access.
 All accessors return plain Python data structures (dicts, lists).
 """
 
@@ -20,7 +20,7 @@ def _load_json(filename):
         return {}
     except json.JSONDecodeError as exc:
         import logging
-        logging.getLogger("fugax.knowledge").error("Invalid JSON in %s: %s", filename, exc)
+        logging.getLogger("elixis.knowledge").error("Invalid JSON in %s: %s", filename, exc)
         return {}
 
 
@@ -77,6 +77,12 @@ def characters():
     return _load_jsonl("characters.jsonl")
 
 
+@lru_cache(maxsize=1)
+def taxonomy():
+    """Scientific taxonomy dataset for naming (JSON array)."""
+    return _load_json("taxonomy.json")
+
+
 # ── Lookup helpers ──────────────────────────────────────────────────
 
 
@@ -129,6 +135,47 @@ def relationship_ids():
     return [r["id"] for r in relationships()["relationships"]]
 
 
+def taxonomy_by_name(name):
+    """Return a single taxonomy entry by name (case-insensitive), or None."""
+    key = name.lower()
+    for entry in taxonomy():
+        if entry.get("name", "").lower() == key:
+            return entry
+    return None
+
+
+def taxonomy_by_kingdom(kingdom):
+    """Return all taxonomy entries matching a kingdom (e.g. 'plantae')."""
+    k = kingdom.lower()
+    return [e for e in taxonomy() if e.get("kingdom", "").lower() == k]
+
+
+def taxonomy_search(query, limit=10):
+    """Search taxonomy by name, common_name, etymology, or keywords."""
+    q = query.lower()
+    scored = []
+    for entry in taxonomy():
+        score = 0.0
+        if q in entry.get("name", "").lower():
+            score += 3.0
+        if q in entry.get("common_name", "").lower():
+            score += 2.0
+        for kw in entry.get("keywords", []):
+            if q in kw.lower():
+                score += 1.5
+                break
+        if q in entry.get("etymology", "").lower():
+            score += 1.0
+        for theme in entry.get("themes", []):
+            if q in theme.lower():
+                score += 1.0
+                break
+        if score > 0:
+            scored.append((score, entry))
+    scored.sort(key=lambda x: -x[0])
+    return [e for _, e in scored[:limit]]
+
+
 def clear_cache():
     """Clear all cached data. Useful after data file updates."""
     traits.cache_clear()
@@ -137,3 +184,4 @@ def clear_cache():
     relationships.cache_clear()
     entity_types.cache_clear()
     characters.cache_clear()
+    taxonomy.cache_clear()

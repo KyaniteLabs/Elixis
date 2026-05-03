@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.validation import (
+from elixis.validation import (
     sanitize_text,
     validate_brain_dump,
     validate_entity,

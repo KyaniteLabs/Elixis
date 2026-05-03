@@ -1,4 +1,4 @@
-# Fugax Deployment Guide
+# Elixis Deployment Guide
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@
 
 ```bash
 git clone <repo-url>
-cd Fugax
+cd Elixis
 cp .env.example .env
 # Edit .env with your settings
 ```
@@ -29,7 +29,7 @@ docker-compose -f docker-compose.traefik.yml up -d
 
 ### 3. Access
 
-- **Fugax**: https://fugax.YOUR_TAILNET.ts.net
+- **Elixis**: https://elixis.YOUR_TAILNET.ts.net
 - **Traefik Dashboard**: https://traefik.YOUR_TAILNET.ts.net
 
 ## Configuration
@@ -73,8 +73,8 @@ docker-compose -f docker-compose.traefik.yml up -d
 
 ```bash
 # Build and push image
-docker build -t ghcr.io/USER/fugax:latest .
-docker push ghcr.io/USER/fugax:latest
+docker build -t ghcr.io/USER/elixis:latest .
+docker push ghcr.io/USER/elixis:latest
 
 # Deploy on VPS
 docker-compose pull
@@ -91,8 +91,8 @@ docker-compose up -d
 ### Logs
 
 ```bash
-# View Fugax logs
-docker-compose logs -f fugax
+# View Elixis logs
+docker-compose logs -f elixis
 
 # View Traefik logs
 docker-compose logs -f traefik
@@ -109,18 +109,18 @@ docker-compose logs -f traefik
 ### Container won't start
 
 ```bash
-docker-compose logs fugax
+docker-compose logs elixis
 ```
 
 ### Inference server unreachable
 
 ```bash
 # Test from inside container
-docker exec -it fugax python -c "from fugax.llm import is_available; print(is_available())"
+docker exec -it elixis python -c "from elixis.llm import is_available; print(is_available())"
 ```
 
 ### Reset data
 
 ```bash
-docker volume rm fugax_fugax-data
+docker volume rm elixis_elixis-data
 ```

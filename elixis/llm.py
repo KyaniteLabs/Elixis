@@ -1,4 +1,4 @@
-"""LLM client for Fugax synthesis.
+"""LLM client for Elixis synthesis.
 
 Uses the Ollama API (localhost:11434) by default.
 Configurable via environment variables:
@@ -46,7 +46,7 @@ class _Config:
 cfg = _Config()
 
 # Module-level __getattr__ resolves backward-compatible aliases live.
-# This ensures `from fugax.llm import DEFAULT_MODEL` always returns
+# This ensures `from elixis.llm import DEFAULT_MODEL` always returns
 # the current env var value, not the import-time snapshot.
 _ALIASES = {
     "OLLAMA_BASE": "base_url",
@@ -112,7 +112,7 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
             }
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         import logging
-        logging.getLogger("fugax.llm").warning(f"Ollama call failed: {e}")
+        logging.getLogger("elixis.llm").warning(f"Ollama call failed: {e}")
         return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": model or cfg.default_model, "provider": cfg.provider}
 
 
@@ -177,7 +177,7 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
         # Both failed or no fallback
         used_model = model or cfg.default_model
         import logging
-        logging.getLogger("fugax.llm").warning(f"OpenAI-compatible call failed (primary): {e}")
+        logging.getLogger("elixis.llm").warning(f"OpenAI-compatible call failed (primary): {e}")
         return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": used_model, "provider": "openai"}
 
 
@@ -312,7 +312,7 @@ def _chat_stream_openai(messages, model=None):
         }
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         import logging
-        logging.getLogger("fugax.llm").warning(f"OpenAI stream failed: {e}")
+        logging.getLogger("elixis.llm").warning(f"OpenAI stream failed: {e}")
 
 
 def _chat_stream_ollama(messages, model=None):

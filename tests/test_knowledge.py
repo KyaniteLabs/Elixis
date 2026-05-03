@@ -1,7 +1,7 @@
-"""Comprehensive tests for fugax.knowledge — data loaders and lookup helpers."""
+"""Comprehensive tests for elixis.knowledge — data loaders and lookup helpers."""
 
 
-from fugax.knowledge import (
+from elixis.knowledge import (
     traits,
     archetypes,
     domains,

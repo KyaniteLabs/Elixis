@@ -1,4 +1,4 @@
-"""Tests for output validation (fugax.quality)."""
+"""Tests for output validation (elixis.quality)."""
 
 import unittest
 import sys
@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.quality import validate_output, sanitize_output
+from elixis.quality import validate_output, sanitize_output
 
 
 def _make_good_identity_output():

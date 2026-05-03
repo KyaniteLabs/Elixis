@@ -1,4 +1,4 @@
-"""Entry point for `python -m fugax` and `fugax` CLI command."""
+"""Entry point for `python -m elixis` and `elixis` CLI command."""
 
 import sys
 import os

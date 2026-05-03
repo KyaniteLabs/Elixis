@@ -1,4 +1,4 @@
-"""On-the-fly translation for Fugax using local LLM inference.
+"""On-the-fly translation for Elixis using local LLM inference.
 
 Translates SOUL.md output to any language user selects.
 Uses local inference servers (VPS + fallback) for zero external API costs.
@@ -14,8 +14,8 @@ from .llm import chat, chat_stream, is_available
 
 
 # Cache configuration — use project-local directory so it persists in Docker
-_PROJECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".fugax")
-CACHE_DIR = os.environ.get("FUGAX_CACHE_DIR", os.path.join(_PROJECT_DIR, "translations"))
+_PROJECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".elixis")
+CACHE_DIR = os.environ.get("ELIXIS_CACHE_DIR", os.path.join(_PROJECT_DIR, "translations"))
 CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
 CACHE_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB max total cache size
 MAX_TRANSLATE_TEXT_LENGTH = 50000  # 50K chars max for translation input

@@ -1,8 +1,8 @@
-# Fugax
+# Elixis
 
 > AI-powered identity synthesis companion for OpenClaw and Soul Spec.
 
-Fugax transforms brain dump text into structured SOUL.md identity documents for AI agents. It is a companion tool for the OpenClaw ecosystem that provides a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
+Elixis transforms brain dump text into structured SOUL.md identity documents for AI agents. It is a companion tool for the OpenClaw ecosystem that provides a 3-stage pipeline: entity extraction, archetypal pattern analysis, and LLM-assisted synthesis. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
 
 ## Use cases
 
@@ -22,19 +22,19 @@ Fugax transforms brain dump text into structured SOUL.md identity documents for 
 
 ## Key paths
 
-- [README.md](https://github.com/KyaniteLabs/Fugax/blob/main/README.md): Public-facing overview with FAQ and compatibility table
-- [fugax/](https://github.com/KyaniteLabs/Fugax/tree/main/fugax/): Core Python package
-- [tests/](https://github.com/KyaniteLabs/Fugax/tree/main/tests/): Verification suite (80 tests, unittest)
-- [app.py](https://github.com/KyaniteLabs/Fugax/blob/main/app.py): HTTP server entry point (stdlib, port 3110)
-- [Dockerfile](https://github.com/KyaniteLabs/Fugax/blob/main/Dockerfile): Multi-stage production build
-- [traefik/](https://github.com/KyaniteLabs/Fugax/tree/main/traefik/): Reverse-proxy deployment examples
+- [README.md](https://github.com/KyaniteLabs/Elixis/blob/main/README.md): Public-facing overview with FAQ and compatibility table
+- [elixis/](https://github.com/KyaniteLabs/Elixis/tree/main/elixis/): Core Python package
+- [tests/](https://github.com/KyaniteLabs/Elixis/tree/main/tests/): Verification suite (80 tests, unittest)
+- [app.py](https://github.com/KyaniteLabs/Elixis/blob/main/app.py): HTTP server entry point (stdlib, port 3110)
+- [Dockerfile](https://github.com/KyaniteLabs/Elixis/blob/main/Dockerfile): Multi-stage production build
+- [traefik/](https://github.com/KyaniteLabs/Elixis/tree/main/traefik/): Reverse-proxy deployment examples
 
 ## Optional
 
-- [docker-compose.yml](https://github.com/KyaniteLabs/Fugax/blob/main/docker-compose.yml): Production Docker Compose config
-- [.env.example](https://github.com/KyaniteLabs/Fugax/blob/main/.env.example): Environment variable template
-- [.github/workflows/ci.yml](https://github.com/KyaniteLabs/Fugax/blob/main/.github/workflows/ci.yml): CI/CD pipeline with Blacksmith runners
-- [fugax/templates/landing.html](https://github.com/KyaniteLabs/Fugax/blob/main/fugax/templates/landing.html): Interactive UI with SSE streaming demo
+- [docker-compose.yml](https://github.com/KyaniteLabs/Elixis/blob/main/docker-compose.yml): Production Docker Compose config
+- [.env.example](https://github.com/KyaniteLabs/Elixis/blob/main/.env.example): Environment variable template
+- [.github/workflows/ci.yml](https://github.com/KyaniteLabs/Elixis/blob/main/.github/workflows/ci.yml): CI/CD pipeline with Blacksmith runners
+- [elixis/templates/landing.html](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/templates/landing.html): Interactive UI with SSE streaming demo
 
 ## Keywords
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fugax deployment script
+# Elixis deployment script
 # Usage: ./scripts/deploy.sh [environment]
 
 set -e
@@ -8,7 +8,7 @@ ENVIRONMENT=${1:-production}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "🚀 Deploying Fugax to $ENVIRONMENT..."
+echo "🚀 Deploying Elixis to $ENVIRONMENT..."
 
 # Colors
 RED='\033[0;31m'
@@ -49,11 +49,11 @@ sleep 5
 # Check if services are healthy
 if docker-compose -f docker-compose.traefik.yml ps | grep -q "healthy"; then
     echo -e "${GREEN}✓ Deployment successful!${NC}"
-    echo -e "${GREEN}✓ Fugax available at: https://fugax.$TRAEFIK_DOMAIN${NC}"
+    echo -e "${GREEN}✓ Elixis available at: https://elixis.$TRAEFIK_DOMAIN${NC}"
 else
     echo -e "${RED}✗ Health check failed${NC}"
     echo "Checking logs..."
-    docker-compose -f docker-compose.traefik.yml logs --tail=50 fugax
+    docker-compose -f docker-compose.traefik.yml logs --tail=50 elixis
     exit 1
 fi
 

@@ -1,6 +1,6 @@
-"""Backup and restore functionality for Fugax data.
+"""Backup and restore functionality for Elixis data.
 
-Manages backup creation, rotation, and restoration of .fugax/ data.
+Manages backup creation, rotation, and restoration of .elixis/ data.
 """
 
 import re
@@ -30,11 +30,11 @@ def get_backup_dir() -> Path:
 def get_data_dir() -> Path:
     """Get data directory path."""
     base_dir = Path(__file__).parent.parent
-    return base_dir / ".fugax"
+    return base_dir / ".elixis"
 
 
 def create_backup() -> Dict:
-    """Create a new backup of all Fugax data.
+    """Create a new backup of all Elixis data.
 
     Returns:
         Backup metadata dictionary
@@ -46,7 +46,7 @@ def create_backup() -> Dict:
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    backup_name = f"fugax_backup_{timestamp}"
+    backup_name = f"elixis_backup_{timestamp}"
     backup_path = backup_dir / f"{backup_name}.tar.gz"
 
     backup_info = {
@@ -102,7 +102,7 @@ def list_backups() -> List[Dict]:
     if not backup_dir.exists():
         return backups
 
-    for backup_file in sorted(backup_dir.glob("fugax_backup_*.tar.gz"), reverse=True):
+    for backup_file in sorted(backup_dir.glob("elixis_backup_*.tar.gz"), reverse=True):
         try:
             stat = backup_file.stat()
             backups.append({
@@ -216,7 +216,7 @@ def cleanup_old_backups() -> Dict:
     if not backup_dir.exists():
         return result
 
-    for backup_file in backup_dir.glob("fugax_backup_*.tar.gz"):
+    for backup_file in backup_dir.glob("elixis_backup_*.tar.gz"):
         try:
             stat = backup_file.stat()
             mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)

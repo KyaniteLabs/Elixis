@@ -1,12 +1,12 @@
 version: "3.8"
 
 services:
-  fugax:
+  elixis:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: fugax
+    container_name: elixis
     restart: unless-stopped
 
     # Environment configuration
@@ -28,7 +28,7 @@ services:
 
     # Persistent volume for data
     volumes:
-      - fugax-data:/app/.fugax
+      - elixis-data:/app/.elixis
 
     # Resource limits
     deploy:
@@ -42,21 +42,21 @@ services:
 
     # Network
     networks:
-      - fugax-net
+      - elixis-net
 
     # Labels for Traefik routing (Tailscale-only)
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fugax.rule=Host(`fugax.${TRAEFIK_DOMAIN:-tailnet}`)"
-      - "traefik.http.routers.fugax.entrypoints=websecure"
-      - "traefik.http.routers.fugax.tls=true"
-      - "traefik.http.routers.fugax.tls.certresolver=tailscale"
-      - "traefik.http.routers.fugax.middlewares=tailscale-only@file"
-      - "traefik.http.services.fugax.loadbalancer.server.port=3110"
+      - "traefik.http.routers.elixis.rule=Host(`elixis.${TRAEFIK_DOMAIN:-tailnet}`)"
+      - "traefik.http.routers.elixis.entrypoints=websecure"
+      - "traefik.http.routers.elixis.tls=true"
+      - "traefik.http.routers.elixis.tls.certresolver=tailscale"
+      - "traefik.http.routers.elixis.middlewares=tailscale-only@file"
+      - "traefik.http.services.elixis.loadbalancer.server.port=3110"
 
       # Health check
-      - "traefik.http.services.fugax.loadbalancer.healthcheck.path=/api/health"
-      - "traefik.http.services.fugax.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.elixis.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.elixis.loadbalancer.healthcheck.interval=10s"
 
     logging:
       driver: "json-file"
@@ -67,19 +67,19 @@ services:
   # Optional: Redis for caching (if needed later)
   # redis:
   #   image: redis:7-alpine
-  #   container_name: fugax-redis
+  #   container_name: elixis-redis
   #   restart: unless-stopped
   #   volumes:
   #     - redis-data:/data
   #   networks:
-  #     - fugax-net
+  #     - elixis-net
 
 volumes:
-  fugax-data:
+  elixis-data:
     driver: local
   # redis-data:
   #   driver: local
 
 networks:
-  fugax-net:
+  elixis-net:
     driver: bridge

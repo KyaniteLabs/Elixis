@@ -1,8 +1,8 @@
-"""Tests for fugax.resolution — name normalization, similarity, dedup, entity resolution."""
+"""Tests for elixis.resolution — name normalization, similarity, dedup, entity resolution."""
 
 
-from fugax.bead import Bead
-from fugax.resolution import (
+from elixis.bead import Bead
+from elixis.resolution import (
     normalize_name,
     name_similarity,
     _levenshtein,

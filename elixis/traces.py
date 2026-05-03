@@ -1,10 +1,10 @@
-"""Trace and diagnostics system for Fugax.
+"""Trace and diagnostics system for Elixis.
 
 Saves LLM traces, pipeline runs, and request logs to disk.
-All data goes to the .fugax/ directory next to app.py.
+All data goes to the .elixis/ directory next to app.py.
 
 Structure:
-  .fugax/
+  .elixis/
     traces/       — One JSON per LLM call
     runs/         — One JSON per pipeline run (brain dump → SOUL.md)
     requests.log  — HTTP request log (JSONL)
@@ -16,7 +16,7 @@ import tempfile
 import threading
 from datetime import datetime, timezone
 
-_BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".fugax")
+_BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".elixis")
 _TRACES_DIR = os.path.join(_BASE_DIR, "traces")
 _RUNS_DIR = os.path.join(_BASE_DIR, "runs")
 _REQUESTS_LOG = os.path.join(_BASE_DIR, "requests.log")

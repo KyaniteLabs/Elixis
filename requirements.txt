@@ -1,2 +1,2 @@
-# Fugax - The Glass Bead Game for AI Personas
+# Elixis - The Glass Bead Game for AI Personas
 # No external dependencies - uses Python stdlib only (http.server, re, math, json)

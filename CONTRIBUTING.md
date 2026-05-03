@@ -1,17 +1,17 @@
-# Contributing to Fugax
+# Contributing to Elixis
 
-Thanks for your interest! Fugax is a companion tool for OpenClaw that transforms brain dump text into structured SOUL.md identity documents.
+Thanks for your interest! Elixis is a companion tool for OpenClaw that transforms brain dump text into structured SOUL.md identity documents.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/KyaniteLabs/Fugax.git
-cd Fugax
+git clone https://github.com/KyaniteLabs/Elixis.git
+cd Elixis
 python -m pytest  # or: python -m unittest discover -s tests
 python app.py     # starts on http://localhost:3110
 ```
 
-Fugax uses **zero external Python dependencies** — everything runs on the stdlib. You'll need a running Ollama instance (or OpenAI-compatible API) for the LLM pipeline.
+Elixis uses **zero external Python dependencies** — everything runs on the stdlib. You'll need a running Ollama instance (or OpenAI-compatible API) for the LLM pipeline.
 
 ## Development Setup
 
@@ -24,13 +24,13 @@ Fugax uses **zero external Python dependencies** — everything runs on the stdl
 3-stage pipeline: **Entity Extraction** → **Pattern Graph Engine** → **SOUL.md Synthesis**
 
 - `app.py` — HTTP server, routing, SSE streaming
-- `fugax/entities.py` — Stage 1: LLM entity extraction
-- `fugax/patterns.py` — Stage 2: Archetypal pattern probability graph
-- `fugax/synthesis.py` — Stage 3: SOUL.md document generation
-- `fugax/llm.py` — LLM client (Ollama / OpenAI-compatible)
-- `fugax/research.py` — Wikipedia enrichment with ThreadPoolExecutor
-- `fugax/translate.py` — On-the-fly translation with streaming and caching
-- `fugax/mcp_server.py` — MCP server for AI agent native access
+- `elixis/entities.py` — Stage 1: LLM entity extraction
+- `elixis/patterns.py` — Stage 2: Archetypal pattern probability graph
+- `elixis/synthesis.py` — Stage 3: SOUL.md document generation
+- `elixis/llm.py` — LLM client (Ollama / OpenAI-compatible)
+- `elixis/research.py` — Wikipedia enrichment with ThreadPoolExecutor
+- `elixis/translate.py` — On-the-fly translation with streaming and caching
+- `elixis/mcp_server.py` — MCP server for AI agent native access
 
 ## Code Style
 

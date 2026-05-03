@@ -1,1 +1,1 @@
-"""Fugax test suite."""
+"""Elixis test suite."""

@@ -1,7 +1,7 @@
-"""Tests for fugax.thread — Thread class and RELATIONSHIPS constant."""
+"""Tests for elixis.thread — Thread class and RELATIONSHIPS constant."""
 
 
-from fugax.thread import RELATIONSHIPS, Thread
+from elixis.thread import RELATIONSHIPS, Thread
 
 
 # ---------------------------------------------------------------------------

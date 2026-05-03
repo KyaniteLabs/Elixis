@@ -1,6 +1,6 @@
 openapi: "3.1.0"
 info:
-  title: Fugax API
+  title: Elixis API
   description: |
     AI-powered identity synthesis companion for OpenClaw and Soul Spec.
     Transforms brain dump text into structured SOUL.md identity documents
@@ -11,7 +11,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
   contact:
-    url: https://github.com/KyaniteLabs/Fugax
+    url: https://github.com/KyaniteLabs/Elixis
 
 servers:
   - url: http://localhost:3110

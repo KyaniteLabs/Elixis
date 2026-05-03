@@ -6,9 +6,9 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fugax.entities import extract_entities
-from fugax.patterns import build_pattern_graph
-from fugax.synthesis import synthesize_soulmd
+from elixis.entities import extract_entities
+from elixis.patterns import build_pattern_graph
+from elixis.synthesis import synthesize_soulmd
 
 
 class TestFullPipeline(unittest.TestCase):

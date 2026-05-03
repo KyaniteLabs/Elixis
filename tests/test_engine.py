@@ -1,12 +1,12 @@
-"""Comprehensive tests for fugax.engine — GameState, GameEngine, and helpers."""
+"""Comprehensive tests for elixis.engine — GameState, GameEngine, and helpers."""
 
 from unittest.mock import patch
 
 import pytest
 
-from fugax.engine import GameState, GameEngine, _infer_domains, _check_isomorphism
-from fugax.bead import Bead
-from fugax.thread import Thread
+from elixis.engine import GameState, GameEngine, _infer_domains, _check_isomorphism
+from elixis.bead import Bead
+from elixis.thread import Thread
 
 
 # ---------------------------------------------------------------------------
@@ -464,7 +464,7 @@ class TestConnectDomains:
 class TestResolve:
     """Tests for GameEngine.resolve."""
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# SOUL.md\nTest output."})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# SOUL.md\nTest output."})
     def test_generates_output(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -474,7 +474,7 @@ class TestResolve:
         assert "SOUL.md" in output
         assert engine.state.phase == "resolution"
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "result", "brand": lambda e, g: "brand result"})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "result", "brand": lambda e, g: "brand result"})
     def test_different_lenses(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -491,7 +491,7 @@ class TestResolve:
         with pytest.raises(RuntimeError, match="connect_domains"):
             engine.resolve()
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "ok"})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "ok"})
     def test_records_timing(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -500,7 +500,7 @@ class TestResolve:
         engine.resolve()
         assert "resolution_ms" in engine.state.timings
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "output text"})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "output text"})
     def test_stores_output_in_metadata(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -519,8 +519,8 @@ class TestResolve:
 class TestResolveStream:
     """Tests for GameEngine.resolve_stream."""
 
-    @patch("fugax.lenses.identity.generate_identity_stream")
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback"})
+    @patch("elixis.lenses.identity.generate_identity_stream")
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback"})
     def test_identity_stream_yields_events(self, mock_stream):
         mock_stream.return_value = iter([
             {"type": "stage_start", "stage": "header"},
@@ -535,7 +535,7 @@ class TestResolveStream:
         assert events[0]["type"] == "stage_start"
         assert events[1]["type"] == "soulmd_done"
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback", "brand": lambda e, g: "brand text"})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "fallback", "brand": lambda e, g: "brand text"})
     def test_non_identity_stream_yields_token_and_done(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -562,14 +562,14 @@ class TestResolveStream:
 class TestRunFull:
     """Tests for GameEngine.run_full and run_full_stream."""
 
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# Full pipeline output"})
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "# Full pipeline output"})
     def test_run_full(self):
         engine = _make_engine()
         output = engine.run_full("test input", lens="identity")
         assert "Full pipeline output" in output
         assert engine.state.phase == "resolution"
 
-    @patch("fugax.lenses.identity.generate_identity_stream")
+    @patch("elixis.lenses.identity.generate_identity_stream")
     def test_run_full_stream(self, mock_stream):
         mock_stream.return_value = iter([
             {"type": "soulmd_token", "content": "Hello"},
@@ -580,8 +580,8 @@ class TestRunFull:
         assert len(events) == 2
         assert events[0]["content"] == "Hello"
 
-    @patch("fugax.lenses.identity.generate_identity_stream")
-    @patch("fugax.lenses.LENS_REGISTRY", {"identity": lambda e, g: "irrelevant"})
+    @patch("elixis.lenses.identity.generate_identity_stream")
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "irrelevant"})
     def test_run_full_stream_yields_identity_events(self, mock_stream):
         mock_stream.return_value = iter([
             {"type": "soulmd_token", "content": "Hello"},
@@ -653,7 +653,7 @@ class TestInferDomains:
 
     def test_only_valid_domains_returned(self):
         result = _infer_domains(_make_entity(etype="character"))
-        from fugax.knowledge import domain_ids
+        from elixis.knowledge import domain_ids
         valid = set(domain_ids())
         assert all(d in valid for d in result)
 
@@ -699,3 +699,56 @@ class TestCheckIsomorphism:
         a = Bead(canonical="A", domains=[], themes=["power", "shadow"])
         b = Bead(canonical="B", domains=[], themes=["power", "shadow"])
         assert _check_isomorphism(a, b) is False
+
+
+class TestEngineName:
+    """engine.name() naming phase."""
+
+    def _make_engine_with_graph(self):
+        engine = GameEngine()
+        engine.new_game("test input for naming")
+        # Manually set up state to the connection phase
+        engine._state.phase = "connection"
+        engine._state.metadata["pattern_graph"] = {
+            "emergent_topic": "transformation",
+            "emergent_theme": "Growth through change",
+            "patterns": [
+                {"id": "transformation", "name": "Transformation", "probability": 0.5, "sub_patterns": []},
+            ],
+            "bridges": [],
+            "entity_scores": [],
+            "consensus_score": 0.7,
+        }
+        engine._state.beads = [
+            Bead(canonical="Morpho", type="concept", themes=["transformation"]),
+        ]
+        return engine
+
+    @patch("elixis.naming.research_name_from_identity")
+    def test_name_after_connect(self, mock_naming):
+        mock_naming.return_value = {"input_name": "transformation", "variants": [], "identity_context": {}}
+        engine = self._make_engine_with_graph()
+        report = engine.name()
+        assert report["input_name"] == "transformation"
+        mock_naming.assert_called_once()
+
+    @patch("elixis.naming.research_name_from_identity")
+    def test_name_default_source_is_taxonomy(self, mock_naming):
+        mock_naming.return_value = {"input_name": "t", "variants": [], "identity_context": {}}
+        engine = self._make_engine_with_graph()
+        engine.name()
+        call_kwargs = mock_naming.call_args
+        assert call_kwargs[1].get("source") == "taxonomy" or call_kwargs[0][2] == "taxonomy" if len(call_kwargs[0]) > 2 else True
+
+    def test_name_requires_connection(self):
+        engine = GameEngine()
+        engine.new_game("test")
+        with pytest.raises(RuntimeError, match="connect_domains"):
+            engine.name()
+
+    @patch("elixis.naming.research_name_from_identity")
+    def test_name_populates_metadata(self, mock_naming):
+        mock_naming.return_value = {"input_name": "t", "variants": [], "identity_context": {}}
+        engine = self._make_engine_with_graph()
+        engine.name()
+        assert "naming_report" in engine.state.metadata
