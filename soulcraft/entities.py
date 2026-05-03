@@ -328,12 +328,29 @@ def _parse_line_entity(line):
     from_match = re.match(r'^(.+?)\s+(?:from|via|in)\s+(.+)$', line, re.IGNORECASE)
     slash_match = re.match(r'^(.+?)\s*/\s*(.+)$', line)
 
+    description = ""
     if paren_match:
         name, source = paren_match.group(1).strip(), paren_match.group(2).strip()
     elif from_match:
         name, source = from_match.group(1).strip(), from_match.group(2).strip()
     elif dash_match:
-        name, source = dash_match.group(1).strip(), dash_match.group(2).strip()
+        left = dash_match.group(1).strip()
+        right = dash_match.group(2).strip()
+        # Extract "by Author" from left side before checking description
+        by_match = re.match(r'^(.+?)\s+by\s+(.+)$', left, re.IGNORECASE)
+        if by_match:
+            left = by_match.group(1).strip()
+            source = by_match.group(2).strip()
+        # Em/en-dash followed by a lowercase description, not a source
+        if right and right[0].islower() and len(right) > 10:
+            name = left
+            description = right
+            # source already set from by_match, or stays empty
+        else:
+            if not source:
+                name, source = left, right
+            else:
+                name = left
     elif slash_match:
         name, source = slash_match.group(1).strip(), slash_match.group(2).strip()
     elif comma_match and len(comma_match.group(1).strip().split()) <= 4:
@@ -348,7 +365,7 @@ def _parse_line_entity(line):
         "canonical": name,
         "source": source,
         "type": _infer_type(name, source),
-        "description": "",
+        "description": description,
         "themes": [],
         "traits": [],
         "confidence": 0.7,
@@ -364,7 +381,7 @@ def _heuristic_extract(text):
     lines = re.split(r'[\n\r]+', text)
     expanded = []
     for line in lines:
-        # Split on ". " period-space if the line is long and has multiple such breaks
+        # Always split on ". " period-space-capital
         parts = re.split(r'(?<=\.)\s+(?=[A-Z])', line)
         if len(parts) > 1:
             expanded.extend(parts)
