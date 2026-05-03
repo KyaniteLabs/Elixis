@@ -1,4 +1,4 @@
-# Fugax - AI Persona Synthesis Pipeline
+# Elixis - Identity Synthesis Engine
 # Multi-stage build for production efficiency
 
 # --- Build stage ---
@@ -21,23 +21,23 @@ FROM python:3.12-slim AS production
 WORKDIR /app
 
 # Create non-root user for security
-RUN groupadd -r fugax && useradd -r -g fugax fugax
+RUN groupadd -r elixis && useradd -r -g elixis elixis
 
 # Copy installed packages from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 
 # Copy application code
-COPY fugax/ ./fugax/
+COPY elixis/ ./elixis/
 COPY app.py .
 COPY requirements.txt .
 
 # Create data directory and set permissions
-RUN mkdir -p /app/.fugax && \
-    chown -R fugax:fugax /app
+RUN mkdir -p /app/.elixis && \
+    chown -R elixis:elixis /app
 
 # Switch to non-root user
-USER fugax
+USER elixis
 
 # Expose the application port
 EXPOSE 3110
