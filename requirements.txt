@@ -1,2 +1,2 @@
-# Elixis - The Glass Bead Game for AI Personas
+# Elixis - local-first AI pattern synthesis engine
 # No external dependencies - uses Python stdlib only (http.server, re, math, json)

@@ -133,7 +133,7 @@ python -m unittest discover tests/ -v
 ## FAQ
 
 **What is Elixis?**
-Elixis is a local-first AI pattern synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand voice, design systems, naming research, and SOUL.md output.
+Elixis is a local-first AI pattern synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand voice, design systems, naming research, and lens-specific outputs.
 
 **How do I create an output?**
 Start the server with `python app.py`, open `http://localhost:3110`, enter references and influences, choose a lens, and run the synthesis. The identity lens generates SOUL.md; the brand and design lenses generate different documents from the same graph.

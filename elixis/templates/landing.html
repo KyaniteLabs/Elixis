@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Elixis | AI Identity, Brand Voice &amp; Design System Generator</title>
-<meta name="description" content="Elixis is a local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md output.">
+<meta name="description" content="Elixis is a local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
 <meta name="keywords" content="AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, Soul Spec, pattern graph, local-first LLM tool">
@@ -17,16 +17,16 @@
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Elixis | AI Identity, Brand Voice &amp; Design System Generator">
-<meta name="twitter:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
+<meta name="twitter:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and lens-specific outputs.">
 <meta name="twitter:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
-<meta name="theme-color" content="#0d0c11">
+<meta name="theme-color" content="#06060e">
 <link rel="canonical" href="https://github.com/KyaniteLabs/Elixis">
 <link rel="alternate" type="text/plain" href="/llms.txt" title="Elixis summary for AI assistants">
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Elixis | AI Identity, Brand Voice &amp; Design System Generator">
-<meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
+<meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and lens-specific outputs.">
 <meta property="og:url" content="https://github.com/KyaniteLabs/Elixis">
 <meta property="og:site_name" content="Elixis">
 <meta property="og:locale" content="en_US">
@@ -47,7 +47,7 @@
         "design system generator",
         "SOUL.md generator"
       ],
-      "description": "Local-first AI pattern synthesis engine that turns raw references into pattern graphs, then resolves them into identity, brand voice, design systems, naming research, and SOUL.md output.",
+      "description": "Local-first AI pattern synthesis engine that turns raw references into pattern graphs, then resolves them into identity, brand voice, design systems, naming research, and lens-specific outputs.",
       "url": "https://github.com/KyaniteLabs/Elixis",
       "mainEntityOfPage": "https://github.com/KyaniteLabs/Elixis",
       "applicationCategory": "DeveloperApplication",
@@ -96,7 +96,7 @@
           "name": "What is Elixis?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Elixis is a local-first AI pattern synthesis engine that turns raw references into a pattern graph for identity, brand voice, design systems, naming research, and SOUL.md output."
+            "text": "Elixis is a local-first AI pattern synthesis engine that turns raw references into a pattern graph for identity, brand voice, design systems, naming research, and lens-specific outputs."
           }
         },
         {
@@ -126,63 +126,77 @@
    DESIGN TOKENS — All visual constants as CSS custom properties
    ════════════════════════════════════════════════════════════════════════════ */
 :root {
+  /* Kyanite Labs brand tokens */
+  --kyanite-900: #0c1e3a;
+  --kyanite-800: #153264;
+  --kyanite-700: #1e4690;
+  --kyanite-600: #2a5cb8;
+  --kyanite-500: #4869A8;
+  --kyanite-400: #6b8fd4;
+  --kyanite-300: #94b3e8;
+  --kyanite-200: #c2d5f4;
+  --brand-crystal: #38bdf8;
+  --brand-amber: #f59e0b;
+  --brand-jade: #34d399;
+  --brand-rose: #fb7185;
+
   /* Background */
-  --bg-primary: #0d0c11;
-  --bg-surface: #111019;
-  --bg-surface-elevated: #17161f;
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+  --bg-primary: #06060e;
+  --bg-surface: #0c0c1e;
+  --bg-surface-elevated: #101026;
+  --bg-glass: rgba(148, 179, 232, 0.045);
+  --bg-glass-hover: rgba(148, 179, 232, 0.08);
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.1);
-  --border-active: rgba(255, 255, 255, 0.18);
+  --border-subtle: #1a1a3a;
+  --border-default: #24244a;
+  --border-active: #2e2e5a;
 
   /* Text */
-  --text-primary: #e8e6e3;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-dim: #4b5563;
+  --text-primary: #eae6de;
+  --text-secondary: #b0aabc;
+  --text-muted: #686078;
+  --text-dim: #4f485c;
 
   /* Accent */
-  --accent: #c9956b;
-  --accent-dim: rgba(201, 149, 107, 0.12);
-  --accent-glow: rgba(201, 149, 107, 0.25);
+  --accent: var(--brand-crystal);
+  --accent-dim: rgba(56, 189, 248, 0.12);
+  --accent-glow: rgba(56, 189, 248, 0.28);
 
   /* Sentiment */
-  --sentiment-positive: #4ade80;
-  --sentiment-negative: #f87171;
-  --sentiment-neutral: #94a3b8;
+  --sentiment-positive: var(--brand-jade);
+  --sentiment-negative: var(--brand-rose);
+  --sentiment-neutral: var(--kyanite-300);
 
   /* Pattern Colors */
-  --pattern-0: #ff6b00;
-  --pattern-1: #a855f7;
-  --pattern-2: #fbbf24;
-  --pattern-3: #4ecdc4;
-  --pattern-4: #f43f5e;
-  --pattern-5: #38bdf8;
-  --pattern-6: #34d399;
-  --pattern-7: #ef4444;
-  --pattern-8: #22d3ee;
-  --pattern-9: #e879f9;
-  --pattern-10: #6b7280;
-  --pattern-11: #f97316;
+  --pattern-0: var(--kyanite-400);
+  --pattern-1: var(--brand-crystal);
+  --pattern-2: var(--brand-amber);
+  --pattern-3: var(--kyanite-300);
+  --pattern-4: var(--brand-jade);
+  --pattern-5: var(--kyanite-600);
+  --pattern-6: var(--brand-rose);
+  --pattern-7: var(--kyanite-200);
+  --pattern-8: var(--kyanite-500);
+  --pattern-9: #fbbf24;
+  --pattern-10: #686078;
+  --pattern-11: var(--kyanite-700);
 
   /* Type Colors */
-  --type-character: #6ee7b7;
-  --type-movie: #4ecdc4;
-  --type-book: #fbbf24;
-  --type-tv_show: #a855f7;
-  --type-historical_figure: #38bdf8;
+  --type-character: var(--brand-jade);
+  --type-movie: var(--brand-crystal);
+  --type-book: var(--brand-amber);
+  --type-tv_show: var(--kyanite-400);
+  --type-historical_figure: var(--kyanite-300);
   --type-music: #22d3ee;
-  --type-person: #f97316;
-  --type-place: #84cc16;
-  --type-concept: #eab308;
-  --type-work: #4ecdc4;
-  --type-event: #c084fc;
-  --type-emotion: #f43f5e;
-  --type-skill: #38bdf8;
-  --type-default: #6b7280;
+  --type-person: #fbbf24;
+  --type-place: var(--brand-jade);
+  --type-concept: var(--brand-amber);
+  --type-work: var(--brand-crystal);
+  --type-event: var(--kyanite-200);
+  --type-emotion: var(--brand-rose);
+  --type-skill: var(--kyanite-300);
+  --type-default: #686078;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -231,7 +245,7 @@
   --transition-slow: 400ms ease;
 
   /* Shadow */
-  --shadow-glow: 0 0 20px rgba(201, 149, 107, 0.15);
+  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -252,7 +266,7 @@ html, body {
 
 body {
   background: var(--bg-primary);
-  background-image: radial-gradient(ellipse at 25% 50%, rgba(201, 149, 107, 0.02) 0%, transparent 60%);
+  background-image: radial-gradient(ellipse at 25% 50%, rgba(56, 189, 248, 0.03) 0%, transparent 60%);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
@@ -316,7 +330,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-lg);
-  background: rgba(13, 12, 17, 0.85);
+  background: rgba(6, 6, 14, 0.85);
   backdrop-filter: blur(var(--blur-heavy));
   border-bottom: 1px solid var(--border-subtle);
   z-index: 100;
@@ -375,6 +389,7 @@ body {
 }
 
 .sidebar-section {
+  flex-shrink: 0;
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -414,8 +429,9 @@ body {
   border-radius: var(--radius-md);
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.13), transparent 34%),
-    #050505;
+    radial-gradient(circle at 50% 46%, rgba(56, 189, 248, 0.18), transparent 34%),
+    radial-gradient(circle at 64% 32%, rgba(148, 179, 232, 0.13), transparent 38%),
+    #06060e;
 }
 
 .about-loom canvas {
@@ -428,7 +444,7 @@ body {
   position: absolute;
   left: var(--space-base);
   bottom: var(--space-sm);
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--kyanite-300);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   letter-spacing: 1.3px;
@@ -453,6 +469,35 @@ body {
   font-size: var(--font-size-sm);
   line-height: 1.55;
   margin-bottom: var(--space-base);
+}
+
+.about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-base);
+}
+
+.about-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--kyanite-200);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.8px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.about-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 
 .about-list {
@@ -696,7 +741,7 @@ body {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(13, 12, 17, 0.6);
+  background: rgba(6, 6, 14, 0.6);
   backdrop-filter: blur(var(--blur-glass));
   flex-shrink: 0;
   padding: 0 var(--space-base);
@@ -1182,6 +1227,7 @@ body {
    FOOTER (inside sidebar)
    ════════════════════════════════════════════════════════════════════════════ */
 .sidebar-footer {
+  flex-shrink: 0;
   margin-top: auto;
   padding: var(--space-base) var(--space-lg);
   border-top: 1px solid var(--border-subtle);
@@ -1202,23 +1248,33 @@ body {
    RESPONSIVE
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
+  html,
+  body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .app-shell {
+    flex-direction: column;
+    min-height: 100dvh;
+    height: auto;
+  }
+
   .sidebar {
     position: relative;
     top: 0;
     width: 100%;
-    max-height: 45vh;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
+    overflow: visible;
   }
 
   .main-content {
     margin-left: 0;
     margin-top: 0;
-    height: 55vh;
-  }
-
-  .app-shell {
-    flex-direction: column;
+    min-height: 55vh;
+    height: auto;
   }
 
   .bead-grid {
@@ -1315,6 +1371,10 @@ Fleabag"
       </div>
       <h2 class="about-title" id="about-title">AI identity, brand voice, design system, and naming generator</h2>
       <p class="about-copy">Elixis is a local-first pattern synthesis engine from Kyanite Labs. It turns raw references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph.</p>
+      <div class="about-links" aria-label="Elixis public links">
+        <a class="about-link" href="https://kyanitelabs.github.io/Elixis/" target="_blank" rel="noopener">Public landing</a>
+        <a class="about-link" href="https://github.com/KyaniteLabs/Elixis" target="_blank" rel="noopener">Repository</a>
+      </div>
       <p class="about-copy">SOUL.md identity files are one compatibility lens. The same graph also powers brand voice guidance, design-system direction, naming research, run traces, and rollback-friendly backups.</p>
       <ul class="about-list" aria-label="Elixis output surfaces">
         <li>Identity and SOUL.md documents for OpenClaw, Soul Spec, and compatible agents</li>
@@ -1993,6 +2053,7 @@ function initAboutLoom() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const colors = ['#eae6de', '#c2d5f4', '#94b3e8', '#38bdf8', '#f59e0b'];
   const nodes = Array.from({ length: 96 }, (_, index) => ({
     u: (index / 96) * Math.PI * 2 * 5,
     lane: index % 6,
@@ -2036,7 +2097,7 @@ function initAboutLoom() {
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - 14, b.x, b.y);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.strokeStyle = i % 10 === 0 ? 'rgba(56, 189, 248, 0.28)' : 'rgba(148, 179, 232, 0.15)';
       ctx.lineWidth = 0.7;
       ctx.stroke();
     }
@@ -2044,7 +2105,7 @@ function initAboutLoom() {
     nodes.forEach((node, index) => {
       ctx.beginPath();
       ctx.arc(node.x, node.y, (index % 5 === 0 ? 1.7 : 1.15) * node.depth, 0, Math.PI * 2);
-      ctx.fillStyle = index % 7 === 0 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.68)';
+      ctx.fillStyle = index % 7 === 0 ? colors[index % colors.length] : 'rgba(194, 213, 244, 0.72)';
       ctx.fill();
     });
     ctx.globalCompositeOperation = 'source-over';

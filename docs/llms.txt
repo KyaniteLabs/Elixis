@@ -1,6 +1,6 @@
 # Elixis
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
 
 Elixis turns raw reference material into a pattern graph, then resolves that graph through output lenses. SOUL.md is one compatibility lens, not the whole scope. Use Elixis when you need to transform messy references, influences, aesthetics, values, constraints, people, works, or places into coherent identity, brand, design, or naming artifacts.
 

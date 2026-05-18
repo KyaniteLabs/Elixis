@@ -1,6 +1,6 @@
 # Elixis — Full Documentation for AI Assistants
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
 
 ## Overview
 
