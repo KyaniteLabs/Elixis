@@ -91,7 +91,7 @@ def _request_leave():
 
 
 def _get_brain_dump(data):
-    """Return the primary synthesis text from current or legacy payload keys."""
+    """Return the primary synthesis text from accepted payload keys."""
     if not isinstance(data, dict):
         return ""
     if data.get("brain_dump") is not None:

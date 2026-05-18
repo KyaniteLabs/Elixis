@@ -30,6 +30,9 @@
 <meta property="og:url" content="https://github.com/KyaniteLabs/Elixis">
 <meta property="og:site_name" content="Elixis">
 <meta property="og:locale" content="en_US">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- JSON-LD Structured Data -->
 <script type="application/ld+json">
@@ -155,8 +158,8 @@
   /* Text */
   --text-primary: #eae6de;
   --text-secondary: #b0aabc;
-  --text-muted: #686078;
-  --text-dim: #4f485c;
+  --text-muted: #8b8499;
+  --text-dim: #706982;
 
   /* Accent */
   --accent: var(--brand-crystal);
@@ -179,7 +182,7 @@
   --pattern-7: var(--kyanite-200);
   --pattern-8: var(--kyanite-500);
   --pattern-9: #fbbf24;
-  --pattern-10: #686078;
+  --pattern-10: var(--text-dim);
   --pattern-11: var(--kyanite-700);
 
   /* Type Colors */
@@ -196,7 +199,7 @@
   --type-event: var(--kyanite-200);
   --type-emotion: var(--brand-rose);
   --type-skill: var(--kyanite-300);
-  --type-default: #686078;
+  --type-default: var(--text-dim);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -214,8 +217,8 @@
   --min-tap-target: 44px;
 
   /* Typography */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Consolas', monospace;
+  --font-sans: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Consolas', monospace;
   --font-size-xs: 0.625rem;
   --font-size-sm: 0.75rem;
   --font-size-base: 0.8125rem;
@@ -245,7 +248,7 @@
   --transition-slow: 400ms ease;
 
   /* Shadow */
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+  --shadow-lift: 0 10px 28px rgba(12, 30, 58, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -286,7 +289,7 @@ body {
   padding: var(--space-sm) var(--space-base);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  z-index: 9999;
+  z-index: 130;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   text-decoration: none;
   transition: top var(--transition-fast);
@@ -314,7 +317,8 @@ body {
    ════════════════════════════════════════════════════════════════════════════ */
 .app-shell {
   display: flex;
-  height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   width: 100vw;
   position: relative;
 }
@@ -337,6 +341,9 @@ body {
 }
 
 .header-brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   font-weight: 700;
@@ -356,6 +363,9 @@ body {
 }
 
 .header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--text-muted);
   text-decoration: none;
   font-size: var(--font-size-sm);
@@ -599,7 +609,7 @@ body {
 }
 
 .play-btn:hover:not(:disabled) {
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--shadow-lift);
   filter: brightness(1.1);
 }
 
@@ -614,18 +624,23 @@ body {
 
 .play-btn .spinner {
   display: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--bg-primary);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin var(--transition-slow) linear infinite;
+  width: 30px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background:
+    linear-gradient(90deg, transparent, rgba(6, 6, 14, 0.72), transparent),
+    rgba(6, 6, 14, 0.24);
+  background-size: 160% 100%;
+  animation: loading-sweep 900ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .play-btn.loading .spinner { display: block; }
 .play-btn.loading .btn-label { opacity: var(--opacity-muted); }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes loading-sweep {
+  from { background-position: 160% 0, 0 0; }
+  to { background-position: -160% 0, 0 0; }
+}
 
 /* Pipeline Status */
 .pipeline-status {
@@ -652,13 +667,13 @@ body {
 
 .pipeline-dot.active {
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
+  outline: 4px solid var(--accent-dim);
   animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
 .pipeline-dot.done {
   background: var(--sentiment-positive);
-  box-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+  outline: 3px solid rgba(52, 211, 153, 0.16);
 }
 
 @keyframes pulse-glow {
@@ -703,7 +718,7 @@ body {
   font-size: var(--font-size-xs);
   cursor: pointer;
   transition: all var(--transition-fast);
-  min-height: 28px;
+  min-height: 32px;
 }
 
 .example-btn:hover {
@@ -732,7 +747,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
   overflow: hidden;
 }
 
@@ -812,16 +827,22 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  min-height: min(520px, calc(100dvh - 180px));
   text-align: center;
-  color: var(--text-dim);
+  color: var(--text-muted);
   gap: var(--space-base);
   padding: var(--space-2xl);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(56, 189, 248, 0.07), transparent 36%),
+    linear-gradient(180deg, rgba(148, 179, 232, 0.035), rgba(148, 179, 232, 0.018));
 }
 
 .panel-placeholder-icon {
   font-size: var(--font-size-3xl);
-  opacity: 0.3;
+  color: var(--accent);
+  opacity: 0.46;
 }
 
 .panel-placeholder p {
@@ -1176,7 +1197,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  min-height: 28px;
+  min-height: 32px;
 }
 
 .output-btn:hover {
@@ -1195,7 +1216,7 @@ body {
   color: var(--text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: calc(100vh - 220px);
+  max-height: calc(100dvh - 220px);
   overflow-y: auto;
 }
 
@@ -1237,6 +1258,9 @@ body {
 }
 
 .sidebar-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   color: var(--text-muted);
   text-decoration: none;
   transition: color var(--transition-fast);
@@ -1413,7 +1437,7 @@ Fleabag"
       <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
         <div class="panel-placeholder" id="beadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
-          <p>Run synthesis to see extracted beads — the concepts that surface from your input.</p>
+          <p>Awaiting extracted beads.</p>
         </div>
         <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
@@ -1422,7 +1446,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-threads" aria-labelledby="tab-threads">
         <div class="panel-placeholder" id="threadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#10697;</div>
-          <p>Cross-domain threads will emerge here — isomorphic bridges between your references.</p>
+          <p>Awaiting cross-domain threads.</p>
         </div>
         <div class="thread-list" id="threadList" style="display:none;"></div>
       </div>
@@ -1431,7 +1455,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-radar" aria-labelledby="tab-radar">
         <div class="panel-placeholder" id="radarPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9881;</div>
-          <p>Pattern scores will emerge here once the engine maps your references.</p>
+          <p>Awaiting pattern scores.</p>
         </div>
         <div id="radarContent" style="display:none;">
           <div class="radar-summary" id="radarSummary"></div>
@@ -1443,7 +1467,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
         <div class="panel-placeholder" id="outputPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9997;</div>
-          <p>The generated document will stream here — fleeting patterns, captured in text.</p>
+          <p>Awaiting generated document.</p>
         </div>
         <div id="outputContent" style="display:none;">
           <div class="output-header">

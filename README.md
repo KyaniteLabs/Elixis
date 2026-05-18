@@ -27,7 +27,7 @@ Elixis has one active product and package name:
 | Python distribution, import package, CLI, Docker service | `elixis` |
 | Compatibility targets, not package names | OpenClaw, SoulClaw, Soul Spec, SOUL.md |
 
-Archived pre-Elixis planning notes are preserved under `docs/archive/` for historical context only. They do not define the current package, product, or public positioning.
+Historical planning notes are preserved under `archive/` for continuity only. They do not define the current package, product, or public positioning.
 
 ## What it does
 

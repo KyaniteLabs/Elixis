@@ -99,6 +99,38 @@ class TestDocsLanding(unittest.TestCase):
         ET.fromstring((ROOT / "docs" / "sitemap.xml").read_text())
         ET.fromstring((ROOT / "docs" / "static" / "og-image.svg").read_text())
 
+    def test_public_surfaces_do_not_leak_process_language(self):
+        self.assertFalse((ROOT / "docs" / "agent-law").exists())
+        self.assertFalse((ROOT / "docs" / "agents").exists())
+        self.assertFalse((ROOT / "docs" / "archive").exists())
+
+        public_paths = [
+            ROOT / "README.md",
+            ROOT / "CONTRIBUTING.md",
+            ROOT / "docs" / "index.html",
+            ROOT / "docs" / "llms.txt",
+            ROOT / "llms.txt",
+            ROOT / "llms-full.txt",
+            ROOT / "openapi.yaml",
+            ROOT / "elixis" / "templates" / "landing.html",
+        ]
+        blocked_terms = [
+            "Glass Bead Game",
+            "SOUL.md outputs",
+            "translation checks",
+            "MCP access",
+            "MCP responses",
+            "agent-law",
+            "Empower Orchestrator",
+            "Codex",
+            "legacy",
+        ]
+        for path in public_paths:
+            text = path.read_text(errors="ignore")
+            lower_text = text.lower()
+            for term in blocked_terms:
+                self.assertNotIn(term.lower(), lower_text, f"{term!r} leaked in {path}")
+
 
 if __name__ == "__main__":
     unittest.main()

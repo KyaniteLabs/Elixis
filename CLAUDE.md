@@ -2,15 +2,15 @@
 
 ### Issue tracker
 
-Issues tracked in GitHub (KyaniteLabs/Elixis) via `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues tracked in GitHub (KyaniteLabs/Elixis) via `gh` CLI. See `agent-docs/issue-tracker.md`.
 
 ### Triage labels
 
-Default vocabulary: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+Default vocabulary: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `agent-docs/triage-labels.md`.
 
 ### Domain docs
 
-Single-context repo. See `docs/agents/domain.md`.
+Single-context repo. See `agent-docs/domain.md`.
 
 ## Git Workspace Hygiene
 - Delete feature branches after merge — no stale branches
@@ -48,5 +48,5 @@ Worker discipline: isolated worktree/sandbox, one artifact equals one commit/cha
 
 Success line: “I noticed X, found a better way. The system just got an upgrade.”
 
-Full recipe: `docs/agent-law/empower-orchestrator.md`.
+Full recipe: `agent-law/empower-orchestrator.md`.
 <!-- EMPOWER_ORCHESTRATOR:END -->
