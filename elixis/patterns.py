@@ -1,4 +1,4 @@
-"""Stage 2: Pattern Graph Engine.
+"""Connection support: pattern graph engine.
 
 Builds a full probability graph of archetypal patterns.
 Uses LLM classification (primary) blended with keyword scoring (secondary).

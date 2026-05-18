@@ -57,6 +57,7 @@ services:
       - LLM_FALLBACK_URL=${LLM_FALLBACK_URL:-}
       - LLM_MODEL=${LLM_MODEL:-gemma-4b}
       - LLM_API_KEY=${LLM_API_KEY:-}
+      - ADMIN_API_KEY=${ADMIN_API_KEY:?set ADMIN_API_KEY before starting Elixis}
       - PYTHONUNBUFFERED=1
     volumes:
       - elixis-data:/app/.elixis

@@ -3,7 +3,7 @@
 Uses the Ollama API (localhost:11434) by default.
 Configurable via environment variables:
   LLM_BASE_URL  — API base URL (default: http://localhost:11434)
-  LLM_MODEL     — Model name (default: qwen3.5:0.8b)
+  LLM_MODEL     — Model name (default: gemma-4b)
   LLM_PROVIDER  — "ollama" (default) or "openai" for OpenAI-compatible APIs
   LLM_API_KEY   — API key (not needed for Ollama, required for cloud providers)
 """
@@ -11,8 +11,8 @@ Configurable via environment variables:
 import json
 import os
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 
 
 class _Config:
@@ -163,7 +163,7 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
     # Try primary first
     try:
         return _call_openai_compat_single(primary_base, messages, model, max_tokens)
-    except (urllib.error.URLError, KeyError, TimeoutError) as e:
+    except (urllib.error.URLError, OSError, KeyError, TimeoutError, json.JSONDecodeError) as e:
         # Primary failed - try fallback if configured
         if fallback_base:
             try:
@@ -172,8 +172,26 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
                 result["fallback"] = True
                 result["primary_error"] = str(e)
                 return result
-            except (urllib.error.URLError, KeyError, TimeoutError):
-                pass
+            except (urllib.error.URLError, OSError, KeyError, TimeoutError, json.JSONDecodeError) as fallback_error:
+                used_model = model or cfg.default_model
+                import logging
+                logging.getLogger("elixis.llm").warning(
+                    "OpenAI-compatible call failed (primary: %s; fallback: %s)",
+                    e,
+                    fallback_error,
+                )
+                return {
+                    "content": "",
+                    "error": f"Primary failed: {e}; fallback failed: {fallback_error}",
+                    "primary_error": str(e),
+                    "fallback_error": str(fallback_error),
+                    "tokens_in": 0,
+                    "tokens_out": 0,
+                    "latency_ms": 0,
+                    "tokens_per_sec": 0,
+                    "model": used_model,
+                    "provider": "openai",
+                }
         # Both failed or no fallback
         used_model = model or cfg.default_model
         import logging
@@ -313,6 +331,18 @@ def _chat_stream_openai(messages, model=None):
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         import logging
         logging.getLogger("elixis.llm").warning(f"OpenAI stream failed: {e}")
+        yield {"type": "error", "error": str(e), "provider": "openai", "model": used_model}
+        yield {
+            "type": "done",
+            "success": False,
+            "error": str(e),
+            "latency_ms": int((time.time() - start) * 1000),
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "tokens_per_sec": 0,
+            "model": used_model,
+            "provider": "openai",
+        }
 
 
 def _chat_stream_ollama(messages, model=None):
@@ -406,7 +436,17 @@ def _chat_stream_ollama(messages, model=None):
                         "provider": cfg.provider,
                     }
 
-    except (urllib.error.URLError, OSError) as e:
+    except (urllib.error.URLError, OSError, TimeoutError) as e:
         yield {"type": "error", "error": str(e)}
-        yield {"type": "soulmd_done", "data": {"length": 0, "source": "error"}}
+        yield {
+            "type": "done",
+            "success": False,
+            "error": str(e),
+            "latency_ms": int((time.time() - start) * 1000),
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "tokens_per_sec": 0,
+            "model": model or cfg.default_model,
+            "provider": cfg.provider,
+        }
         return

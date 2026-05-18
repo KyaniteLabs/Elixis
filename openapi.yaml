@@ -2,10 +2,9 @@ openapi: "3.1.0"
 info:
   title: Elixis API
   description: |
-    AI-powered identity synthesis companion for OpenClaw and Soul Spec.
-    Transforms brain dump text into structured SOUL.md identity documents
-    through a 3-stage pipeline: entity extraction, archetypal pattern analysis,
-    and LLM-assisted synthesis.
+    Glass Bead Game synthesis engine for identity, brand, design, naming,
+    and SOUL.md outputs. Elixis turns raw references into beads, threads,
+    pattern graphs, tensions, and lens-specific markdown documents.
   version: "1.0.0"
   license:
     name: MIT
@@ -17,13 +16,27 @@ servers:
   - url: http://localhost:3110
     description: Local development server
 
+tags:
+  - name: Pipeline
+    description: Legacy identity-compatible synthesis routes
+  - name: Game
+    description: Glass Bead Game phases and lens-based synthesis
+  - name: Translation
+    description: Translation, language detection, and cache routes
+  - name: Naming
+    description: Name research and name generation
+  - name: System
+    description: Health, diagnostics, and run history
+  - name: Backups
+    description: Backup and restore operations
+
 paths:
   /api/extract:
     post:
-      summary: Run the full 3-stage pipeline on a brain dump
+      summary: Run the identity-compatible pipeline on a brain dump
       description: |
-        Extracts entities, analyzes archetypal patterns, and synthesizes a
-        SOUL.md document. Supports both JSON and SSE streaming responses.
+        Legacy route that runs the Glass Bead Game through the identity lens
+        and returns a SOUL.md-compatible result. Supports JSON and SSE.
       operationId: extractSoul
       tags: [Pipeline]
       requestBody:
@@ -32,11 +45,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [brain_dump]
+              oneOf:
+                - required: [brain_dump]
+                - required: [text]
               properties:
                 brain_dump:
                   type: string
-                  description: Raw text with references, influences, values
+                  description: Raw text with references, influences, and values
+                text:
+                  type: string
+                  description: Legacy alias for brain_dump
                 stream:
                   type: boolean
                   default: false
@@ -47,27 +65,143 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  stage1_entities:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Entity"
-                  stage2_graph:
-                    $ref: "#/components/schemas/PatternGraph"
-                  stage3_soulmd:
-                    type: string
-                  timings:
-                    type: object
-                    additionalProperties:
-                      type: integer
+                $ref: "#/components/schemas/ExtractResult"
             text/event-stream:
               schema:
                 type: string
         "400":
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "503":
-          description: LLM unavailable
+          description: Server busy, shutting down, or LLM unavailable
+
+  /api/extract/stream:
+    post:
+      summary: Stream the identity-compatible pipeline with SSE events
+      description: "Slash-style alias for posting `{ stream: true }` to `/api/extract`."
+      operationId: extractSoulStream
+      tags: [Pipeline]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              oneOf:
+                - required: [brain_dump]
+                - required: [text]
+              properties:
+                brain_dump:
+                  type: string
+                text:
+                  type: string
+      responses:
+        "200":
+          description: SSE stream of identity pipeline events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: Invalid input
+
+  /api/game:
+    post:
+      summary: Run the Glass Bead Game through a selected output lens
+      operationId: runGame
+      tags: [Game]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameRequest"
+      responses:
+        "200":
+          description: Lens-specific game result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResult"
+        "400":
+          description: Invalid input or lens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Server busy or shutting down
+
+  /api/game/stream:
+    post:
+      summary: Stream the Glass Bead Game through a selected output lens
+      description: |
+        Streams declaration, connection, tension, output-token, and completion
+        events. Non-identity lenses stream their final markdown as output tokens.
+      operationId: streamGame
+      tags: [Game]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameRequest"
+      responses:
+        "200":
+          description: SSE stream of game events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: Invalid input or lens
+
+  /api/lenses:
+    get:
+      summary: List available output lenses
+      operationId: getLenses
+      tags: [Game]
+      responses:
+        "200":
+          description: Available lenses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lenses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Lens"
+
+  /api/game/schema:
+    get:
+      summary: Describe game phases, lenses, and entity types
+      operationId: getGameSchema
+      tags: [Game]
+      responses:
+        "200":
+          description: Game schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phases:
+                    type: array
+                    items:
+                      type: string
+                  lenses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Lens"
+                  entity_types:
+                    type: array
+                    items:
+                      type: string
 
   /api/translate:
     post:
@@ -86,7 +220,7 @@ paths:
                   type: string
                 target_lang:
                   type: string
-                  description: "ISO language code (e.g. 'es', 'fr', 'de')"
+                  description: "ISO language code, such as es, fr, or de"
                 source_lang:
                   type: string
                   default: en
@@ -121,6 +255,31 @@ paths:
     post:
       summary: Stream translation with SSE events
       operationId: translateStream
+      tags: [Translation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, target_lang]
+              properties:
+                text:
+                  type: string
+                target_lang:
+                  type: string
+                source_lang:
+                  type: string
+                  default: en
+      responses:
+        "200":
+          description: SSE stream of translation events
+
+  /api/translate/stream:
+    post:
+      summary: Stream translation with SSE events
+      description: Slash-style alias for `/api/translate-stream`.
+      operationId: translateStreamAlias
       tags: [Translation]
       requestBody:
         required: true
@@ -187,24 +346,40 @@ paths:
                   disk:
                     type: string
                     enum: [ok, low]
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: string
 
   /api/diagnostics:
     get:
       summary: Full diagnostics with recent runs and traces
       operationId: getDiagnostics
       tags: [System]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: Diagnostics data
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/runs:
     get:
       summary: Recent pipeline runs
       operationId: getRuns
       tags: [System]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: List of recent runs
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/languages:
     get:
@@ -219,44 +394,76 @@ paths:
     get:
       summary: Translation cache statistics
       operationId: getCacheStats
-      tags: [System]
-      delete:
-        summary: Clear the translation cache
-        operationId: clearCache
-        responses:
-          "200":
-            description: Cache cleared
+      tags: [Translation]
+      responses:
+        "200":
+          description: Cache statistics
+    delete:
+      summary: Clear the translation cache
+      operationId: clearCache
+      tags: [Translation]
+      security:
+        - AdminToken: []
+      responses:
+        "200":
+          description: Cache cleared
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/backups:
     get:
       summary: List available backups
       operationId: listBackups
       tags: [Backups]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: List of backups
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
     post:
       summary: Create a backup
       operationId: createBackup
       tags: [Backups]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: Backup created
+        "202":
+          description: Backup skipped
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/backups/status:
     get:
       summary: Get backup status
       operationId: getBackupStatus
       tags: [Backups]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: Backup status
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/backups/restore:
     post:
       summary: Restore from a backup
       operationId: restoreBackup
       tags: [Backups]
+      security:
+        - AdminToken: []
       requestBody:
         required: true
         content:
@@ -273,18 +480,142 @@ paths:
       responses:
         "200":
           description: Restore result
+        "400":
+          description: Invalid restore request
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
   /api/backups/cleanup:
     post:
       summary: Remove old backups
       operationId: cleanupBackups
       tags: [Backups]
+      security:
+        - AdminToken: []
       responses:
         "200":
           description: Cleanup result
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
+
+  /api/backups/{name}:
+    delete:
+      summary: Delete a backup by name
+      operationId: deleteBackup
+      tags: [Backups]
+      security:
+        - AdminToken: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-zA-Z0-9_-]+$"
+      responses:
+        "200":
+          description: Backup deletion result
+        "400":
+          description: Invalid backup name
+        "401":
+          description: Admin authorization required
+        "503":
+          description: Admin API key is not configured
 
 components:
+  securitySchemes:
+    AdminToken:
+      type: http
+      scheme: bearer
+      description: ADMIN_API_KEY bearer token. X-Admin-API-Key is also accepted by the server.
   schemas:
+    Lens:
+      type: string
+      enum: [brand, design, identity]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        _request_id:
+          type: string
+
+    GameRequest:
+      type: object
+      oneOf:
+        - required: [brain_dump]
+        - required: [text]
+      properties:
+        brain_dump:
+          type: string
+          description: Raw text with references, influences, and values
+        text:
+          type: string
+          description: Legacy alias for brain_dump
+        lens:
+          $ref: "#/components/schemas/Lens"
+      examples:
+        - brain_dump: Batman, Athena, blueprints, ritual, clarity
+          lens: brand
+
+    GameResult:
+      type: object
+      properties:
+        lens:
+          $ref: "#/components/schemas/Lens"
+        stage1_entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+        stage2_graph:
+          $ref: "#/components/schemas/PatternGraph"
+        stage3_output:
+          type: string
+          description: Lens-specific markdown output
+        stage3_soulmd:
+          type:
+            - string
+            - "null"
+          description: SOUL.md when lens is identity, otherwise null
+        threads:
+          type: array
+          items:
+            type: object
+        tensions:
+          type: array
+          items:
+            type: object
+        timings:
+          type: object
+          additionalProperties:
+            type: integer
+        quality:
+          type: object
+
+    ExtractResult:
+      type: object
+      properties:
+        stage1_entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+        stage2_graph:
+          $ref: "#/components/schemas/PatternGraph"
+        stage3_soulmd:
+          type: string
+        stage3_output:
+          type: string
+          description: Same markdown output as stage3_soulmd, provided for parity with /api/game.
+        timings:
+          type: object
+          additionalProperties:
+            type: integer
+
     Entity:
       type: object
       properties:
@@ -296,7 +627,7 @@ components:
           description: Original text as it appeared
         type:
           type: string
-          description: "Entity type (person, work, concept, historical_figure, etc.)"
+          description: "Entity type: person, work, concept, historical_figure, and others"
         themes:
           type: array
           items:
@@ -305,9 +636,19 @@ components:
           type: array
           items:
             type: string
+        domains:
+          type: array
+          items:
+            type: string
+        sentiment:
+          type: string
+        intensity:
+          type: number
+        confidence:
+          type: number
         description:
           type: string
-          description: Wikipedia summary if available
+          description: Wikipedia or knowledge-base summary when available
 
     PatternGraph:
       type: object
@@ -332,6 +673,10 @@ components:
         consensus_score:
           type: number
         bridges:
+          type: array
+          items:
+            type: object
+        threads:
           type: array
           items:
             type: object

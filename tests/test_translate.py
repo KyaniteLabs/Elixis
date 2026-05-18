@@ -3,6 +3,7 @@
 import unittest
 import sys
 import os
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -44,6 +45,32 @@ class TestTranslateText(unittest.TestCase):
         self.assertTrue(is_language_supported("en"))
         self.assertTrue(is_language_supported("es"))
         self.assertFalse(is_language_supported("xx"))
+
+    @patch("elixis.translate.is_available", return_value=True)
+    @patch("elixis.translate.chat", return_value={"content": "", "error": "model empty", "model": "test"})
+    def test_empty_llm_translation_is_failure(self, mock_chat, mock_available):
+        """Empty LLM output is not cached as a successful translation."""
+        result = translate_text("Hello world", "es")
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["translated_text"], "Hello world")
+        self.assertIn("model empty", result["error"])
+
+    @patch("elixis.translate.translate_text")
+    def test_large_text_reports_partial_chunk_failures(self, mock_translate):
+        """Chunked translation reports partial failures instead of silently succeeding."""
+        from elixis.translate import _translate_large_text
+
+        mock_translate.side_effect = [
+            {"success": True, "translated_text": "Uno", "latency_ms": 1, "tokens_in": 1, "tokens_out": 1},
+            {"success": False, "translated_text": "Two", "error": "chunk failed"},
+        ]
+
+        result = _translate_large_text("# One\nbody\n# Two\nbody", "es", "en", 12)
+
+        self.assertFalse(result["success"])
+        self.assertEqual(len(result["failed_chunks"]), 1)
+        self.assertIn("chunk failed", result["failed_chunks"][0]["error"])
 
 
 class TestTranslateSoulmd(unittest.TestCase):
@@ -105,6 +132,26 @@ class TestDetectLanguage(unittest.TestCase):
         """Very short text returns None."""
         result = detect_language("Hi")
         self.assertIsNone(result)
+
+
+class TestTranslateStream(unittest.TestCase):
+    """Test streaming translation failure behavior."""
+
+    @patch("elixis.translate.is_available", return_value=True)
+    @patch("elixis.translate.chat_stream")
+    def test_stream_error_yields_done_failure(self, mock_stream, mock_available):
+        mock_stream.return_value = [
+            {"type": "error", "error": "stream failed"},
+            {"type": "done", "success": False, "error": "stream failed"},
+        ]
+
+        from elixis.translate import translate_text_stream
+        events = list(translate_text_stream("Hello world", "es"))
+
+        self.assertEqual(events[0]["type"], "error")
+        self.assertEqual(events[-1]["type"], "done")
+        self.assertFalse(events[-1]["success"])
+        self.assertIn("stream failed", events[-1]["error"])
 
 
 class TestTranslationCache(unittest.TestCase):

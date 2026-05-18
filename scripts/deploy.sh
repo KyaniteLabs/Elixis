@@ -13,9 +13,20 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-VPS_HOST="${VPS_HOST:-187.124.238.235}"
+VPS_HOST="${VPS_HOST:-}"
 VPS_USER="${VPS_USER:-root}"
+ADMIN_API_KEY="${ADMIN_API_KEY:-}"
 REMOTE_DIR="/docker/elixis"
+
+if [ -z "${VPS_HOST}" ]; then
+    echo -e "${RED}VPS_HOST must be set before deploying.${NC}"
+    exit 1
+fi
+
+if [ -z "${ADMIN_API_KEY}" ]; then
+    echo -e "${RED}ADMIN_API_KEY must be set for protected diagnostics and backup routes.${NC}"
+    exit 1
+fi
 
 echo "Deploying Elixis to ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}..."
 
@@ -35,7 +46,7 @@ scp "${PROJECT_DIR}/docker-compose.yml" "${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/d
 echo -e "${YELLOW}Starting deployment...${NC}"
 ssh "${VPS_USER}@${VPS_HOST}" << EOF
   cd ${REMOTE_DIR}
-  docker compose up -d --remove-orphans
+  ADMIN_API_KEY='${ADMIN_API_KEY}' docker compose up -d --no-build --remove-orphans
 EOF
 
 # Wait for health check

@@ -81,6 +81,7 @@ def validate_brain_dump(text: str) -> Tuple[bool, Optional[str], Dict]:
     metadata = {
         "original_length": len(text) if text else 0,
         "sanitized_length": 0,
+        "sanitized_text": "",
         "warnings": [],
     }
 
@@ -105,6 +106,7 @@ def validate_brain_dump(text: str) -> Tuple[bool, Optional[str], Dict]:
     # Sanitize
     sanitized = sanitize_text(text)
     metadata["sanitized_length"] = len(sanitized)
+    metadata["sanitized_text"] = sanitized
 
     # Check minimum meaningful content
     word_count = len(sanitized.split())
@@ -211,7 +213,7 @@ def validate_api_request(data: Dict, endpoint: str) -> Tuple[bool, Optional[str]
 
     if endpoint == "/api/extract":
         # Validate extraction request
-        brain_dump = data.get("brain_dump", "")
+        brain_dump = data.get("brain_dump", data.get("text", ""))
         is_valid, error, _ = validate_brain_dump(brain_dump)
         if not is_valid:
             return False, error
@@ -220,6 +222,13 @@ def validate_api_request(data: Dict, endpoint: str) -> Tuple[bool, Optional[str]
         stream = data.get("stream", False)
         if not isinstance(stream, bool):
             return False, "Invalid 'stream' parameter"
+    elif endpoint == "/api/game":
+        brain_dump = data.get("brain_dump", data.get("text", ""))
+        is_valid, error, _ = validate_brain_dump(brain_dump)
+        if not is_valid:
+            return False, error
+        if data.get("lens", "identity") not in {"identity", "brand", "design"}:
+            return False, "Invalid lens"
 
     return True, None
 

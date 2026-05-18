@@ -1,5 +1,6 @@
 services:
   elixis:
+    image: ${ELIXIS_IMAGE:-elixis:latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,6 +13,7 @@ services:
       - LLM_FALLBACK_URL=http://100.66.225.85:1234/v1
       - LLM_MODEL=Qwen3.5-0.8B-Q4_K_M.gguf
       - LLM_API_KEY=dummy
+      - ADMIN_API_KEY=${ADMIN_API_KEY:?set ADMIN_API_KEY before starting Elixis}
       - CORS_ORIGIN=https://elixis.kyanitelabs.tech
       - HTTPS=1
       - PYTHONUNBUFFERED=1

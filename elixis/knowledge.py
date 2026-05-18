@@ -5,10 +5,12 @@ All accessors return plain Python data structures (dicts, lists).
 """
 
 import json
+import logging
 import os
 from functools import lru_cache
 
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+logger = logging.getLogger("elixis.knowledge")
 
 
 def _load_json(filename):
@@ -17,10 +19,10 @@ def _load_json(filename):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
+        logger.warning("Knowledge JSON file missing: %s", filename)
         return {}
     except json.JSONDecodeError as exc:
-        import logging
-        logging.getLogger("elixis.knowledge").error("Invalid JSON in %s: %s", filename, exc)
+        logger.error("Invalid JSON in %s: %s", filename, exc)
         return {}
 
 
@@ -34,10 +36,11 @@ def _load_jsonl(filename):
                 if line:
                     try:
                         entries.append(json.loads(line))
-                    except json.JSONDecodeError:
+                    except json.JSONDecodeError as exc:
+                        logger.warning("Skipping invalid JSONL row in %s: %s", filename, exc)
                         continue
     except FileNotFoundError:
-        pass
+        logger.warning("Knowledge JSONL file missing: %s", filename)
     return entries
 
 

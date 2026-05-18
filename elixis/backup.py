@@ -45,7 +45,7 @@ def create_backup() -> Dict:
     # Ensure backup directory exists
     backup_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     backup_name = f"elixis_backup_{timestamp}"
     backup_path = backup_dir / f"{backup_name}.tar.gz"
 
@@ -156,28 +156,23 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
         return result
 
     try:
-        # Create safety backup of current data unless forced
-        if data_dir.exists() and not force:
-            safety_backup = create_backup()
-            if safety_backup["status"] != "success":
-                result["error"] = "Failed to create safety backup"
-                return result
-            result["safety_backup"] = safety_backup["name"]
-
-        # Clear existing data
-        if data_dir.exists():
-            shutil.rmtree(data_dir)
-
-        # Extract backup with path traversal and symlink protection
+        # Validate archive members before touching existing data.
         with tarfile.open(backup_path, "r:gz") as tar:
-            extract_dir = data_dir.parent
             members = []
             for member in tar.getmembers():
-                if member.name.startswith("/") or ".." in member.name.replace("\\", "/").split("/"):
+                member_name = member.name.replace("\\", "/")
+                parts = member_name.split("/")
+                if member_name.startswith("/") or ".." in parts:
+                    continue
+                if not parts or parts[0] != ".elixis":
                     continue
                 if member.issym() or member.islnk():
                     continue
                 members.append(member)
+
+            if not members:
+                result["error"] = "Backup did not contain restorable .elixis data"
+                return result
 
             # Tar bomb protection: check total uncompressed size
             total_size = sum(m.size for m in members if m.isfile())
@@ -186,8 +181,20 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
                 result["error"] = f"Backup too large uncompressed ({total_size // (1024*1024)}MB > {MAX_BACKUP_SIZE_MB}MB)"
                 return result
 
-            tar.extractall(path=extract_dir, members=members)
+            # Create safety backup of current data unless forced
+            if data_dir.exists() and not force:
+                safety_backup = create_backup()
+                if safety_backup["status"] != "success":
+                    result["error"] = "Failed to create safety backup"
+                    return result
+                result["safety_backup"] = safety_backup["name"]
 
+            # Clear existing data only after the incoming archive is valid.
+            if data_dir.exists():
+                shutil.rmtree(data_dir)
+
+            extract_dir = data_dir.parent
+            tar.extractall(path=extract_dir, members=members)
             result["files_restored"] = sum(1 for m in members if m.isfile())
 
         result["success"] = True

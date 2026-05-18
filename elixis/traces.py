@@ -6,15 +6,18 @@ All data goes to the .elixis/ directory next to app.py.
 Structure:
   .elixis/
     traces/       — One JSON per LLM call
-    runs/         — One JSON per pipeline run (brain dump → SOUL.md)
+    runs/         — One JSON per pipeline run (brain dump → lens output)
     requests.log  — HTTP request log (JSONL)
 """
 
 import json
+import logging
 import os
 import tempfile
 import threading
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 _BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".elixis")
 _TRACES_DIR = os.path.join(_BASE_DIR, "traces")
@@ -38,10 +41,10 @@ def _rotate_directory(directory, max_files):
         for old_file in files[max_files:]:
             try:
                 os.remove(os.path.join(directory, old_file))
-            except OSError:
-                pass
-    except OSError:
-        pass
+            except OSError as exc:
+                logger.warning("Failed to remove old diagnostic file %s: %s", old_file, exc)
+    except OSError as exc:
+        logger.warning("Failed to rotate diagnostic directory %s: %s", directory, exc)
 
 
 def _rotate_request_log():
@@ -63,13 +66,14 @@ def _rotate_request_log():
                 with os.fdopen(fd, "w") as f:
                     f.writelines(keep)
                 os.replace(tmp_path, _REQUESTS_LOG)
-            except OSError:
+            except OSError as exc:
+                logger.warning("Failed to rotate request log: %s", exc)
                 try:
                     os.unlink(tmp_path)
-                except OSError:
-                    pass
-        except OSError:
-            pass
+                except OSError as unlink_exc:
+                    logger.warning("Failed to remove temporary request log %s: %s", tmp_path, unlink_exc)
+        except OSError as exc:
+            logger.warning("Failed to inspect request log for rotation: %s", exc)
 
 
 def _ensure_dirs():
@@ -99,8 +103,8 @@ def save_trace(prompt, response, latency_ms, model="", extra=None):
     try:
         with open(filepath, "w") as f:
             json.dump(entry, f, indent=2)
-    except OSError:
-        pass  # trace saving is best-effort
+    except OSError as exc:
+        logger.warning("Failed to save LLM trace: %s", exc)
 
 
 def save_run(brain_dump, entities, graph, soulmd, stage_timings=None, telemetry=None):
@@ -142,8 +146,8 @@ def save_run(brain_dump, entities, graph, soulmd, stage_timings=None, telemetry=
     try:
         with open(filepath, "w") as f:
             json.dump(entry, f, indent=2)
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.warning("Failed to save pipeline run: %s", exc)
 
 
 def log_request(method, path, status, duration_ms, extra=None):
@@ -162,8 +166,8 @@ def log_request(method, path, status, duration_ms, extra=None):
         with _request_log_lock:
             with open(_REQUESTS_LOG, "a") as f:
                 f.write(json.dumps(entry) + "\n")
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.warning("Failed to append request log: %s", exc)
 
 
 def get_recent_traces(limit=20):
@@ -176,8 +180,8 @@ def get_recent_traces(limit=20):
             if fname.endswith(".json"):
                 with open(os.path.join(_TRACES_DIR, fname)) as f:
                     traces.append(json.load(f))
-    except (OSError, json.JSONDecodeError):
-        pass
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Failed to load recent traces: %s", exc)
     return traces
 
 
@@ -191,8 +195,8 @@ def get_recent_runs(limit=20):
             if fname.endswith(".json"):
                 with open(os.path.join(_RUNS_DIR, fname)) as f:
                     runs.append(json.load(f))
-    except (OSError, json.JSONDecodeError):
-        pass
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Failed to load recent runs: %s", exc)
     return runs
 
 
@@ -208,9 +212,21 @@ def get_recent_requests(limit=50):
             line = line.strip()
             if line:
                 entries.append(json.loads(line))
-    except (OSError, json.JSONDecodeError):
-        pass
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Failed to load recent request log entries: %s", exc)
     return entries
+
+
+def count_requests():
+    """Count request log entries for diagnostics."""
+    if not os.path.isfile(_REQUESTS_LOG):
+        return 0
+    try:
+        with open(_REQUESTS_LOG) as f:
+            return sum(1 for line in f if line.strip())
+    except OSError as exc:
+        logger.warning("Failed to count request log entries: %s", exc)
+        return 0
 
 
 def get_diagnostics():
@@ -226,15 +242,17 @@ def get_diagnostics():
     if runs:
         avg_total = round(sum(r.get("total_ms", 0) for r in runs) / len(runs))
 
+    recent_requests = get_recent_requests(20)
     return {
         "status": "ok",
         "total_runs": len(runs),
         "total_traces": len(traces),
+        "request_count": count_requests(),
         "avg_llm_latency_ms": avg_latency,
         "avg_pipeline_ms": avg_total,
         "recent_runs": get_recent_runs(5),
         "recent_traces": get_recent_traces(5),
-        "recent_requests": get_recent_requests(20),
+        "recent_requests": recent_requests,
     }
 
 

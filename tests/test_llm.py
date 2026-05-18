@@ -3,6 +3,8 @@
 import unittest
 import sys
 import os
+import urllib.error
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -70,6 +72,30 @@ class TestEnvironmentVariables(unittest.TestCase):
     def test_api_key_handling(self):
         """API key should be handled (empty or set)."""
         self.assertTrue(hasattr(llm, 'API_KEY'))
+
+
+class TestOpenAICompatibleFallback(unittest.TestCase):
+    """Test OpenAI-compatible fallback diagnostics."""
+
+    @patch.dict(os.environ, {
+        "LLM_BASE_URL": "http://primary.invalid/v1",
+        "LLM_FALLBACK_URL": "http://fallback.invalid/v1",
+        "LLM_MODEL": "test-model",
+    })
+    @patch("elixis.llm._call_openai_compat_single")
+    def test_reports_primary_and_fallback_errors(self, mock_single):
+        mock_single.side_effect = [
+            urllib.error.URLError("primary down"),
+            urllib.error.URLError("fallback down"),
+        ]
+
+        result = llm._call_openai_compat([{"role": "user", "content": "hi"}])
+
+        self.assertEqual(result["content"], "")
+        self.assertIn("primary_error", result)
+        self.assertIn("fallback_error", result)
+        self.assertIn("primary down", result["error"])
+        self.assertIn("fallback down", result["error"])
 
 
 if __name__ == "__main__":

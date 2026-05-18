@@ -6,6 +6,7 @@ Uses local inference servers (VPS + fallback) for zero external API costs.
 
 import hashlib
 import json
+import logging
 import os
 import re
 import threading
@@ -20,6 +21,7 @@ CACHE_MAX_AGE_DAYS = 30  # Cache entries expire after 30 days
 CACHE_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB max total cache size
 MAX_TRANSLATE_TEXT_LENGTH = 50000  # 50K chars max for translation input
 _cache_lock = threading.Lock()
+logger = logging.getLogger("elixis.translate")
 
 
 def _get_cache_key(text: str, target_lang: str, source_lang: str) -> str:
@@ -55,7 +57,8 @@ def _load_from_cache(text: str, target_lang: str, source_lang: str) -> Optional[
             return None
 
         return cached
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("Translation cache read failed for %s: %s", cache_path, e)
         return None
 
 
@@ -76,8 +79,8 @@ def _save_to_cache(result: Dict, text: str, target_lang: str, source_lang: str):
 
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(cache_entry, f, ensure_ascii=False)
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning("Translation cache write failed: %s", e)
 
 
 def _evict_cache_if_needed():
@@ -96,7 +99,8 @@ def _evict_cache_if_needed():
                     stat = os.stat(filepath)
                     entries.append((filepath, stat.st_mtime, stat.st_size))
                     total_size += stat.st_size
-                except OSError:
+                except OSError as e:
+                    logger.warning("Translation cache stat failed for %s: %s", filepath, e)
                     continue
 
             if total_size <= CACHE_MAX_SIZE_BYTES:
@@ -110,10 +114,10 @@ def _evict_cache_if_needed():
                 try:
                     os.remove(filepath)
                     total_size -= size
-                except OSError:
-                    pass
-        except OSError:
-            pass
+                except OSError as e:
+                    logger.warning("Translation cache eviction failed for %s: %s", filepath, e)
+        except OSError as e:
+            logger.warning("Translation cache eviction scan failed: %s", e)
 
 
 def get_cache_stats() -> Dict:
@@ -130,8 +134,8 @@ def get_cache_stats() -> Dict:
             try:
                 total_size += os.path.getsize(filepath)
                 entries += 1
-            except OSError:
-                pass
+            except OSError as e:
+                logger.warning("Translation cache stat failed for %s: %s", filepath, e)
 
     return {
         "entries": entries,
@@ -151,8 +155,8 @@ def clear_cache() -> Dict:
             try:
                 os.remove(os.path.join(CACHE_DIR, filename))
                 removed += 1
-            except OSError:
-                pass
+            except OSError as e:
+                logger.warning("Translation cache delete failed for %s: %s", filename, e)
 
     return {"removed": removed}
 
@@ -282,6 +286,16 @@ def translate_text(
         )
 
         translated = result.get("content", "").strip()
+        if not translated:
+            return {
+                "translated_text": text,
+                "success": False,
+                "error": result.get("error", "LLM returned empty translation"),
+                "source_lang": source_lang,
+                "target_lang": target_lang,
+                "model": result.get("model"),
+                "fallback_used": result.get("fallback", False),
+            }
 
         # Clean up any code blocks if the model wraps output
         if translated.startswith("```"):
@@ -324,6 +338,7 @@ def _translate_large_text(
     """Translate large text in chunks and reassemble."""
     chunks = _split_into_chunks(text, chunk_size)
     translated_chunks = []
+    failed_chunks = []
     total_latency = 0
     total_tokens_in = 0
     total_tokens_out = 0
@@ -339,15 +354,17 @@ def _translate_large_text(
             if result.get("fallback_used"):
                 any_fallback = True
         else:
-            # If translation fails, keep original chunk
             translated_chunks.append(chunk)
+            failed_chunks.append({"index": len(translated_chunks), "error": result.get("error", "unknown error")})
 
     return {
         "translated_text": "\n\n".join(translated_chunks),
-        "success": True,
+        "success": len(failed_chunks) == 0,
         "source_lang": source_lang,
         "target_lang": target_lang,
         "chunks": len(chunks),
+        "failed_chunks": failed_chunks,
+        "error": f"{len(failed_chunks)} translation chunks failed" if failed_chunks else None,
         "latency_ms": total_latency,
         "tokens_in": total_tokens_in,
         "tokens_out": total_tokens_out,
@@ -472,7 +489,8 @@ def detect_language(text: str) -> Optional[str]:
             return match.group(1)
         return None
 
-    except Exception:
+    except Exception as e:
+        logger.warning("Language detection failed: %s", e)
         return None
 
 
@@ -547,14 +565,27 @@ def translate_text_stream(
     ]
 
     translated_parts = []
+    stream_failed = False
 
     try:
         for event in chat_stream(messages):
             if event["type"] == "token":
                 translated_parts.append(event["content"])
                 yield {"type": "token", "content": event["content"]}
+            elif event["type"] == "error":
+                stream_failed = True
+                error = event.get("error", "Translation stream failed")
+                yield {"type": "error", "error": error}
             elif event["type"] == "done":
+                if event.get("success") is False or stream_failed:
+                    error = event.get("error", "Translation stream failed")
+                    yield {"type": "done", "translated_text": text, "success": False, "error": error}
+                    return
                 full_text = "".join(translated_parts)
+                if not full_text.strip():
+                    yield {"type": "error", "error": "LLM returned empty translation"}
+                    yield {"type": "done", "translated_text": text, "success": False, "error": "LLM returned empty translation"}
+                    return
                 # Clean up code blocks if present
                 if full_text.startswith("```"):
                     full_text = re.sub(r"^```[\w]*\n?", "", full_text)

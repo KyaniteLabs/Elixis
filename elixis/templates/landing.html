@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elixis — Identity Synthesis Engine</title>
-<meta name="description" content="Elixis reveals the latent patterns connecting your references. Drop characters, films, books, figures — watch cross-domain connections emerge in real time.">
+<title>Elixis — Glass Bead Game Engine</title>
+<meta name="description" content="Elixis is a Glass Bead Game engine that turns raw references into identity, brand, design, naming, and SOUL.md outputs.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -14,16 +14,16 @@
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Elixis — Identity Synthesis Engine">
-<meta name="twitter:description" content="Drop your references. Elixis reveals the latent patterns connecting them — cross-domain connections emerge in real time.">
+<meta name="twitter:title" content="Elixis — Glass Bead Game Engine">
+<meta name="twitter:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand, design, naming, and SOUL.md outputs.">
 <meta name="twitter:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
 <meta name="theme-color" content="#0d0c11">
 <link rel="canonical" href="https://github.com/KyaniteLabs/Elixis">
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Elixis — Identity Synthesis Engine">
-<meta property="og:description" content="Drop your references. Elixis reveals the latent patterns connecting them — cross-domain connections emerge in real time.">
+<meta property="og:title" content="Elixis — Glass Bead Game Engine">
+<meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand, design, naming, and SOUL.md outputs.">
 <meta property="og:url" content="https://github.com/KyaniteLabs/Elixis">
 <meta property="og:site_name" content="Elixis">
 <meta property="og:locale" content="en_US">
@@ -34,7 +34,7 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Elixis",
-  "description": "Cross-domain pattern engine that reveals latent connections between your cultural references. Drop characters, films, books, figures — watch isomorphic patterns emerge in real time.",
+  "description": "Glass Bead Game engine that turns raw references into pattern graphs and resolves them into identity, brand, design, naming, and SOUL.md outputs.",
   "url": "https://github.com/KyaniteLabs/Elixis",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux",
@@ -1117,7 +1117,7 @@ body {
   <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
     <div class="sidebar-section">
       <span class="sidebar-label">Theme Declaration</span>
-      <p class="sidebar-description">Drop your references. Characters, films, books, figures. Elixis reveals the fleeting patterns connecting them.</p>
+      <p class="sidebar-description">Drop your references. Elixis plays a Glass Bead Game over the pattern graph, then resolves it through identity, brand, design, and naming lenses.</p>
       <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
       <textarea
         class="theme-textarea"
@@ -1236,12 +1236,12 @@ Fleabag"
         </div>
         <div id="outputContent" style="display:none;">
           <div class="output-header">
-            <span class="output-title">SOUL.md</span>
+            <span class="output-title" id="outputTitle">SOUL.md</span>
             <div class="output-actions" id="outputActions" style="display:none;">
-              <button class="output-btn" id="copyBtn" aria-label="Copy SOUL.md to clipboard">
+              <button class="output-btn" id="copyBtn" aria-label="Copy generated output to clipboard">
                 <span aria-hidden="true">&#9135;</span> Copy
               </button>
-              <button class="output-btn" id="downloadBtn" aria-label="Download SOUL.md file">
+              <button class="output-btn" id="downloadBtn" aria-label="Download generated output file">
                 <span aria-hidden="true">&#8595;</span> Download
               </button>
               <span class="copied-toast" id="copiedToast">Copied</span>
@@ -1263,7 +1263,13 @@ const state = {
   loading: false,
   entities: [],
   graph: null,
-  soulmdText: '',
+  outputText: '',
+};
+
+const LENS_OUTPUT = {
+  identity: { title: 'SOUL.md', filename: 'SOUL.md' },
+  brand: { title: 'Brand Guide', filename: 'brand-guide.md' },
+  design: { title: 'Design System', filename: 'design-system.md' },
 };
 
 const PATTERN_COLORS = [
@@ -1331,6 +1337,7 @@ const dom = {
   outputContent: $('#outputContent'),
   outputPlaceholder: $('#outputPlaceholder'),
   outputContentPre: $('#outputContentPre'),
+  outputTitle: $('#outputTitle'),
   outputActions: $('#outputActions'),
   streamingCursor: $('#streamingCursor'),
   copiedToast: $('#copiedToast'),
@@ -1364,6 +1371,14 @@ function getSentimentColor(sentiment) {
 
 function getPatternColor(index) {
   return PATTERN_COLORS[index % PATTERN_COLORS.length];
+}
+
+function getOutputMeta() {
+  return LENS_OUTPUT[state.lens] || LENS_OUTPUT.identity;
+}
+
+function updateOutputMeta() {
+  dom.outputTitle.textContent = getOutputMeta().title;
 }
 
 function showBadge(id, text) {
@@ -1428,6 +1443,7 @@ function initLensSelector() {
       btn.setAttribute('aria-checked', 'true');
       btn.setAttribute('tabindex', '0');
       state.lens = btn.dataset.lens;
+      updateOutputMeta();
     });
   });
 }
@@ -1570,19 +1586,21 @@ function renderPatternRadar(graph) {
    ════════════════════════════════════════════════════════════════════════════ */
 function handleSSEEvent(event, outputEl) {
   switch (event.type) {
+    case 'entities':
     case 'stage1_entities':
       state.entities = event.data || [];
       renderBeadBoard(state.entities);
       setPipelineStage(1);
-      dom.pipelineLabel.textContent = 'Stage 1: Beads surfaced';
+      dom.pipelineLabel.textContent = 'Declaration: Beads surfaced';
       break;
 
+    case 'graph':
     case 'stage2_graph':
       state.graph = event.data || {};
       renderPatternRadar(state.graph);
       renderThreads(state.graph.threads || []);
       setPipelineStage(2);
-      dom.pipelineLabel.textContent = 'Stage 2: Threads woven';
+      dom.pipelineLabel.textContent = 'Connection: Threads woven';
       break;
 
     case 'soulmd_token':
@@ -1590,13 +1608,13 @@ function handleSSEEvent(event, outputEl) {
         dom.outputPlaceholder.style.display = 'none';
         dom.outputContent.style.display = 'block';
         setPipelineStage(3);
-        dom.pipelineLabel.textContent = 'Stage 3: Pattern resolved';
+        dom.pipelineLabel.textContent = 'Resolution: Pattern resolved';
         showBadge('badge-output', '!');
       }
       const cursor = document.getElementById('streamingCursor');
       if (cursor) cursor.remove();
       outputEl.appendChild(document.createTextNode(event.content));
-      state.soulmdText += event.content;
+      state.outputText += event.content;
       const newCursor = document.createElement('span');
       newCursor.className = 'streaming-cursor';
       newCursor.id = 'streamingCursor';
@@ -1644,7 +1662,8 @@ async function runPipeline() {
   resetPanels();
   state.entities = [];
   state.graph = null;
-  state.soulmdText = '';
+  state.outputText = '';
+  updateOutputMeta();
 
   // UI: loading
   state.loading = true;
@@ -1653,7 +1672,7 @@ async function runPipeline() {
   dom.playBtn.querySelector('.btn-label').textContent = 'Analyzing...';
   dom.pipelineStatus.classList.add('active');
   setPipelineStage(1);
-  dom.pipelineLabel.textContent = 'Stage 1: Surfacing beads...';
+  dom.pipelineLabel.textContent = 'Declaration: Surfacing beads...';
 
   const outputEl = dom.outputContentPre;
 
@@ -1661,7 +1680,7 @@ async function runPipeline() {
     const resp = await fetch('/api/game/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, lens: state.lens }),
+      body: JSON.stringify({ brain_dump: text, lens: state.lens }),
     });
 
     if (!resp.ok) {
@@ -1672,6 +1691,8 @@ async function runPipeline() {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let sawDone = false;
+    let streamParseFailed = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1685,29 +1706,41 @@ async function runPipeline() {
         if (!line.startsWith('data: ')) continue;
         const payload = line.slice(6);
         if (!payload) continue;
-        try {
-          const event = JSON.parse(payload);
-          handleSSEEvent(event, outputEl);
-        } catch {
-          // Ignore malformed SSE lines
+          try {
+            const event = JSON.parse(payload);
+            if (event.type === 'soulmd_done') sawDone = true;
+            handleSSEEvent(event, outputEl);
+          } catch {
+            if (!streamParseFailed) {
+              streamParseFailed = true;
+              showError('Malformed stream event received from server.');
+            }
+          }
         }
       }
-    }
 
     // Process remaining buffer
     if (buffer.trim() && buffer.startsWith('data: ')) {
       try {
         const event = JSON.parse(buffer.slice(6));
+        if (event.type === 'soulmd_done') sawDone = true;
         handleSSEEvent(event, outputEl);
       } catch {
-        // Ignore
+        if (!streamParseFailed) {
+          streamParseFailed = true;
+          showError('Malformed stream event received from server.');
+        }
       }
     }
 
     // Ensure final state
     const cursor = document.getElementById('streamingCursor');
     if (cursor) cursor.remove();
-    dom.outputActions.style.display = 'flex';
+    if (!sawDone) {
+      showError('Stream ended before completion.');
+    } else {
+      dom.outputActions.style.display = 'flex';
+    }
   } catch (e) {
     showError('Pipeline error: ' + e.message);
   } finally {
@@ -1764,21 +1797,21 @@ function hideError() {
 /* ════════════════════════════════════════════════════════════════════════════
    COPY & DOWNLOAD
    ════════════════════════════════════════════════════════════════════════════ */
-function copySoulmd() {
-  const text = state.soulmdText || dom.outputContentPre.textContent;
+function copyOutput() {
+  const text = state.outputText || dom.outputContentPre.textContent;
   navigator.clipboard.writeText(text).then(() => {
     dom.copiedToast.classList.add('visible');
     setTimeout(() => dom.copiedToast.classList.remove('visible'), 2000);
   });
 }
 
-function downloadSoulmd() {
-  const text = state.soulmdText || dom.outputContentPre.textContent;
+function downloadOutput() {
+  const text = state.outputText || dom.outputContentPre.textContent;
   const blob = new Blob([text], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'SOUL.md';
+  a.download = getOutputMeta().filename;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1790,10 +1823,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initLensSelector();
   initExamples();
+  updateOutputMeta();
 
   dom.playBtn.addEventListener('click', runPipeline);
-  $('#copyBtn').addEventListener('click', copySoulmd);
-  $('#downloadBtn').addEventListener('click', downloadSoulmd);
+  $('#copyBtn').addEventListener('click', copyOutput);
+  $('#downloadBtn').addEventListener('click', downloadOutput);
 
   // Allow Ctrl+Enter to submit
   dom.textarea.addEventListener('keydown', (e) => {

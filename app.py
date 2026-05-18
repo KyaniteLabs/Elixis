@@ -4,6 +4,7 @@ Usage: python app.py [--port PORT]
 """
 
 import hashlib
+import hmac
 import json
 import os
 import signal
@@ -13,6 +14,7 @@ import time
 import uuid
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
+from urllib.parse import urlparse
 
 from elixis.backup import (
     create_backup,
@@ -23,7 +25,12 @@ from elixis.backup import (
     auto_backup_if_enabled,
 )
 from elixis.engine import GameEngine
-from elixis.logging_config import get_logger, configure_root_logger
+from elixis.logging_config import (
+    clear_request_id,
+    configure_root_logger,
+    get_logger,
+    set_request_id,
+)
 from elixis.naming import research_name
 from elixis.quality import validate_output
 from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
@@ -45,6 +52,7 @@ PORT = 3110
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "elixis", "templates")
 CSP_HEADER = get_content_security_policy()
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3110")
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
@@ -80,6 +88,26 @@ def _request_leave():
         _drain_condition.notify_all()
 
 
+def _get_brain_dump(data):
+    """Return the primary synthesis text from current or legacy payload keys."""
+    if not isinstance(data, dict):
+        return ""
+    if data.get("brain_dump") is not None:
+        return data.get("brain_dump", "")
+    return data.get("text", "")
+
+
+def _validate_brain_dump_input(brain_dump):
+    is_valid, error, meta = validate_brain_dump(brain_dump)
+    return is_valid, error, meta.get("sanitized_text", brain_dump)
+
+
+def _lens_error(lens):
+    if lens in VALID_LENSES:
+        return None
+    return f"Invalid lens '{lens}'. Must be one of: {', '.join(sorted(VALID_LENSES))}"
+
+
 def run_pipeline(brain_dump):
     """Run the full pipeline on a brain dump string using the GameEngine."""
     if not brain_dump or len(brain_dump.strip()) < 3:
@@ -102,6 +130,7 @@ def run_pipeline(brain_dump):
     return {
         "stage1_entities": [b.to_dict() for b in state.beads],
         "stage2_graph": graph,
+        "stage3_output": output,
         "stage3_soulmd": output,
         "timings": state.timings,
     }
@@ -140,110 +169,176 @@ class Handler(BaseHTTPRequestHandler):
     def _request_id(self):
         if not hasattr(self, '_req_id'):
             self._req_id = uuid.uuid4().hex[:12]
+        set_request_id(self._req_id)
         return self._req_id
+
+    def finish(self):
+        try:
+            super().finish()
+        finally:
+            if (
+                hasattr(self, "_request_start")
+                and hasattr(self, "_response_status")
+                and not getattr(self, "_response_logged", False)
+                and hasattr(self, "command")
+                and hasattr(self, "path")
+            ):
+                self._log(self.command, self._route_path(), self._response_status, self._request_start)
+            clear_request_id()
+
+    def send_response(self, code, message=None):
+        self._response_status = code
+        return super().send_response(code, message)
+
+    def _route_path(self):
+        return urlparse(self.path).path
 
     def do_GET(self):
         start = time.time()
+        self._request_start = start
         self._request_id()
-        if self.path in ("", "/"):
+        path = self._route_path()
+        if path in ("", "/"):
             self._serve_file("landing.html", "text/html")
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/diagnostics":
+            self._log("GET", path, 200, start)
+        elif path == "/api/diagnostics":
+            if not self._require_admin():
+                self._log("GET", path, self._admin_response_status_for_log(), start)
+                return
             self._json_response(get_diagnostics())
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/health":
+            self._log("GET", path, 200, start)
+        elif path == "/api/health":
             llm_ok = False
+            health_errors = {}
             try:
                 from elixis.llm import is_available as llm_available
                 llm_ok = llm_available()
-            except Exception:
-                pass
+                if not llm_ok:
+                    health_errors["llm"] = "LLM inference unavailable"
+            except Exception as e:
+                health_errors["llm"] = str(e)
             disk_ok = True
             try:
                 if hasattr(os, 'statvfs'):
                     stat = os.statvfs(os.path.dirname(os.path.abspath(__file__)))
                     free_gb = (stat.f_bavail * stat.f_frsize) / (1024 ** 3)
                     disk_ok = free_gb > 0.5
-            except Exception:
-                pass
+                    if not disk_ok:
+                        health_errors["disk"] = f"Low disk space: {free_gb:.2f}GB free"
+            except Exception as e:
+                health_errors["disk"] = str(e)
             status = "ok" if (llm_ok and disk_ok) else "degraded"
-            self._json_response({
+            payload = {
                 "status": status,
                 "llm": "available" if llm_ok else "unavailable",
                 "disk": "ok" if disk_ok else "low",
-            })
-        elif self.path == "/api/runs":
+            }
+            if health_errors:
+                payload["errors"] = health_errors
+            self._json_response(payload)
+            self._log("GET", path, 200, start)
+        elif path == "/api/runs":
+            if not self._require_admin():
+                self._log("GET", path, self._admin_response_status_for_log(), start)
+                return
             self._json_response({"runs": get_recent_runs(50)})
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/languages":
+            self._log("GET", path, 200, start)
+        elif path == "/api/languages":
             self._json_response({"languages": get_supported_languages()})
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/translation-cache":
+            self._log("GET", path, 200, start)
+        elif path == "/api/translation-cache":
             self._json_response(get_cache_stats())
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/backups":
+            self._log("GET", path, 200, start)
+        elif path == "/api/backups":
+            if not self._require_admin():
+                self._log("GET", path, self._admin_response_status_for_log(), start)
+                return
             self._json_response({"backups": list_backups()})
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/backups/status":
+            self._log("GET", path, 200, start)
+        elif path == "/api/backups/status":
+            if not self._require_admin():
+                self._log("GET", path, self._admin_response_status_for_log(), start)
+                return
             self._json_response(get_backup_status())
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/lenses":
+            self._log("GET", path, 200, start)
+        elif path == "/api/lenses":
             self._json_response({"lenses": sorted(VALID_LENSES)})
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/api/game/schema":
+            self._log("GET", path, 200, start)
+        elif path == "/api/game/schema":
             from elixis.bead import VALID_TYPES
             self._json_response({
                 "phases": ["declaration", "elaboration", "connection", "resolution"],
                 "lenses": sorted(VALID_LENSES),
                 "entity_types": sorted(VALID_TYPES),
             })
-            self._log("GET", self.path, 200, start)
-        elif self.path == "/robots.txt":
+            self._log("GET", path, 200, start)
+        elif path == "/robots.txt":
             self._serve_robots(start)
-        elif self.path == "/sitemap.xml":
+        elif path == "/sitemap.xml":
             self._serve_sitemap(start)
         else:
-            self._serve_static(self.path)
-            self._log("GET", self.path, 200, start)
+            status = self._serve_static(path)
+            self._log("GET", path, status, start)
 
     def do_POST(self):
         start = time.time()
+        self._request_start = start
         self._request_id()
-        if self.path == "/api/extract":
+        path = self._route_path()
+        if path == "/api/extract":
             self._handle_extract(start)
-        elif self.path == "/api/translate":
+        elif path == "/api/extract/stream":
+            self._handle_extract(start, force_stream=True)
+        elif path == "/api/translate":
             self._handle_translate(start)
-        elif self.path == "/api/detect-language":
+        elif path == "/api/detect-language":
             self._handle_detect_language(start)
-        elif self.path == "/api/translate-stream":
+        elif path in ("/api/translate-stream", "/api/translate/stream"):
             self._handle_translate_stream(start)
-        elif self.path == "/api/naming":
+        elif path == "/api/naming":
             self._handle_naming(start)
-        elif self.path == "/api/backups":
+        elif path == "/api/backups":
+            if not self._require_admin():
+                self._log("POST", path, self._admin_response_status_for_log(), start)
+                return
             self._handle_backup_create(start)
-        elif self.path == "/api/backups/restore":
+        elif path == "/api/backups/restore":
+            if not self._require_admin():
+                self._log("POST", path, self._admin_response_status_for_log(), start)
+                return
             self._handle_backup_restore(start)
-        elif self.path == "/api/backups/cleanup":
+        elif path == "/api/backups/cleanup":
+            if not self._require_admin():
+                self._log("POST", path, self._admin_response_status_for_log(), start)
+                return
             self._handle_backup_cleanup(start)
-        elif self.path == "/api/game":
+        elif path == "/api/game":
             self._handle_game(start)
-        elif self.path == "/api/game/stream":
+        elif path == "/api/game/stream":
             self._handle_game_stream(start)
         else:
             self.send_response(404)
             self._send_cors_headers()
             self.end_headers()
-            self._log("POST", self.path, 404, start)
+            self._log("POST", path, 404, start)
 
     def do_DELETE(self):
         start = time.time()
+        self._request_start = start
         self._request_id()
-        if self.path == "/api/translation-cache":
+        path = self._route_path()
+        if path == "/api/translation-cache":
+            if not self._require_admin():
+                self._log("DELETE", path, self._admin_response_status_for_log(), start)
+                return
             result = clear_cache()
             self._json_response(result)
-            self._log("DELETE", self.path, 200, start)
-        elif self.path.startswith("/api/backups/"):
-            name = self.path[len("/api/backups/"):]
+            self._log("DELETE", path, 200, start)
+        elif path.startswith("/api/backups/"):
+            if not self._require_admin():
+                self._log("DELETE", path, self._admin_response_status_for_log(), start)
+                return
+            name = path[len("/api/backups/"):]
             # Validate name to prevent path traversal
             import re as _re
             if not name or not _re.match(r'^[a-zA-Z0-9_-]+$', name):
@@ -261,38 +356,71 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 result = {"removed": 0, "error": f"Backup not found: {name}"}
             self._json_response(result)
-            self._log("DELETE", self.path, 200, start)
+            self._log("DELETE", path, 200, start)
         else:
             self.send_response(404)
             self._send_cors_headers()
             self.end_headers()
-            self._log("DELETE", self.path, 404, start)
+            self._log("DELETE", path, 404, start)
 
     # --- Endpoint handlers ---
 
     def _read_json_body(self):
         """Read and parse JSON body, returning (data, error_response)."""
         try:
-            length = max(0, min(int(self.headers.get("Content-Length", 0)), MAX_BODY_SIZE))
+            length = max(0, int(self.headers.get("Content-Length", 0)))
+            if length > MAX_BODY_SIZE:
+                return None, {
+                    "error": f"Request body too large. Maximum {MAX_BODY_SIZE} bytes allowed.",
+                    "_status": 413,
+                }
             body = self.rfile.read(length).decode("utf-8")
             return json.loads(body), None
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as e:
             return None, {"error": f"Invalid request body: {e}"}
 
-    def _handle_extract(self, start):
+    def _json_body_error(self, err):
+        status = err.pop("_status", 400)
+        self._json_response(err, status)
+
+    def _is_head(self):
+        return self.command == "HEAD"
+
+    def _admin_token(self):
+        auth = self.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            return auth[len("Bearer "):].strip()
+        return self.headers.get("X-Admin-API-Key", "")
+
+    def _require_admin(self):
+        if not ADMIN_API_KEY:
+            self._admin_response_status = 503
+            self._json_response({"error": "Admin API key is not configured"}, 503)
+            return False
+        if hmac.compare_digest(self._admin_token(), ADMIN_API_KEY):
+            self._admin_response_status = 200
+            return True
+        self._admin_response_status = 401
+        self._json_response({"error": "Admin authorization required"}, 401)
+        return False
+
+    def _admin_response_status_for_log(self):
+        return getattr(self, "_admin_response_status", 401)
+
+    def _handle_extract(self, start, force_stream=False):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
-        brain_dump = data.get("brain_dump", "")
+        brain_dump = _get_brain_dump(data)
 
-        is_valid, error, _ = validate_brain_dump(brain_dump)
+        is_valid, error, brain_dump = _validate_brain_dump_input(brain_dump)
         if not is_valid:
             self._json_response({"error": error}, 400)
             return
 
         accept = self.headers.get("Accept", "")
-        if "text/event-stream" in accept or data.get("stream"):
+        if force_stream or "text/event-stream" in accept or data.get("stream"):
             if not _request_enter():
                 self._json_response({"error": "Server is shutting down"}, 503)
                 return
@@ -330,7 +458,7 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_translate(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
         text = data.get("text", "")
@@ -362,15 +490,29 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_detect_language(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
         text = data.get("text", "")
         if not text:
             self._json_response({"error": "No text provided"}, 400)
             return
+        if len(text.strip()) < 10:
+            self._json_response({"error": "Text too short for reliable language detection"}, 400)
+            return
+        try:
+            from elixis.llm import is_available as llm_available
+            if not llm_available():
+                self._json_response({"error": "Language detection unavailable: LLM inference unavailable"}, 503)
+                return
+        except Exception as e:
+            self._json_response({"error": f"Language detection unavailable: {e}"}, 503)
+            return
 
         detected = detect_language(text)
+        if not detected:
+            self._json_response({"error": "Could not detect language"}, 422)
+            return
         self._json_response({
             "detected_language": detected,
             "language_name": get_supported_languages().get(detected, "Unknown") if detected else None,
@@ -380,7 +522,7 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_translate_stream(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
         text = data.get("text", "")
@@ -398,13 +540,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json_response({"error": "Server is shutting down"}, 503)
             return
         try:
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.send_header("Content-Security-Policy", CSP_HEADER)
-            self._send_cors_headers()
-            self.end_headers()
+            self._begin_sse_response()
 
             rid = self._request_id()
             deadline = time.time() + SSE_WRITE_TIMEOUT
@@ -419,7 +555,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.flush()
                     deadline = time.time() + SSE_WRITE_TIMEOUT
             except (BrokenPipeError, ConnectionResetError):
-                pass
+                logger.warning(f"[{rid}] Client disconnected during translation stream")
 
             self._log("POST", self.path, 200, start, extra={
                 "target_lang": target_lang,
@@ -432,7 +568,7 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_naming(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
         name = data.get("name", "")
@@ -460,7 +596,7 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_backup_restore(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
         backup_name = data.get("name", "")
@@ -483,13 +619,17 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_game(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
-        brain_dump = data.get("brain_dump", "")
+        brain_dump = _get_brain_dump(data)
         lens = data.get("lens", "identity")
+        lens_error = _lens_error(lens)
+        if lens_error:
+            self._json_response({"error": lens_error}, 400)
+            return
 
-        is_valid, error, _ = validate_brain_dump(brain_dump)
+        is_valid, error, brain_dump = _validate_brain_dump_input(brain_dump)
         if not is_valid:
             self._json_response({"error": error}, 400)
             return
@@ -519,13 +659,17 @@ class Handler(BaseHTTPRequestHandler):
     def _handle_game_stream(self, start):
         data, err = self._read_json_body()
         if err:
-            self._json_response(err, 400)
+            self._json_body_error(err)
             return
 
-        brain_dump = data.get("brain_dump", "")
+        brain_dump = _get_brain_dump(data)
         lens = data.get("lens", "identity")
+        lens_error = _lens_error(lens)
+        if lens_error:
+            self._json_response({"error": lens_error}, 400)
+            return
 
-        is_valid, error, _ = validate_brain_dump(brain_dump)
+        is_valid, error, brain_dump = _validate_brain_dump_input(brain_dump)
         if not is_valid:
             self._json_response({"error": error}, 400)
             return
@@ -539,13 +683,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         try:
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.send_header("Content-Security-Policy", CSP_HEADER)
-            self._send_cors_headers()
-            self.end_headers()
+            self._begin_sse_response()
 
             rid = self._request_id()
             deadline = time.time() + SSE_WRITE_TIMEOUT
@@ -603,13 +741,7 @@ class Handler(BaseHTTPRequestHandler):
         timings = {}
         rid = self._request_id()
 
-        self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream")
-        self.send_header("Cache-Control", "no-cache")
-        self.send_header("Connection", "keep-alive")
-        self.send_header("Content-Security-Policy", CSP_HEADER)
-        self._send_cors_headers()
-        self.end_headers()
+        self._begin_sse_response()
 
         def _send(event):
             if isinstance(event, dict):
@@ -673,8 +805,18 @@ class Handler(BaseHTTPRequestHandler):
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Admin-API-Key")
         self.send_header("X-Request-ID", self._request_id())
+
+    def _begin_sse_response(self):
+        self.close_connection = True
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.send_header("Content-Security-Policy", CSP_HEADER)
+        self._send_cors_headers()
+        self.end_headers()
 
     def _json_response(self, data, status=200):
         if isinstance(data, dict):
@@ -686,9 +828,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", CSP_HEADER)
         self._send_cors_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if not self._is_head():
+            self.wfile.write(body)
 
     def _log(self, method, path, status, start, extra=None):
+        self._response_logged = True
         duration_ms = (time.time() - start) * 1000
         rid = self._request_id()
         if extra is None:
@@ -703,7 +847,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(404)
             self._send_cors_headers()
             self.end_headers()
-            return
+            return 404
         with open(filepath, "rb") as f:
             content = f.read()
 
@@ -716,7 +860,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("ETag", etag)
                 self._send_cors_headers()
                 self.end_headers()
-                return
+                return 304
 
         self.send_response(200)
         self.send_header("Content-Type", content_type)
@@ -726,7 +870,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("ETag", etag)
         self._send_cors_headers()
         self.end_headers()
-        self.wfile.write(content)
+        if not self._is_head():
+            self.wfile.write(content)
+        return 200
 
     # Cache TTL by content type (seconds)
     _CACHE_TTL = {
@@ -743,7 +889,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(403)
             self._send_cors_headers()
             self.end_headers()
-            return
+            return 403
         content_types = {
             ".css": "text/css",
             ".js": "application/javascript",
@@ -764,15 +910,15 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(403)
             self._send_cors_headers()
             self.end_headers()
-            return
+            return 403
         content_type = content_types.get(ext)
         if content_type is None:
-            self.send_response(403)
+            self.send_response(404)
             self._send_cors_headers()
             self.end_headers()
-            return
+            return 404
         cache_ttl = self._CACHE_TTL.get(ext, 0)
-        self._serve_file(resolved, content_type, cache_max_age=cache_ttl)
+        return self._serve_file(resolved, content_type, cache_max_age=cache_ttl)
 
     def _serve_robots(self, start):
         host = self.headers.get("Host", f"localhost:{PORT}")
@@ -789,7 +935,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "public, max-age=86400")
         self._send_cors_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if not self._is_head():
+            self.wfile.write(body)
         self._log("GET", "/robots.txt", 200, start)
 
     def _serve_sitemap(self, start):
@@ -810,10 +957,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "public, max-age=86400")
         self._send_cors_headers()
         self.end_headers()
-        self.wfile.write(body)
+        if not self._is_head():
+            self.wfile.write(body)
         self._log("GET", "/sitemap.xml", 200, start)
 
     def do_OPTIONS(self):
+        self._request_start = time.time()
+        self._request_id()
         self.send_response(204)
         self._send_cors_headers()
         self.send_header("Content-Length", "0")
@@ -821,11 +971,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         self.do_GET()
-        # do_GET already wrote body via wfile; for HEAD we must not send body.
-        # Since BaseHTTPRequestHandler doesn't natively support HEAD, we handle
-        # it by calling do_GET which sets all headers, then discarding the body.
-        # This works because the response is buffered in many cases. For large
-        # files the body was already written — acceptable tradeoff for simplicity.
 
     def log_message(self, format, *args):
         pass
