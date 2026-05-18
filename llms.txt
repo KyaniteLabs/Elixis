@@ -26,6 +26,8 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 - [elixis/](https://github.com/KyaniteLabs/Elixis/tree/main/elixis/): Core Python package
 - [tests/](https://github.com/KyaniteLabs/Elixis/tree/main/tests/): Verification suite (unittest-compatible, pytest-friendly)
 - [app.py](https://github.com/KyaniteLabs/Elixis/blob/main/app.py): HTTP server entry point (stdlib, port 3110)
+- [openapi.yaml](https://github.com/KyaniteLabs/Elixis/blob/main/openapi.yaml): HTTP API contract
+- [elixis/__main__.py](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/__main__.py): CLI for serve, run, extract, patterns, name, and mcp commands
 - [Dockerfile](https://github.com/KyaniteLabs/Elixis/blob/main/Dockerfile): Multi-stage production build
 - [traefik/](https://github.com/KyaniteLabs/Elixis/tree/main/traefik/): Reverse-proxy deployment examples
 
@@ -35,6 +37,12 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 - [.env.example](https://github.com/KyaniteLabs/Elixis/blob/main/.env.example): Environment variable template
 - [.github/workflows/ci.yml](https://github.com/KyaniteLabs/Elixis/blob/main/.github/workflows/ci.yml): CI/CD pipeline with Blacksmith runners
 - [elixis/templates/landing.html](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/templates/landing.html): Interactive UI with SSE streaming demo
+
+## Technical surfaces
+
+- CLI: `python -m elixis run --text "..." --lens brand`
+- HTTP API: `python -m elixis serve --port 3110`; contract in `openapi.yaml`
+- MCP stdio adapter: `python -m elixis mcp`
 
 ## Keywords
 

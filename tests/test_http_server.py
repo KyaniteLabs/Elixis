@@ -9,7 +9,7 @@ import json
 import unittest
 from unittest.mock import patch, MagicMock, ANY
 
-from app import Handler, _shutdown_requested, run_pipeline
+from app import Handler, _shutdown_requested, run_game_pipeline, run_pipeline
 
 
 class _FakeSocket:
@@ -454,7 +454,7 @@ class TestGamePayloads(unittest.TestCase):
     @patch.object(Handler, '_log')
     @patch('app.run_game_pipeline')
     def test_game_accepts_text_alias(self, mock_pipeline, mock_log, mock_json):
-        mock_pipeline.return_value = {"stage1_entities": [], "stage3_output": "ok"}
+        mock_pipeline.return_value = {"stage1_entities": [], "output": "ok", "stage3_output": "ok"}
         handler = _make_handler("POST", "/api/game", body={"text": "Batman and Athena", "lens": "brand"})
 
         with patch.object(Handler, 'do_POST', Handler.do_POST):
@@ -509,7 +509,36 @@ class TestGamePayloads(unittest.TestCase):
         with patch("app.GameEngine", FakeEngine), patch("app.save_run"):
             result = run_pipeline("Batman and Athena")
 
+        self.assertEqual(result["output"], result["stage3_output"])
         self.assertEqual(result["stage3_output"], result["stage3_soulmd"])
+
+    def test_game_pipeline_includes_normalized_output_alias(self):
+        class FakeBead:
+            def to_dict(self):
+                return {"canonical": "Athena"}
+
+        class FakeThread:
+            def to_dict(self):
+                return {"bead_a": "Athena", "bead_b": "Wisdom"}
+
+        class FakeEngine:
+            def __init__(self):
+                self.state = MagicMock()
+                self.state.beads = [FakeBead()]
+                self.state.threads = [FakeThread()]
+                self.state.tensions = []
+                self.state.metadata = {"pattern_graph": {}}
+                self.state.timings = {}
+
+            def run_full(self, brain_dump, lens="identity"):
+                return "# Brand Output"
+
+        with patch("app.GameEngine", FakeEngine):
+            result = run_game_pipeline("Batman and Athena", lens="brand")
+
+        self.assertEqual(result["output"], "# Brand Output")
+        self.assertEqual(result["stage3_output"], "# Brand Output")
+        self.assertIsNone(result["stage3_soulmd"])
 
 
 if __name__ == "__main__":

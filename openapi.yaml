@@ -575,6 +575,9 @@ components:
             $ref: "#/components/schemas/Entity"
         stage2_graph:
           $ref: "#/components/schemas/PatternGraph"
+        output:
+          type: string
+          description: Normalized lens-specific markdown output shared with CLI and MCP responses
         stage3_output:
           type: string
           description: Lens-specific markdown output
@@ -607,6 +610,9 @@ components:
             $ref: "#/components/schemas/Entity"
         stage2_graph:
           $ref: "#/components/schemas/PatternGraph"
+        output:
+          type: string
+          description: Normalized markdown output shared with CLI and MCP responses.
         stage3_soulmd:
           type: string
         stage3_output:

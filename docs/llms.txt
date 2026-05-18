@@ -14,4 +14,9 @@ Core surfaces:
 - Naming research and semantically aligned variants
 - Run tracing, backups, and local-first operation
 
+Technical operator surfaces:
+- CLI: `python -m elixis run --text "..." --lens brand`
+- HTTP API: `python -m elixis serve --port 3110`; contract in `openapi.yaml`
+- MCP stdio adapter: `python -m elixis mcp`
+
 Keywords: AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, local LLM tool.
