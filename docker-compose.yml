@@ -7,10 +7,12 @@ services:
       target: production
     container_name: elixis
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - LLM_PROVIDER=openai
-      - LLM_BASE_URL=http://172.19.0.1:8085/v1
-      - LLM_FALLBACK_URL=http://100.66.225.85:1234/v1
+      - LLM_BASE_URL=http://llama-local:8085/v1
+      - LLM_FALLBACK_URL=http://llama-local:8085/v1
       - LLM_MODEL=Qwen3.5-0.8B-Q4_K_M.gguf
       - LLM_API_KEY=dummy
       - ADMIN_API_KEY=${ADMIN_API_KEY:?set ADMIN_API_KEY before starting Elixis}
