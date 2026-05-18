@@ -1,4 +1,4 @@
-"""Entity deduplication and canonical name resolution for the Glass Bead Game."""
+"""Entity deduplication and canonical name resolution for the pattern synthesis."""
 
 
 

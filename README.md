@@ -5,13 +5,13 @@
 [![CI](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/Elixis.svg)](https://github.com/KyaniteLabs/Elixis/stargazers)
 
-> A Glass Bead Game engine for turning raw references into structured outputs: identity, brand voice, design systems, naming direction, and SOUL.md documents.
+> A local-first AI pattern synthesis engine for turning raw references into structured outputs: identity, brand voice, design systems, naming direction, translation checks, and SOUL.md documents.
 
 Elixis is a cross-domain synthesis engine. It transforms raw brain dump text — references, influences, values, works, people, places, aesthetics, constraints — into a pattern graph, then resolves that graph through output lenses. The identity lens generates **SOUL.md** documents for OpenClaw and Soul Spec, but SOUL.md is one output mode, not the whole scope. Current lenses also produce brand voice guidance and design-system direction, with naming research built on the same graph.
 
 ## TL;DR
 
-Elixis takes a messy constellation of references and turns it into usable structure: beads, threads, archetypal patterns, tensions, and a resolved output. Choose the identity lens for SOUL.md, the brand lens for voice guidelines, the design lens for design tokens and principles, or the naming tools for semantically aligned names.
+Elixis takes a messy constellation of references and turns it into usable structure: beads, threads, archetypal patterns, tensions, and a resolved output. Choose the identity lens for SOUL.md, the brand lens for voice guidelines, the design lens for design tokens and principles, or the naming tools for semantically aligned names. It is bigger than identity-file generation: SOUL.md is a compatibility surface, while the core product is a reusable synthesis engine.
 
 **AI discovery:** [`llms.txt`](llms.txt) provides a compact project summary for AI assistants and search crawlers.
 
@@ -33,7 +33,7 @@ Elixis takes a messy constellation of references and turns it into usable struct
 ```text
 elixis/              Core Python package
   entities.py           Entity extraction and structured terms
-  engine.py             Four-phase Glass Bead Game orchestrator
+  engine.py             Four-phase pattern synthesis orchestrator
   lenses/               Output lenses: identity, brand, design
   patterns.py           Archetypal pattern discovery and graph
   synthesis.py          SOUL.md identity lens implementation
@@ -115,10 +115,10 @@ Works with Claude Code, Cursor, Windsurf, and any MCP client.
 ## FAQ
 
 **What is Elixis?**
-Elixis is a Glass Bead Game synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand, design, naming, and SOUL.md output.
+Elixis is a local-first AI pattern synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.
 
 **How do I create an output?**
-Start the server with `python app.py`, open `http://localhost:3110`, enter references and influences, choose a lens, and run the game. The identity lens generates SOUL.md; the brand and design lenses generate different documents from the same graph.
+Start the server with `python app.py`, open `http://localhost:3110`, enter references and influences, choose a lens, and run the synthesis. The identity lens generates SOUL.md; the brand and design lenses generate different documents from the same graph.
 
 **What LLM providers does Elixis support?**
 Elixis works with any local LLM via Ollama (default: Gemma) or any OpenAI-compatible API (OpenAI, Anthropic via proxy, LM Studio, etc.). It falls back to template-based synthesis when no LLM is available.

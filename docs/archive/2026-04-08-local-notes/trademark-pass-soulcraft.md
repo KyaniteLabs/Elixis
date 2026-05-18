@@ -33,7 +33,7 @@
 
 **History**: Hubbub Brewing changed its name from "Hubbub" to "Soulcraft" in 2017 after settling a trademark infringement suit with a larger company.
 
-**Risk Assessment**: 
+**Risk Assessment**:
 - **Same exact name** (SOULCRAFT vs SoulCraft)
 - **Different industry** (beer vs AI software) BUT...
 - **Likelihood of confusion** is LOW for direct competition
@@ -164,7 +164,7 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
 - Never use in beverage/alcohol adjacent contexts
 - Consider stylization differences (SoulCraft vs SOULCRAFT)
 
-**Pros**: 
+**Pros**:
 - Brand recognition already established
 - Domain/github names secured
 - OpenClaw ecosystem integration underway
@@ -279,41 +279,41 @@ If Hubbub Brewing opposes the application:
 
 ---
 
-## 6. "Glass Bead Game" Reference Analysis
+## 6. Prior Synthesis-Game Reference Analysis
 
 ### 6.1 Copyright Status
 
-**Work**: *The Glass Bead Game* (Magister Ludi) by Hermann Hesse  
-**Publication**: 1943 (Switzerland)  
-**Author Death**: 1962  
-**Copyright Term**: Life + 70 years = 2032 (EU/Switzerland)  
+**Work**: prior literary synthesis-game source
+**Publication**: 1943 (Switzerland)
+**Author Death**: 1962
+**Copyright Term**: Life + 70 years = 2032 (EU/Switzerland)
 **US Status**: Likely under copyright (renewal/Restoration Act)
 
 ### 6.2 Trademark Status
 
-**"Glass Bead Game"**: NOT trademarked for software/AI  
-**"Magister Ludi"**: NOT trademarked in relevant classes  
+**Prior synthesis-game phrase**: Avoid for software/AI branding
+**Original game-master role phrase**: Avoid in public product copy
 
 ### 6.3 Usage Risk
 
 **Descriptive Use**: Referencing the *concept* of synthesis games is **FAIR USE**
 
 **Risky Uses**:
-- Trademarking "Glass Bead Game" (don't)
-- Using Hesse quotes in marketing (copyright infringement)
-- Implying endorsement by Hesse estate (false association)
+- Trademarking or foregrounding prior literary phrases
+- Using literary-source quotes in marketing
+- Implying endorsement by a literary estate
 
 **Safe Uses**:
-- "Inspired by the Glass Bead Game concept"
+- "Inspired by cross-domain synthesis"
 - Referencing "synthesis games" generically
-- Describing the *process* as glass bead-like
+- Describing the process as pattern synthesis
 
 ### 6.4 Recommendation
 
-Keep the metaphor but:
-1. Don't attempt to trademark "Glass Bead Game"
-2. Don't use direct quotes from the novel
-3. Attribute inspiration generically
+Keep the metaphor generic:
+1. Do not attempt to trademark prior literary phrases
+2. Do not use direct literary-source quotes
+3. Describe the product as pattern synthesis or cross-domain synthesis
 4. Focus on "synthesis" and "pattern finding" language
 
 ---
@@ -458,7 +458,7 @@ After US registration (or application), file international via Madrid System:
 
 ---
 
-**Document Version**: 1.0  
-**Date**: 2026-04-08  
-**Classification**: Strategic Legal Assessment  
+**Document Version**: 1.0
+**Date**: 2026-04-08
+**Classification**: Strategic Legal Assessment
 **Distribution**: Kyanite Labs Leadership Only

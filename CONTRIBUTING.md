@@ -1,6 +1,6 @@
 # Contributing to Elixis
 
-Thanks for your interest! Elixis is a Glass Bead Game synthesis engine that turns brain dump text into structured outputs for identity, brand, design, naming, and SOUL.md-compatible agents.
+Thanks for your interest! Elixis is a local-first AI pattern synthesis engine that turns brain dump text into structured outputs for identity, brand, design, naming, translation checks, and SOUL.md-compatible agents.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ Elixis uses **zero external Python dependencies** — everything runs on the std
 
 ## Architecture
 
-Four-phase game pipeline: **Declaration** → **Elaboration** → **Connection** → **Resolution**
+Four-phase synthesis pipeline: **Declaration** → **Elaboration** → **Connection** → **Resolution**
 
 - `app.py` — HTTP server, routing, SSE streaming
 - `elixis/engine.py` — four-phase GameEngine orchestration

@@ -1,6 +1,6 @@
 # Elixis — Full Documentation for AI Assistants
 
-> Glass Bead Game synthesis engine for identity, brand, design, naming, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, and SOUL.md outputs.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 
 ## Architecture
 
-Elixis runs a four-phase Glass Bead Game pipeline:
+Elixis runs a four-phase pattern synthesis pipeline:
 
 1. **Declaration** (`elixis/engine.py`, `elixis/entities.py`): Parses references, people, works, concepts, and values into beads using LLM extraction with heuristic fallback.
 2. **Elaboration** (`elixis/research.py`, `elixis/knowledge.py`): Enriches beads with external and curated context.
@@ -93,10 +93,10 @@ Health check with LLM availability and disk status.
 List available output lenses. Current lenses: `identity`, `brand`, `design`.
 
 ### GET /api/game/schema
-Return the Glass Bead Game phases, available lenses, and supported entity types.
+Return the synthesis phases, available lenses, and supported entity types.
 
 ### POST /api/game
-Run the full Glass Bead Game pipeline through a selected output lens.
+Run the full pattern synthesis pipeline through a selected output lens.
 
 ```json
 {"brain_dump": "Batman, Athena, blueprints, ritual, clarity", "lens": "brand"}
@@ -105,7 +105,7 @@ Run the full Glass Bead Game pipeline through a selected output lens.
 The server also accepts legacy `text` as an alias for `brain_dump`.
 
 ### POST /api/game/stream
-Stream the four-phase game with SSE events for beads, graph, tensions, output tokens, and completion.
+Stream the four-phase synthesis pipeline with SSE events for beads, graph, tensions, output tokens, and completion.
 
 ### GET /api/diagnostics
 Admin-protected diagnostics with recent runs, traces, and request logs.

@@ -1,12 +1,12 @@
 # Elixis
 
-> Glass Bead Game synthesis engine for identity, brand, design, naming, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, and SOUL.md outputs.
 
 Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, translation, run tracing, and backup/restore. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
 
 ## Use cases
 
-- Run a four-phase Glass Bead Game pipeline: declaration, elaboration, connection, resolution
+- Run a four-phase pattern synthesis pipeline: declaration, elaboration, connection, resolution
 - Resolve the same pattern graph through identity, brand, and design lenses
 - Generate SOUL.md personas for OpenClaw, SoulClaw, and compatible systems
 - Analyze archetypal patterns, tensions, beads, and cross-domain threads in text
@@ -39,4 +39,4 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 
 ## Keywords
 
-Glass Bead Game engine, AI persona synthesis, brand voice synthesis, design system synthesis, naming research, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, cross-language translation check.
+AI pattern synthesis engine, AI identity generator, brand voice generator, design system generator, naming research tool, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, cross-language translation check, local-first LLM tool, MCP server, answer engine optimization.

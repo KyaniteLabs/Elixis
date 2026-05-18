@@ -1,4 +1,4 @@
-"""Quantified style analysis for the Glass Bead Game."""
+"""Quantified style analysis for the pattern synthesis."""
 
 import math
 import re

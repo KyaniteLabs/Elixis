@@ -15,7 +15,7 @@
 
 ### 1.1 Category Definition
 
-**Current Category**: AI Agent Development Tools  
+**Current Category**: AI Agent Development Tools
 **New Category**: *AI Identity Synthesis & Specification*
 
 SoulCraft doesn't compete with agent frameworks—it complements them. We are the "identity layer" that sits between user intent and agent execution.
@@ -24,36 +24,36 @@ SoulCraft doesn't compete with agent frameworks—it complements them. We are th
 
 > For AI developers and power users who want agents with coherent, transferable personalities, SoulCraft is an identity synthesis engine that discovers the hidden patterns in your influences and generates OpenClaw-compatible SOUL.md specifications. Unlike character templates or prompt engineering, SoulCraft extracts the *essence* of your references and produces a rigorous identity document that works across frameworks.
 
-### 1.3 The "Glass Bead Game" Metaphor
+### 1.3 Cross-Domain Synthesis Metaphor
 
-**Reference**: Hermann Hesse's *The Glass Bead Game* (Magister Ludi), 1943  
+**Reference**: prior literary synthesis-game framing, kept out of front-facing branding
 **Concept**: A cerebral game where players synthesize insights across disciplines (music, math, philosophy) into unified patterns.
 
-**Application**: SoulCraft treats persona creation as a Glass Bead Game—taking disparate cultural references and finding the underlying pattern that connects them. This metaphor:
+**Application**: SoulCraft treats persona creation as cross-domain synthesis: taking disparate cultural references and finding the underlying pattern that connects them. This metaphor:
 - Suggests intellectual rigor without being academic
 - Implies synthesis over aggregation
 - Creates mystique/artistic credibility
 - Positions the user as a "player" in a creative game
 
-**⚠️ Copyright Note**: *The Glass Bead Game* is under copyright (1943, author died 1962 = 70 years after death = expires 2032 in most jurisdictions). Use the *concept* of synthesis games, not direct quotes or the specific phrase in branding.
+**Copyright Note**: Keep the concept generic in public copy. Do not use direct quotes, branded literary phrases, or language that implies endorsement by a literary estate.
 
 ---
 
 ## 2. Target Audience Segments
 
 ### 2.1 Primary: The Framework Architect
-**Profile**: OpenClaw/Aeon/Nanobot developers building multi-agent systems  
-**Pain Point**: Agents feel mechanical; personality is an afterthought  
+**Profile**: OpenClaw/Aeon/Nanobot developers building multi-agent systems
+**Pain Point**: Agents feel mechanical; personality is an afterthought
 **Value Prop**: "Give your agents consistent, transferable identity"
 
 ### 2.2 Secondary: The Creative Technologist
-**Profile**: Writers, game designers, artists experimenting with AI personas  
-**Pain Point**: Character consistency across long-form content  
+**Profile**: Writers, game designers, artists experimenting with AI personas
+**Pain Point**: Character consistency across long-form content
 **Value Prop**: "Capture the essence of your influences in a format AI can execute"
 
 ### 2.3 Tertiary: The Enterprise Integrator
-**Profile**: Consultants building branded AI experiences for clients  
-**Pain Point**: Client brand voice is hard to codify  
+**Profile**: Consultants building branded AI experiences for clients
+**Pain Point**: Client brand voice is hard to codify
 **Value Prop**: "Transform brand references into executable identity specifications"
 
 ---
@@ -86,9 +86,9 @@ None. The space is wide open.
 
 ### 4.1 Tagline Options
 
-**Primary**: "Give Your AI a Soul"  
-**Secondary**: "The Glass Bead Game for AI Personas"  
-**Technical**: "Identity Synthesis Engine for AI Agents"  
+**Primary**: "Give Your AI a Soul"
+**Secondary**: "Cross-domain synthesis for AI personas"
+**Technical**: "Identity Synthesis Engine for AI Agents"
 **Short**: "Find the Thread"
 
 ### 4.2 Key Messages by Audience
@@ -180,7 +180,7 @@ None. The space is wide open.
 - Code: JetBrains Mono (developer credibility)
 
 **Visual Motifs**:
-- Glass beads (connection, synthesis)
+- Pattern beads (connection, synthesis)
 - Thread/connections (finding the pattern)
 - Probability bars (data-driven insight)
 
@@ -195,14 +195,14 @@ None. The space is wide open.
 - But we're part of the OpenClaw ecosystem, not replacing it
 
 **Mysterious but Accessible**:
-- "Glass Bead Game" creates intrigue
+- Cross-domain synthesis creates intrigue
 - But the tool is straightforward to use
 
 ### 6.3 Naming Conventions
 
-**Product**: SoulCraft (one word, camelCase in code)  
-**Output**: SOUL.md (all caps, file extension included)  
-**Process**: "The Pipeline" (3 stages)  
+**Product**: SoulCraft (one word, camelCase in code)
+**Output**: SOUL.md (all caps, file extension included)
+**Process**: "The Pipeline" (3 stages)
 **Tagline**: "Find the Thread"
 
 ---
@@ -247,22 +247,22 @@ None. The space is wide open.
 ## 9. Risk Assessment
 
 ### 9.1 Market Risks
-- **Risk**: OpenClaw builds this internally  
+- **Risk**: OpenClaw builds this internally
   **Mitigation**: Open source, community ownership, focus on *synthesis* not just formatting
 
-- **Risk**: LLM providers make persona generation trivial  
+- **Risk**: LLM providers make persona generation trivial
   **Mitigation**: Local inference, caching, pattern graph engine IP
 
 ### 9.2 Technical Risks
-- **Risk**: Local LLM quality degradation  
+- **Risk**: Local LLM quality degradation
   **Mitigation**: Dual inference (VPS + fallback), model flexibility
 
-- **Risk**: Translation quality for edge cases  
+- **Risk**: Translation quality for edge cases
   **Mitigation**: Cache-based fallback, human-in-the-loop option
 
 ### 9.3 Brand Risks
-- **Risk**: "Glass Bead Game" trademark concerns (see Trademark Pass)  
-  **Mitigation**: Reference conceptually, don't trademark the phrase
+- **Risk**: Over-specific literary references create trademark or copyright concerns
+  **Mitigation**: Reference the synthesis concept generically and avoid literary branding
 
 ---
 
@@ -286,36 +286,36 @@ None. The space is wide open.
 ```
 1/ AGENTS.md handles what your AI does.
    SOUL.md handles who your AI is.
-   
-   Introducing SoulCraft: The Glass Bead Game for AI Personas.
+
+   Introducing SoulCraft: cross-domain synthesis for AI personas.
 
 2/ Drop your references—characters, films, books, figures.
    SoulCraft finds the pattern underneath.
-   
+
    Not who they are. What it means that you chose them.
 
 3/ 3-stage pipeline:
    • Extract entities
-   • Build pattern graph  
+   • Build pattern graph
    • Synthesize SOUL.md
 
    OpenClaw-compatible out of the box.
 
 4/ Local inference. 29 languages. Zero external API costs.
-   
+
    Because your agent's identity shouldn't depend on someone else's server.
 
 5/ Try it: [link]
-   
+
    Open source. Built by @KyaniteLabs.
-   
+
    Find the Thread.
 ```
 
 ### README Hero Section
 
 ```markdown
-# SoulCraft — The Glass Bead Game for AI Personas
+# SoulCraft — Cross-Domain Synthesis for AI Personas
 
 > AGENTS.md handles operations. SOUL.md handles identity.
 
@@ -330,6 +330,6 @@ Drop your references. Find the pattern. Give your AI a soul.
 
 ---
 
-*Document Version: 1.0*  
-*Date: 2026-04-08*  
+*Document Version: 1.0*
+*Date: 2026-04-08*
 *Author: Kyanite Labs Strategy*

@@ -1,4 +1,4 @@
-"""Negation-aware sentiment and intensity detection for the Glass Bead Game."""
+"""Negation-aware sentiment and intensity detection for the pattern synthesis."""
 
 import re
 from collections import Counter

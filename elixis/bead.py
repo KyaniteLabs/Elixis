@@ -1,4 +1,4 @@
-"""Universal concept node for the Glass Bead Game engine."""
+"""Universal concept node for the pattern synthesis engine."""
 
 
 VALID_TYPES = frozenset({
@@ -31,7 +31,7 @@ def _clamp(value, lo, hi):
 
 
 class Bead:
-    """A universal concept node in the Glass Bead Game.
+    """A universal concept node in pattern synthesis.
 
     Represents any entity -- character, person, work, concept, archetype,
     mythological figure, or place -- that can participate in bead connections.

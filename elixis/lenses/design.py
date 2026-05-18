@@ -1,4 +1,4 @@
-"""Design system output lens for the Glass Bead Game."""
+"""Design system output lens for the pattern synthesis."""
 
 _DESIGN_PRINCIPLES = {
     "transformation": [

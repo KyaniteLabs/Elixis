@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <circle cx="16" cy="16" r="14" fill="#0d0c11" stroke="#7c3aed" stroke-width="2"/>
-  <text x="16" y="22" font-family="sans-serif" font-size="18" fill="#7c3aed" text-anchor="middle" font-weight="bold">E</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="title desc">
+  <title id="title">Elixis favicon</title>
+  <desc id="desc">Letter E inside a dark circle for the Elixis AI pattern synthesis engine.</desc>
+  <circle cx="16" cy="16" r="14" fill="#0d0c11" stroke="#c9956b" stroke-width="2"/>
+  <text x="16" y="22" font-family="sans-serif" font-size="18" fill="#c9956b" text-anchor="middle" font-weight="bold">E</text>
 </svg>

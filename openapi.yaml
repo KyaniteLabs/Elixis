@@ -2,9 +2,10 @@ openapi: "3.1.0"
 info:
   title: Elixis API
   description: |
-    Glass Bead Game synthesis engine for identity, brand, design, naming,
-    and SOUL.md outputs. Elixis turns raw references into beads, threads,
-    pattern graphs, tensions, and lens-specific markdown documents.
+    Local-first AI pattern synthesis engine for identity, brand voice, design systems,
+    naming research, translation checks, and SOUL.md outputs. Elixis turns raw
+    references into beads, threads, pattern graphs, tensions, and lens-specific
+    markdown documents.
   version: "1.0.0"
   license:
     name: MIT
@@ -19,8 +20,8 @@ servers:
 tags:
   - name: Pipeline
     description: Legacy identity-compatible synthesis routes
-  - name: Game
-    description: Glass Bead Game phases and lens-based synthesis
+  - name: Synthesis
+    description: Pattern synthesis phases and lens-based output generation
   - name: Translation
     description: Translation, language detection, and cache routes
   - name: Naming
@@ -35,7 +36,7 @@ paths:
     post:
       summary: Run the identity-compatible pipeline on a brain dump
       description: |
-        Legacy route that runs the Glass Bead Game through the identity lens
+        Legacy route that runs the pattern synthesis pipeline through the identity lens
         and returns a SOUL.md-compatible result. Supports JSON and SSE.
       operationId: extractSoul
       tags: [Pipeline]
@@ -110,9 +111,9 @@ paths:
 
   /api/game:
     post:
-      summary: Run the Glass Bead Game through a selected output lens
+      summary: Run the pattern synthesis pipeline through a selected output lens
       operationId: runGame
-      tags: [Game]
+      tags: [Synthesis]
       requestBody:
         required: true
         content:
@@ -121,7 +122,7 @@ paths:
               $ref: "#/components/schemas/GameRequest"
       responses:
         "200":
-          description: Lens-specific game result
+          description: Lens-specific synthesis result
           content:
             application/json:
               schema:
@@ -137,12 +138,12 @@ paths:
 
   /api/game/stream:
     post:
-      summary: Stream the Glass Bead Game through a selected output lens
+      summary: Stream the pattern synthesis pipeline through a selected output lens
       description: |
         Streams declaration, connection, tension, output-token, and completion
         events. Non-identity lenses stream their final markdown as output tokens.
       operationId: streamGame
-      tags: [Game]
+      tags: [Synthesis]
       requestBody:
         required: true
         content:
@@ -151,7 +152,7 @@ paths:
               $ref: "#/components/schemas/GameRequest"
       responses:
         "200":
-          description: SSE stream of game events
+          description: SSE stream of synthesis events
           content:
             text/event-stream:
               schema:
@@ -163,7 +164,7 @@ paths:
     get:
       summary: List available output lenses
       operationId: getLenses
-      tags: [Game]
+      tags: [Synthesis]
       responses:
         "200":
           description: Available lenses
@@ -179,12 +180,12 @@ paths:
 
   /api/game/schema:
     get:
-      summary: Describe game phases, lenses, and entity types
+      summary: Describe synthesis phases, lenses, and entity types
       operationId: getGameSchema
-      tags: [Game]
+      tags: [Synthesis]
       responses:
         "200":
-          description: Game schema
+          description: Synthesis schema
           content:
             application/json:
               schema:

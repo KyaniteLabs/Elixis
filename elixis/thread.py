@@ -1,4 +1,4 @@
-"""Cross-domain connection for the Glass Bead Game engine."""
+"""Cross-domain connection for the pattern synthesis engine."""
 
 from __future__ import annotations
 

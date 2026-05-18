@@ -1,4 +1,4 @@
-"""Output validation for the Glass Bead Game.
+"""Output validation for the pattern synthesis.
 
 Checks generated output for completeness, quality, and safety.
 """
