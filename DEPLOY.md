@@ -12,7 +12,7 @@
 - **VPS**: `srv1542844.hstgr.cloud` (Ubuntu 24.04, Docker + Traefik)
 - **Domain**: `elixis.kyanitelabs.tech` (Let's Encrypt via Traefik)
 - **LLM primary**: `llama-local` on VPS (Qwen3.5-0.8B via llama.cpp)
-- **LLM fallback**: LM Studio via Tailscale (`100.66.225.85:1234`)
+- **LLM fallback**: `llama-local` on the same Docker network
 
 ## Quick Deploy
 
@@ -70,8 +70,8 @@ All config is in `docker-compose.yml` environment variables:
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
-| `LLM_BASE_URL` | `http://172.19.0.1:8085/v1` | Docker bridge → llama-local |
-| `LLM_FALLBACK_URL` | `http://100.66.225.85:1234/v1` | Tailscale → LM Studio |
+| `LLM_BASE_URL` | `http://llama-local:8085/v1` | Docker network → llama-local |
+| `LLM_FALLBACK_URL` | `http://llama-local:8085/v1` | Same local inference service |
 | `LLM_MODEL` | `Qwen3.5-0.8B-Q4_K_M.gguf` | Model file in llama.cpp |
 | `ADMIN_API_KEY` | secret | Required for diagnostics, run history, backups, and cache deletion |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
