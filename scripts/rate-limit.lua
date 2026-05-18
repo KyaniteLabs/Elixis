@@ -1,4 +1,4 @@
--- Rate limiting middleware for Fugax
+-- Rate limiting middleware for Elixis
 -- Can be used with OpenResty/Nginx for additional rate limiting layer
 
 local _M = {}

@@ -69,16 +69,21 @@ def get_logger(name: str) -> logging.Logger:
         Configured logger instance
     """
     logger = logging.getLogger(name)
+    logger.propagate = False
 
     # Avoid reconfiguring if already set up
     if logger.handlers:
+        if not any(isinstance(filter_, RequestContextFilter) for filter_ in logger.filters):
+            logger.addFilter(RequestContextFilter())
         return logger
 
     logger.setLevel(getattr(logging, LOG_LEVEL))
+    logger.addFilter(RequestContextFilter())
 
     # Console handler
     console = logging.StreamHandler(sys.stdout)
     console.setLevel(logging.DEBUG)
+    console.addFilter(RequestContextFilter())
 
     if LOG_FORMAT == "json":
         console.setFormatter(JSONFormatter())
@@ -99,10 +104,10 @@ def get_logger(name: str) -> logging.Logger:
         )
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(JSONFormatter())
+        file_handler.addFilter(RequestContextFilter())
         logger.addHandler(file_handler)
-    except OSError:
-        # If we can't write to file, console-only is fine
-        pass
+    except OSError as exc:
+        logger.warning("File logging unavailable; continuing with console logging only: %s", exc)
 
     return logger
 
@@ -150,6 +155,7 @@ def configure_root_logger():
     # Console handler
     console = logging.StreamHandler(sys.stdout)
     console.setLevel(logging.DEBUG)
+    console.addFilter(context_filter)
 
     if LOG_FORMAT == "json":
         console.setFormatter(JSONFormatter())
@@ -170,9 +176,10 @@ def configure_root_logger():
         )
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(JSONFormatter())
+        file_handler.addFilter(context_filter)
         root_logger.addHandler(file_handler)
-    except OSError:
-        pass
+    except OSError as exc:
+        root_logger.warning("File logging unavailable; continuing with console logging only: %s", exc)
 
 
 # Structured log event helpers

@@ -12,7 +12,7 @@ from elixis.synthesis import synthesize_soulmd
 
 
 class TestFullPipeline(unittest.TestCase):
-    """Test the complete 3-stage pipeline."""
+    """Test the identity-compatible pipeline surface."""
 
     def test_pipeline_end_to_end(self):
         """Run full pipeline on sample brain dump."""
@@ -22,16 +22,16 @@ Miyamoto Musashi (Book of Five Rings) - strategist, philosopher
 The concept of emergence from complexity
 Flow states in creative work
 """
-        # Stage 1: Extract entities
+        # Declaration: Extract entities
         entities = extract_entities(brain_dump)
         self.assertIsInstance(entities, list)
 
-        # Stage 2: Build pattern graph
+        # Connection: Build pattern graph
         graph = build_pattern_graph(entities, brain_dump)
         self.assertIn("patterns", graph)
         self.assertIn("emergent_topic", graph)
 
-        # Stage 3: Synthesize SOUL.md
+        # Identity lens: Synthesize SOUL.md
         soulmd = synthesize_soulmd(entities, graph)
         self.assertIn("#", soulmd)
         self.assertIn("Who I Am", soulmd)

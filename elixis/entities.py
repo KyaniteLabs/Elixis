@@ -1,4 +1,4 @@
-"""Stage 1: Entity Extraction Engine.
+"""Declaration support: entity extraction engine.
 
 Extracts named entities from raw brain dump text using LLM (primary)
 with heuristic line-by-line parsing as fallback.

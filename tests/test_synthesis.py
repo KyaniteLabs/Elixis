@@ -470,3 +470,18 @@ class TestSynthesizeSoulmdStream:
         assert telemetry["data"]["tokens_total"] == 30
         assert telemetry["data"]["total_ms"] == 300
         assert telemetry["data"]["stage_timings_ms"]["stage1_ms"] == 100
+
+    @patch("elixis.synthesis.llm_available", return_value=True)
+    @patch("elixis.synthesis.chat_stream")
+    def test_stream_error_falls_back_with_explicit_error(self, mock_stream, mock_avail):
+        mock_stream.return_value = [
+            {"type": "error", "error": "stream exploded"},
+            {"type": "done", "success": False, "error": "stream exploded"},
+        ]
+
+        events = list(synthesize_soulmd_stream([_make_entity()], _make_graph()))
+
+        assert events[0]["type"] == "error"
+        assert "stream exploded" in events[0]["message"]
+        assert events[-1]["type"] == "soulmd_done"
+        assert events[-1]["data"]["source"] == "template-fallback"

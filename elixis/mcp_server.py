@@ -50,6 +50,29 @@ _TOOLS = [
         },
     },
     {
+        "name": "run_game",
+        "description": (
+            "Run the Glass Bead Game through an output lens. "
+            "Use when: generating identity, brand, or design documents from scattered references, "
+            "or when SOUL.md is too narrow for the requested output."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "brain_dump": {
+                    "type": "string",
+                    "description": "Raw text containing references, influences, values, people, works, or concepts.",
+                },
+                "lens": {
+                    "type": "string",
+                    "description": "Output lens to resolve through. Default: identity.",
+                    "enum": ["identity", "brand", "design"],
+                },
+            },
+            "required": ["brain_dump"],
+        },
+    },
+    {
         "name": "extract_entities",
         "description": (
             "Extract structured entities (people, works, concepts, values) from text. "
@@ -168,6 +191,8 @@ def _handle_tools_call(params):
     try:
         if name == "create_soul":
             return _tool_create_soul(arguments)
+        elif name == "run_game":
+            return _tool_run_game(arguments)
         elif name == "extract_entities":
             return _tool_extract_entities(arguments)
         elif name == "analyze_patterns":
@@ -192,6 +217,7 @@ def _tool_create_soul(args):
     is_valid, error, meta = validate_brain_dump(brain_dump)
     if not is_valid:
         return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
+    brain_dump = meta.get("sanitized_text", brain_dump)
 
     entities = extract_entities(brain_dump)
     enrich_entities(entities)
@@ -209,10 +235,45 @@ def _tool_create_soul(args):
     return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
 
 
+def _tool_run_game(args):
+    brain_dump = args.get("brain_dump", "")
+    lens = args.get("lens", "identity")
+    if lens not in {"identity", "brand", "design"}:
+        return {
+            "content": [{"type": "text", "text": "Validation error: lens must be one of identity, brand, design"}],
+            "isError": True,
+        }
+
+    is_valid, error, meta = validate_brain_dump(brain_dump)
+    if not is_valid:
+        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
+    brain_dump = meta.get("sanitized_text", brain_dump)
+
+    from .engine import GameEngine
+    engine = GameEngine()
+    output = engine.run_full(brain_dump, lens=lens)
+    state = engine.state
+    graph = state.metadata.get("pattern_graph", {})
+    result = {
+        "lens": lens,
+        "entity_count": len(state.beads),
+        "thread_count": len(state.threads),
+        "tension_count": len(state.tensions),
+        "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
+        "emergent_topic": graph.get("emergent_topic"),
+        "emergent_theme": graph.get("emergent_theme"),
+        "consensus_score": graph.get("consensus_score"),
+        "output": output,
+    }
+    return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+
+
 def _tool_extract_entities(args):
     text = args.get("text", "")
-    if not text or not text.strip():
-        return {"content": [{"type": "text", "text": "Error: 'text' must be a non-empty string"}], "isError": True}
+    is_valid, error, meta = validate_brain_dump(text)
+    if not is_valid:
+        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
+    text = meta.get("sanitized_text", text)
     entities = extract_entities(text)
     out = []
     for e in entities[:15]:
@@ -226,8 +287,10 @@ def _tool_extract_entities(args):
 
 def _tool_analyze_patterns(args):
     text = args.get("text", "")
-    if not text or not text.strip():
-        return {"content": [{"type": "text", "text": "Error: 'text' must be a non-empty string"}], "isError": True}
+    is_valid, error, meta = validate_brain_dump(text)
+    if not is_valid:
+        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
+    text = meta.get("sanitized_text", text)
     entities = extract_entities(text)
     graph = build_pattern_graph(entities, text)
     result = {
@@ -279,8 +342,10 @@ def _tool_research_name(args):
 def _tool_name_from_identity(args):
     brain_dump = args.get("brain_dump", "")
     source = args.get("source", "taxonomy")
-    if not brain_dump or not brain_dump.strip():
-        return {"content": [{"type": "text", "text": "Error: 'brain_dump' must be a non-empty string"}], "isError": True}
+    is_valid, error, meta = validate_brain_dump(brain_dump)
+    if not is_valid:
+        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
+    brain_dump = meta.get("sanitized_text", brain_dump)
 
     from .engine import GameEngine
     engine = GameEngine()

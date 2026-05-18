@@ -4,7 +4,7 @@
 http:
   routers:
     elixis:
-      rule: "Host(`elixis.{{ env "TRAEFIK_DOMAIN" }}`)"
+      rule: 'Host(`elixis.{{ env "TRAEFIK_DOMAIN" }}`)'
       entryPoints:
         - websecure
       service: elixis
@@ -46,9 +46,11 @@ http:
         accessControlAllowMethods:
           - GET
           - POST
+          - DELETE
           - OPTIONS
         accessControlAllowHeaders:
           - Content-Type
           - Authorization
+          - X-Admin-API-Key
         accessControlMaxAge: 100
         addVaryHeader: true

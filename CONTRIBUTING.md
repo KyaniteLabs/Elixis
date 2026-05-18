@@ -1,6 +1,6 @@
 # Contributing to Elixis
 
-Thanks for your interest! Elixis is a companion tool for OpenClaw that transforms brain dump text into structured SOUL.md identity documents.
+Thanks for your interest! Elixis is a Glass Bead Game synthesis engine that turns brain dump text into structured outputs for identity, brand, design, naming, and SOUL.md-compatible agents.
 
 ## Quick Start
 
@@ -21,14 +21,16 @@ Elixis uses **zero external Python dependencies** — everything runs on the std
 
 ## Architecture
 
-3-stage pipeline: **Entity Extraction** → **Pattern Graph Engine** → **SOUL.md Synthesis**
+Four-phase game pipeline: **Declaration** → **Elaboration** → **Connection** → **Resolution**
 
 - `app.py` — HTTP server, routing, SSE streaming
-- `elixis/entities.py` — Stage 1: LLM entity extraction
-- `elixis/patterns.py` — Stage 2: Archetypal pattern probability graph
-- `elixis/synthesis.py` — Stage 3: SOUL.md document generation
+- `elixis/engine.py` — four-phase GameEngine orchestration
+- `elixis/entities.py` — declaration: LLM entity extraction
+- `elixis/research.py` — elaboration: Wikipedia and knowledge-base enrichment
+- `elixis/patterns.py` and `elixis/graph.py` — connection: archetypal graph, bridges, and threads
+- `elixis/lenses/` — resolution: identity, brand, and design output lenses
+- `elixis/synthesis.py` — SOUL.md identity lens implementation
 - `elixis/llm.py` — LLM client (Ollama / OpenAI-compatible)
-- `elixis/research.py` — Wikipedia enrichment with ThreadPoolExecutor
 - `elixis/translate.py` — On-the-fly translation with streaming and caching
 - `elixis/mcp_server.py` — MCP server for AI agent native access
 

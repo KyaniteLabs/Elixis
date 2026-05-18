@@ -1,20 +1,22 @@
 # Elixis — Full Documentation for AI Assistants
 
-> AI-powered identity synthesis companion for OpenClaw and Soul Spec.
+> Glass Bead Game synthesis engine for identity, brand, design, naming, and SOUL.md outputs.
 
 ## Overview
 
-Elixis transforms brain dump text into structured SOUL.md identity documents for AI agents. It is a companion tool for the OpenClaw ecosystem, compatible with Soul Spec v0.5, SoulClaw, Claude Code, Cursor, Windsurf, and any system that reads markdown-based agent identities.
+Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, translation, run tracing, and backup/restore.
 
 ## Architecture
 
-Elixis runs a 3-stage pipeline:
+Elixis runs a four-phase Glass Bead Game pipeline:
 
-1. **Entity Extraction** (`elixis/entities.py`): Parses references, people, works, concepts, and values from raw text using LLM with heuristic fallback.
-2. **Pattern Analysis** (`elixis/patterns.py`): Maps entities to 12 archetypal patterns (transformation, power, outsider, creation, shadow, wisdom, connection, struggle, freedom, spiritual, trickster, explorer) using LLM classification blended with keyword scoring.
-3. **SOUL.md Synthesis** (`elixis/synthesis.py`): Generates a complete identity document with sections for Who I Am, Worldview, Voice & Tone, Operating Principles, Response Patterns, Boundaries, and Pet Peeves.
+1. **Declaration** (`elixis/engine.py`, `elixis/entities.py`): Parses references, people, works, concepts, and values into beads using LLM extraction with heuristic fallback.
+2. **Elaboration** (`elixis/research.py`, `elixis/knowledge.py`): Enriches beads with external and curated context.
+3. **Connection** (`elixis/patterns.py`, `elixis/graph.py`): Maps beads into archetypal patterns, cross-domain threads, bridges, and tensions.
+4. **Resolution** (`elixis/lenses/`): Resolves the graph through identity, brand, or design lenses. The identity lens produces SOUL.md; other lenses produce their own markdown documents.
 
 Supporting modules:
+- `elixis/lenses/` — Output lenses for identity, brand, and design documents
 - `elixis/research.py` — Wikipedia enrichment (parallelized with ThreadPoolExecutor)
 - `elixis/translate.py` — Translation with file-based caching and streaming
 - `elixis/naming.py` — Name research and variant generation
@@ -23,12 +25,14 @@ Supporting modules:
 - `elixis/backup.py` — Backup and restore with path traversal protection
 - `elixis/llm.py` — LLM interface supporting Ollama and OpenAI-compatible APIs
 
+MCP tools include `create_soul` for identity/SOUL.md compatibility and `run_game` for the broader lens-based engine (`identity`, `brand`, `design`).
+
 ## HTTP API Reference
 
 Base URL: `http://localhost:3110`
 
 ### POST /api/extract
-Run the full 3-stage pipeline on a brain dump.
+Run the identity-compatible pipeline on a brain dump. This is the legacy SOUL.md route; use `/api/game` for explicit lens selection.
 
 **Request:**
 ```json
@@ -85,11 +89,29 @@ Research a name with semantic analysis and variant generation.
 ### GET /api/health
 Health check with LLM availability and disk status.
 
+### GET /api/lenses
+List available output lenses. Current lenses: `identity`, `brand`, `design`.
+
+### GET /api/game/schema
+Return the Glass Bead Game phases, available lenses, and supported entity types.
+
+### POST /api/game
+Run the full Glass Bead Game pipeline through a selected output lens.
+
+```json
+{"brain_dump": "Batman, Athena, blueprints, ritual, clarity", "lens": "brand"}
+```
+
+The server also accepts legacy `text` as an alias for `brain_dump`.
+
+### POST /api/game/stream
+Stream the four-phase game with SSE events for beads, graph, tensions, output tokens, and completion.
+
 ### GET /api/diagnostics
-Full diagnostics with recent runs, traces, and request logs.
+Admin-protected diagnostics with recent runs, traces, and request logs.
 
 ### GET /api/runs
-Recent pipeline runs (last 50).
+Admin-protected recent pipeline runs (last 50).
 
 ### GET /api/languages
 Supported translation languages (28+).
@@ -98,36 +120,37 @@ Supported translation languages (28+).
 Translation cache statistics.
 
 ### POST /api/backups
-Create a backup of the .elixis/ data directory.
+Admin-protected backup creation for the .elixis/ data directory.
 
 ### GET /api/backups
-List available backups.
+Admin-protected backup listing.
 
 ### POST /api/backups/restore
-Restore from a backup.
+Admin-protected restore from a backup.
 
 ### POST /api/backups/cleanup
-Remove backups older than retention period.
+Admin-protected removal of backups older than retention period.
 
 ### DELETE /api/backups/:name
-Delete a specific backup.
+Admin-protected deletion of a specific backup.
 
 ### DELETE /api/translation-cache
-Clear the translation cache.
+Admin-protected cache deletion.
 
 ## Configuration
 
 Environment variables:
 - `LLM_BASE_URL` — API base URL (default: `http://localhost:11434`)
-- `LLM_MODEL` — Model name (default: `gemma4`)
+- `LLM_MODEL` — Model name (default: `gemma-4b`)
 - `LLM_PROVIDER` — `ollama` (default) or `openai`
 - `LLM_API_KEY` — API key for cloud providers
-- `CORS_ORIGIN` — CORS allow-origin (default: `*`)
+- `CORS_ORIGIN` — CORS allow-origin (default: `http://localhost:3110`)
+- `ADMIN_API_KEY` — Required bearer token for diagnostics, run history, backups, and destructive cache routes
 - `ELIXIS_CACHE_DIR` — Translation cache directory override
 
-## SOUL.md Output Format
+## Identity Lens Output Format
 
-The generated SOUL.md follows this structure:
+The identity lens generates SOUL.md documents with this structure:
 
 ```markdown
 # [Identity Name]

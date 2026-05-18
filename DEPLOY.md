@@ -19,7 +19,7 @@
 ### From local machine
 
 ```bash
-./scripts/deploy.sh
+VPS_HOST=srv1542844.hstgr.cloud ADMIN_API_KEY="$(openssl rand -hex 32)" ./scripts/deploy.sh
 ```
 
 Builds the image locally, transfers it to the VPS, and restarts the container.
@@ -28,7 +28,7 @@ Builds the image locally, transfers it to the VPS, and restarts the container.
 
 ```bash
 cd /docker/elixis
-docker compose up -d --build --remove-orphans
+ADMIN_API_KEY="<long-random-token>" docker compose up -d --build --remove-orphans
 ```
 
 ## First-Time Setup
@@ -42,13 +42,14 @@ cd /docker/elixis
 git clone <repo-url> .
 
 # Build and start
-docker compose up -d --build
+ADMIN_API_KEY="<long-random-token>" docker compose up -d --build
 ```
 
 ## CI/CD
 
-Push to `main` triggers auto-deployment via GitHub Actions.
-Required secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
+Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, copies `docker-compose.yml` to the VPS, logs the VPS into GHCR, and starts Compose with `ELIXIS_IMAGE` set to the pushed image.
+
+Required secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `ADMIN_API_KEY`.
 
 ## Monitoring
 
@@ -60,7 +61,7 @@ curl https://elixis.kyanitelabs.tech/api/health
 ssh root@srv1542844.hstgr.cloud "docker compose -f /docker/elixis/docker-compose.yml logs -f elixis"
 
 # Diagnostics
-curl https://elixis.kyanitelabs.tech/api/diagnostics
+curl -H "Authorization: Bearer $ADMIN_API_KEY" https://elixis.kyanitelabs.tech/api/diagnostics
 ```
 
 ## Configuration
@@ -72,7 +73,9 @@ All config is in `docker-compose.yml` environment variables:
 | `LLM_BASE_URL` | `http://172.19.0.1:8085/v1` | Docker bridge → llama-local |
 | `LLM_FALLBACK_URL` | `http://100.66.225.85:1234/v1` | Tailscale → LM Studio |
 | `LLM_MODEL` | `Qwen3.5-0.8B-Q4_K_M.gguf` | Model file in llama.cpp |
+| `ADMIN_API_KEY` | secret | Required for diagnostics, run history, backups, and cache deletion |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
+| `VPS_HOST` | deploy target | Required by `scripts/deploy.sh` |
 
 ## Data
 

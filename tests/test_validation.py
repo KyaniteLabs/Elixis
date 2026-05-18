@@ -77,6 +77,9 @@ class TestValidateBrainDump(unittest.TestCase):
         # Should pass but with warning
         self.assertTrue(is_valid)
         self.assertTrue(len(meta.get("warnings", [])) > 0)
+        self.assertIn("sanitized_text", meta)
+        self.assertNotIn("Ignore all previous instructions", meta["sanitized_text"])
+        self.assertIn("[filtered]", meta["sanitized_text"])
 
 
 class TestValidateEntity(unittest.TestCase):
@@ -153,6 +156,20 @@ class TestValidateApiRequest(unittest.TestCase):
         data = {"brain_dump": "Valid content", "stream": "yes"}
         is_valid, error = validate_api_request(data, "/api/extract")
         self.assertFalse(is_valid)
+
+    def test_extract_endpoint_accepts_text_alias(self):
+        """Extract request validation accepts legacy text alias."""
+        data = {"text": "Valid content here", "stream": False}
+        is_valid, error = validate_api_request(data, "/api/extract")
+        self.assertTrue(is_valid)
+        self.assertIsNone(error)
+
+    def test_game_endpoint_rejects_invalid_lens(self):
+        """Game request validation rejects unknown lenses."""
+        data = {"brain_dump": "Valid content here", "lens": "unknown"}
+        is_valid, error = validate_api_request(data, "/api/game")
+        self.assertFalse(is_valid)
+        self.assertIn("Invalid lens", error)
 
 
 class TestCSP(unittest.TestCase):

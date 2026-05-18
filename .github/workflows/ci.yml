@@ -100,11 +100,15 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+          GHCR_TOKEN: ${{ github.token }}
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         run: |
-          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ]; then
+          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ] || [ -z "${ADMIN_API_KEY}" ]; then
             echo "VPS deploy secrets are not configured; skipping deploy."
             exit 0
           fi
+          IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
           trap 'rm -f deploy_key' EXIT
           echo "${VPS_SSH_KEY}" > deploy_key
@@ -114,11 +118,15 @@ jobs:
           scp -i deploy_key -o StrictHostKeyChecking=no \
             docker-compose.yml ${VPS_USER}@${VPS_HOST}:/docker/elixis/
 
+          printf '%s' "${GHCR_TOKEN}" | ssh -i deploy_key -o StrictHostKeyChecking=no \
+            ${VPS_USER}@${VPS_HOST} \
+            "docker login ${REGISTRY} -u '${GITHUB_ACTOR}' --password-stdin"
+
           # Deploy via SSH
           ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} << 'EOF'
+            ${VPS_USER}@${VPS_HOST} << EOF
             cd /docker/elixis
-            docker compose pull
-            docker compose up -d --remove-orphans
+            ADMIN_API_KEY='${ADMIN_API_KEY}' ELIXIS_IMAGE='${IMAGE_REF}' docker compose pull elixis
+            ADMIN_API_KEY='${ADMIN_API_KEY}' ELIXIS_IMAGE='${IMAGE_REF}' docker compose up -d --no-build --remove-orphans
             docker system prune -f
           EOF

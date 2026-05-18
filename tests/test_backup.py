@@ -5,6 +5,7 @@ import sys
 import os
 import tempfile
 import shutil
+import tarfile
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,6 +17,7 @@ from elixis.backup import (
     cleanup_old_backups,
     enable_auto_backup,
     is_auto_backup_enabled,
+    restore_backup,
 )
 
 
@@ -83,6 +85,17 @@ class TestBackup(unittest.TestCase):
         self.assertIn("name", backups[0])
         self.assertIn("size_bytes", backups[0])
 
+    def test_backups_created_in_same_second_have_unique_names(self):
+        """Backup names do not collide during rapid operator actions."""
+        first = create_backup()
+        second = create_backup()
+
+        self.assertEqual(first["status"], "success")
+        self.assertEqual(second["status"], "success")
+        self.assertNotEqual(first["name"], second["name"])
+        self.assertTrue(os.path.exists(first["path"]))
+        self.assertTrue(os.path.exists(second["path"]))
+
     def test_get_backup_status(self):
         """Backup status returns correct info."""
         create_backup()
@@ -108,6 +121,26 @@ class TestBackup(unittest.TestCase):
         backup.BACKUP_RETENTION_DAYS = original_retention
 
         self.assertGreaterEqual(result["backups_removed"], 0)
+
+    def test_restore_rejects_archive_without_elixis_root(self):
+        """Restore refuses archives that would write outside .elixis."""
+        import elixis.backup as backup
+
+        backup_name = "elixis_backup_malicious"
+        backup_path = Path(backup.BACKUP_DIR) / f"{backup_name}.tar.gz"
+        with tarfile.open(backup_path, "w:gz") as tar:
+            outside = Path(self.temp_dir) / "outside.txt"
+            outside.write_text("bad", encoding="utf-8")
+            tar.add(outside, arcname="outside.txt")
+        outside.unlink()
+
+        original_file = Path(self.data_dir) / "test.txt"
+        result = restore_backup(backup_name, force=True)
+
+        self.assertFalse(result["success"])
+        self.assertIn(".elixis", result["error"])
+        self.assertTrue(original_file.exists())
+        self.assertFalse(outside.exists())
 
 
 class TestAutoBackup(unittest.TestCase):

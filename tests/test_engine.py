@@ -484,6 +484,15 @@ class TestResolve:
         assert output == "brand result"
         assert engine.state.metadata["lens"] == "brand"
 
+    @patch("elixis.lenses.LENS_REGISTRY", {"identity": lambda e, g: "result"})
+    def test_unknown_lens_raises(self):
+        engine = _make_engine()
+        engine.declare_themes("input")
+        engine.elaborate()
+        engine.connect_domains()
+        with pytest.raises(RuntimeError, match="Invalid lens"):
+            engine.resolve(lens="unknown")
+
     def test_raises_before_elaboration(self):
         engine = _make_engine()
         engine.declare_themes("input")

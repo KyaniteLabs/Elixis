@@ -316,7 +316,9 @@ class GameEngine:
         entity_dicts = [b.to_dict() for b in state.beads]
 
         from .lenses import LENS_REGISTRY
-        generator = LENS_REGISTRY.get(lens, LENS_REGISTRY["identity"])
+        if lens not in LENS_REGISTRY:
+            raise RuntimeError(f"Invalid lens '{lens}'. Must be one of: {', '.join(sorted(LENS_REGISTRY))}")
+        generator = LENS_REGISTRY[lens]
         output = generator(entity_dicts, graph)
 
         state.phase = "resolution"
