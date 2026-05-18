@@ -1,4 +1,4 @@
-"""Triple verification and quality checks for the Glass Bead Game."""
+"""Triple verification and quality checks for the pattern synthesis."""
 
 from .bead import VALID_TYPES as _VALID_BEAD_TYPES
 

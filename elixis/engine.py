@@ -1,4 +1,4 @@
-"""The Game Engine — core orchestrator for the Glass Bead Game.
+"""Core orchestrator for pattern synthesis.
 
 Manages game state through four phases:
   declaration → elaboration → connection → resolution
@@ -54,7 +54,7 @@ class GameState:
 
 
 class GameEngine:
-    """Orchestrates the Glass Bead Game through its four phases.
+    """Orchestrates pattern synthesis through its four phases.
 
     Accepts optional dependency overrides for testing. When omitted,
     the default implementations are used.

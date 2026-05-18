@@ -1,4 +1,4 @@
-"""Identity output lens — SOUL.md generation for the Glass Bead Game.
+"""Identity output lens — SOUL.md generation for the pattern synthesis.
 
 Wraps the existing synthesis module as an output lens.
 """

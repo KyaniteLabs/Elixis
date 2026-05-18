@@ -1,4 +1,4 @@
-"""Entity relationship graph for the Glass Bead Game.
+"""Entity relationship graph for the pattern synthesis.
 
 Builds a directed, weighted graph of entity relationships using
 theme overlap, type affinity, and curated knowledge base data.

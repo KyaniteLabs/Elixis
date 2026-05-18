@@ -3,27 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elixis — Glass Bead Game Engine</title>
-<meta name="description" content="Elixis is a Glass Bead Game engine that turns raw references into identity, brand, design, naming, and SOUL.md outputs.">
+<title>Elixis | AI Identity, Brand Voice &amp; Design System Generator</title>
+<meta name="description" content="Elixis is a local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.">
 <meta name="author" content="Kyanite Labs">
 <meta name="robots" content="index, follow">
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <meta property="og:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
+<meta name="keywords" content="AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, Soul Spec, pattern graph, local-first LLM tool, MCP server">
+<meta name="application-name" content="Elixis">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<meta property="og:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Elixis — Glass Bead Game Engine">
-<meta name="twitter:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand, design, naming, and SOUL.md outputs.">
+<meta name="twitter:title" content="Elixis | AI Identity, Brand Voice &amp; Design System Generator">
+<meta name="twitter:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
 <meta name="twitter:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
 <meta name="theme-color" content="#0d0c11">
 <link rel="canonical" href="https://github.com/KyaniteLabs/Elixis">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="Elixis summary for AI assistants">
 
 <!-- OpenGraph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Elixis — Glass Bead Game Engine">
-<meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand, design, naming, and SOUL.md outputs.">
+<meta property="og:title" content="Elixis | AI Identity, Brand Voice &amp; Design System Generator">
+<meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
 <meta property="og:url" content="https://github.com/KyaniteLabs/Elixis">
 <meta property="og:site_name" content="Elixis">
 <meta property="og:locale" content="en_US">
@@ -32,25 +35,91 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Elixis",
-  "description": "Glass Bead Game engine that turns raw references into pattern graphs and resolves them into identity, brand, design, naming, and SOUL.md outputs.",
-  "url": "https://github.com/KyaniteLabs/Elixis",
-  "applicationCategory": "DeveloperApplication",
-  "operatingSystem": "Linux",
-  "programmingLanguage": "Python",
-  "license": "https://opensource.org/licenses/MIT",
-  "codeRepository": "https://github.com/KyaniteLabs/Elixis",
-  "author": {
-    "@type": "Organization",
-    "name": "Kyanite Labs",
-    "url": "https://kyanitelabs.tech"
-  },
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
+  "@graph": [
+    {
+      "@type": ["SoftwareApplication", "WebApplication"],
+      "@id": "https://github.com/KyaniteLabs/Elixis#software",
+      "name": "Elixis",
+      "alternateName": [
+        "AI pattern synthesis engine",
+        "AI identity generator",
+        "brand voice generator",
+        "design system generator",
+        "SOUL.md generator"
+      ],
+      "description": "Local-first AI pattern synthesis engine that turns raw references into pattern graphs, then resolves them into identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.",
+      "url": "https://github.com/KyaniteLabs/Elixis",
+      "mainEntityOfPage": "https://github.com/KyaniteLabs/Elixis",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "AI identity, brand, design, and naming synthesis",
+      "operatingSystem": "macOS, Linux, Windows",
+      "programmingLanguage": "Python",
+      "softwareRequirements": "Python 3.12+; optional Ollama or OpenAI-compatible LLM backend",
+      "isAccessibleForFree": true,
+      "license": "https://opensource.org/licenses/MIT",
+      "codeRepository": "https://github.com/KyaniteLabs/Elixis",
+      "keywords": [
+        "AI identity generator",
+        "brand voice generator",
+        "design system generator",
+        "naming research tool",
+        "SOUL.md generator",
+        "OpenClaw companion",
+        "Soul Spec",
+        "pattern graph",
+        "MCP server"
+      ],
+      "featureList": [
+        "Identity and SOUL.md generation",
+        "Brand voice synthesis",
+        "Design system direction",
+        "Naming research and variants",
+        "Cross-language translation checks",
+        "MCP tool access",
+        "Run tracing and backups"
+      ],
+      "author": {
+        "@type": "Organization",
+        "name": "Kyanite Labs",
+        "url": "https://kyanitelabs.tech"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://github.com/KyaniteLabs/Elixis#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Elixis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Elixis is a local-first AI pattern synthesis engine that turns raw references into a pattern graph for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Elixis generate more than SOUL.md identity files?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. SOUL.md is one compatibility lens. Elixis also supports brand voice guidance, design-system direction, naming research, translation checks, traces, backups, and MCP access."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Elixis work with local LLMs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Elixis works with Ollama and OpenAI-compatible APIs, uses only the Python standard library, and falls back to template-based synthesis when LLM inference is unavailable."
+          }
+        }
+      ]
+    }
+  ]
 }
 </script>
 
@@ -333,6 +402,40 @@ body {
   margin-bottom: var(--space-base);
 }
 
+.about-section {
+  scroll-margin-top: var(--space-lg);
+}
+
+.about-section:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.about-title {
+  color: var(--text-primary);
+  font-size: var(--font-size-lg);
+  line-height: 1.25;
+  margin-bottom: var(--space-sm);
+}
+
+.about-copy {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  margin-bottom: var(--space-base);
+}
+
+.about-list {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  padding-left: var(--space-lg);
+}
+
+.about-list li + li {
+  margin-top: var(--space-xs);
+}
+
 /* Textarea */
 .theme-textarea {
   width: 100%;
@@ -397,7 +500,7 @@ body {
   color: var(--accent);
 }
 
-/* Play Button */
+/* Run Button */
 .play-btn {
   width: 100%;
   margin-top: var(--space-base);
@@ -1109,6 +1212,8 @@ body {
       ELI<span class="header-brand-accent">XIS</span>
     </a>
     <nav class="header-links" aria-label="Main navigation">
+      <a href="#about" class="header-link" data-about-link>About</a>
+      <a href="/llms.txt" class="header-link">LLMs.txt</a>
       <a href="https://github.com/KyaniteLabs/Elixis" target="_blank" rel="noopener" class="header-link header-github">GitHub</a>
     </nav>
   </header>
@@ -1117,7 +1222,7 @@ body {
   <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
     <div class="sidebar-section">
       <span class="sidebar-label">Theme Declaration</span>
-      <p class="sidebar-description">Drop your references. Elixis plays a Glass Bead Game over the pattern graph, then resolves it through identity, brand, design, and naming lenses.</p>
+      <p class="sidebar-description">Drop your references. Elixis builds a pattern graph, then resolves it through identity, brand voice, design system, and naming lenses.</p>
       <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
       <textarea
         class="theme-textarea"
@@ -1143,9 +1248,9 @@ Fleabag"
         <button class="lens-btn" data-lens="design" role="radio" aria-checked="false" tabindex="-1">Design</button>
       </div>
 
-      <button class="play-btn" id="playBtn" aria-label="Run Elixis analysis">
+      <button class="play-btn" id="playBtn" aria-label="Run Elixis synthesis">
         <span class="spinner"></span>
-        <span class="btn-label">Play</span>
+        <span class="btn-label">Synthesize</span>
       </button>
 
       <div class="pipeline-status" id="pipelineStatus" role="status" aria-live="polite" aria-label="Pipeline progress">
@@ -1171,6 +1276,18 @@ Fleabag"
         <button class="example-btn" data-example="intellectual">Intellectuals</button>
       </div>
     </div>
+
+    <section class="sidebar-section about-section" id="about" aria-labelledby="about-title" tabindex="-1">
+      <span class="sidebar-label">About</span>
+      <h2 class="about-title" id="about-title">AI identity, brand voice, design system, and naming generator</h2>
+      <p class="about-copy">Elixis is a local-first pattern synthesis engine from Kyanite Labs. It turns raw references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph.</p>
+      <p class="about-copy">SOUL.md identity files are one compatibility lens. The same graph also powers brand voice guidance, design-system direction, naming research, cross-language translation checks, run traces, backups, and MCP access for AI agents.</p>
+      <ul class="about-list" aria-label="Elixis output surfaces">
+        <li>Identity and SOUL.md documents for OpenClaw, Soul Spec, and compatible agents</li>
+        <li>Brand voice, positioning language, and design system direction from the same reference set</li>
+        <li>Naming research, multilingual risk checks, and semantically aligned name variants</li>
+      </ul>
+    </section>
 
     <div class="sidebar-footer">
       <a href="https://github.com/KyaniteLabs/Elixis" target="_blank" rel="noopener">Elixis</a> by <a href="https://kyanitelabs.tech" target="_blank" rel="noopener">Kyanite Labs</a><br>
@@ -1202,7 +1319,7 @@ Fleabag"
       <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
         <div class="panel-placeholder" id="beadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
-          <p>Run the game to see extracted beads — the concepts that surface from your input.</p>
+          <p>Run synthesis to see extracted beads — the concepts that surface from your input.</p>
         </div>
         <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
@@ -1747,7 +1864,7 @@ async function runPipeline() {
     state.loading = false;
     dom.playBtn.classList.remove('loading');
     dom.playBtn.disabled = false;
-    dom.playBtn.querySelector('.btn-label').textContent = 'Play';
+    dom.playBtn.querySelector('.btn-label').textContent = 'Synthesize';
   }
 }
 
@@ -1816,6 +1933,27 @@ function downloadOutput() {
   URL.revokeObjectURL(url);
 }
 
+function initAboutLink() {
+  const aboutLink = $('[data-about-link]');
+  const about = $('#about');
+  if (!aboutLink || !about) return;
+
+  const revealAbout = () => {
+    about.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    about.focus({ preventScroll: true });
+  };
+
+  aboutLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    revealAbout();
+    history.replaceState(null, '', '#about');
+  });
+
+  if (window.location.hash === '#about') {
+    requestAnimationFrame(revealAbout);
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════════════════════════════════════ */
@@ -1823,6 +1961,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initLensSelector();
   initExamples();
+  initAboutLink();
   updateOutputMeta();
 
   dom.playBtn.addEventListener('click', runPipeline);

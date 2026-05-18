@@ -52,7 +52,7 @@ _TOOLS = [
     {
         "name": "run_game",
         "description": (
-            "Run the Glass Bead Game through an output lens. "
+            "Run Elixis pattern synthesis through an output lens. "
             "Use when: generating identity, brand, or design documents from scattered references, "
             "or when SOUL.md is too narrow for the requested output."
         ),

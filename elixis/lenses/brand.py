@@ -1,4 +1,4 @@
-"""Brand voice output lens for the Glass Bead Game."""
+"""Brand voice output lens for the pattern synthesis."""
 
 _TONE_MAP = {
     "transformation": ("bold", "direct", "accessible", "warm"),

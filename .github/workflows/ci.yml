@@ -91,6 +91,9 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: production
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - uses: actions/checkout@v4
@@ -110,13 +113,20 @@ jobs:
           fi
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
-          trap 'rm -f deploy_key' EXIT
+          deploy_env="$(mktemp)"
+          trap 'rm -f deploy_key "${deploy_env}"' EXIT
           echo "${VPS_SSH_KEY}" > deploy_key
           chmod 600 deploy_key
+          {
+            printf 'export ADMIN_API_KEY=%q\n' "${ADMIN_API_KEY}"
+            printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
+          } > "${deploy_env}"
 
           # Copy compose file to VPS
           scp -i deploy_key -o StrictHostKeyChecking=no \
             docker-compose.yml ${VPS_USER}@${VPS_HOST}:/docker/elixis/
+          scp -i deploy_key -o StrictHostKeyChecking=no \
+            "${deploy_env}" ${VPS_USER}@${VPS_HOST}:/tmp/elixis-deploy-env
 
           printf '%s' "${GHCR_TOKEN}" | ssh -i deploy_key -o StrictHostKeyChecking=no \
             ${VPS_USER}@${VPS_HOST} \
@@ -124,9 +134,12 @@ jobs:
 
           # Deploy via SSH
           ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} << EOF
+            ${VPS_USER}@${VPS_HOST} 'bash -se' << 'EOF'
+            set -euo pipefail
+            trap 'rm -f /tmp/elixis-deploy-env' EXIT
             cd /docker/elixis
-            ADMIN_API_KEY='${ADMIN_API_KEY}' ELIXIS_IMAGE='${IMAGE_REF}' docker compose pull elixis
-            ADMIN_API_KEY='${ADMIN_API_KEY}' ELIXIS_IMAGE='${IMAGE_REF}' docker compose up -d --no-build --remove-orphans
+            source /tmp/elixis-deploy-env
+            docker compose pull elixis
+            docker compose up -d --no-build --remove-orphans
             docker system prune -f
           EOF

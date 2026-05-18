@@ -1,4 +1,4 @@
-"""Elixis — The Glass Bead Game for AI Personas.
+"""Elixis — AI pattern synthesis for identity, brand, design, and naming.
 
 Usage: python app.py [--port PORT]
 """
@@ -49,7 +49,9 @@ from elixis.validation import (
 )
 
 PORT = 3110
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "elixis", "templates")
+ROOT_DIR = os.path.dirname(__file__)
+TEMPLATE_DIR = os.path.join(ROOT_DIR, "elixis", "templates")
+STATIC_DIR = os.path.join(ROOT_DIR, "elixis", "static")
 CSP_HEADER = get_content_security_policy()
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3110")
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
@@ -137,7 +139,7 @@ def run_pipeline(brain_dump):
 
 
 def run_game_pipeline(brain_dump, lens="identity"):
-    """Run the full Glass Bead Game pipeline using the GameEngine."""
+    """Run the full pattern synthesis pipeline using the GameEngine."""
     if not brain_dump or len(brain_dump.strip()) < 3:
         return {"error": "Brain dump is empty or too short"}
 
@@ -276,6 +278,20 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_robots(start)
         elif path == "/sitemap.xml":
             self._serve_sitemap(start)
+        elif path == "/llms.txt":
+            status = self._serve_file(
+                os.path.join(ROOT_DIR, "llms.txt"),
+                "text/plain; charset=utf-8",
+                cache_max_age=3600,
+            )
+            self._log("GET", path, status, start)
+        elif path == "/llms-full.txt":
+            status = self._serve_file(
+                os.path.join(ROOT_DIR, "llms-full.txt"),
+                "text/plain; charset=utf-8",
+                cache_max_age=3600,
+            )
+            self._log("GET", path, status, start)
         else:
             status = self._serve_static(path)
             self._log("GET", path, status, start)
@@ -883,9 +899,16 @@ class Handler(BaseHTTPRequestHandler):
     }
 
     def _serve_static(self, path):
-        filename = path.lstrip("/")
-        resolved = os.path.realpath(os.path.join(TEMPLATE_DIR, filename))
-        if not resolved.startswith(os.path.realpath(TEMPLATE_DIR)):
+        prefix = "/static/"
+        if not path.startswith(prefix):
+            self.send_response(404)
+            self._send_cors_headers()
+            self.end_headers()
+            return 404
+        filename = path[len(prefix):]
+        resolved = os.path.realpath(os.path.join(STATIC_DIR, filename))
+        static_root = os.path.realpath(STATIC_DIR)
+        if not (resolved == static_root or resolved.startswith(static_root + os.sep)):
             self.send_response(403)
             self._send_cors_headers()
             self.end_headers()
@@ -949,6 +972,8 @@ class Handler(BaseHTTPRequestHandler):
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             f"  <url><loc>{base_url}/</loc><lastmod>{now}</lastmod>"
             "<changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
+            f"  <url><loc>{base_url}/llms.txt</loc><lastmod>{now}</lastmod>"
+            "<changefreq>weekly</changefreq><priority>0.7</priority></url>\n"
             "</urlset>\n"
         ).encode()
         self.send_response(200)

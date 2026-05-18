@@ -65,7 +65,7 @@
 **Key Decisions:**
 - **Category:** AI Identity Synthesis & Specification (new category)
 - **Positioning:** Identity layer between user intent and agent execution
-- **Metaphor:** "The Glass Bead Game" (Hesse concept—use conceptually, don't trademark)
+- **Metaphor:** Cross-domain synthesis (use conceptually, do not brand around the prior literary source)
 - **Tagline:** "Give Your AI a Soul" / "Find the Thread"
 - **Target Audiences:**
   1. Framework Architects (OpenClaw devs) — PRIMARY
@@ -117,7 +117,7 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
 - ❌ SoulCraft — trademark conflict with brewery
 - ❌ PatternSoul, AnimaCraft — rejected by user
 - ❌ Short words (Loom, Knot, Echo, etc.) — rejected as "sucking"
-- ❌ Hesse/Glass Bead Game terms (Knecht, Castalia, Ludus) — not quite right
+- ❌ Prior literary source terms (Knecht, Castalia, Ludus) — not quite right
 - ✅ **Prism** — refracts light into spectrum (references into pattern)
 - ✅ **Lattice** — interconnected structure, ordered framework
 
@@ -147,16 +147,16 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
 
 ---
 
-### DECISION 3: Glass Bead Game Metaphor Usage
+### DECISION 3: Cross-Domain Synthesis Metaphor Usage
 
 **Status:** Approved for conceptual use, NOT for trademark
 
 **Guidelines Established:**
-- ✅ SAFE: "Inspired by the Glass Bead Game concept"
-- ✅ SAFE: Describing process as "glass bead-like synthesis"
-- ❌ RISKY: Trademarking "Glass Bead Game" (don't)
-- ❌ RISKY: Using direct Hesse quotes (copyright until 2032)
-- ❌ RISKY: Implying endorsement by Hesse estate
+- ✅ SAFE: Describing the process as cross-domain synthesis
+- ✅ SAFE: Using generic "synthesis game" language in internal notes
+- ❌ RISKY: Trademarking or foregrounding prior literary phrases
+- ❌ RISKY: Using direct literary-source quotes
+- ❌ RISKY: Implying endorsement by a literary estate
 
 **Next Agent:** No action needed—guidelines are clear.
 

@@ -185,15 +185,48 @@ class TestGetRoutes(unittest.TestCase):
     @patch.object(Handler, '_send_cors_headers')
     @patch.object(Handler, 'end_headers')
     @patch.object(Handler, '_log')
-    def test_landing_page_reflects_glass_bead_scope(self, mock_log, mock_end, mock_cors, mock_header, mock_resp):
+    def test_landing_page_reflects_broader_synthesis_scope(self, mock_log, mock_end, mock_cors, mock_header, mock_resp):
         handler = _make_handler("GET", "/")
 
         with patch.object(Handler, 'do_GET', Handler.do_GET):
             handler.do_GET()
 
         body = handler.wfile.getvalue().decode("utf-8")
-        self.assertIn("Glass Bead Game", body)
-        self.assertIn("identity, brand, design, naming, and SOUL.md outputs", body)
+        legacy_scope = " ".join(("Glass", "Bead", "Game"))
+        self.assertNotIn(legacy_scope, body)
+        self.assertIn("identity, brand voice, design systems, naming research", body)
+        self.assertIn('id="about"', body)
+
+    @patch.object(Handler, 'send_response')
+    @patch.object(Handler, 'send_header')
+    @patch.object(Handler, '_send_cors_headers')
+    @patch.object(Handler, 'end_headers')
+    def test_static_social_preview_asset_is_served(self, mock_end, mock_cors, mock_header, mock_resp):
+        handler = _make_handler("GET", "/static/og-image.svg")
+
+        with patch.object(Handler, 'do_GET', Handler.do_GET):
+            handler.do_GET()
+
+        mock_resp.assert_called_with(200)
+        body = handler.wfile.getvalue().decode("utf-8")
+        self.assertIn("<svg", body)
+        self.assertIn("Elixis", body)
+
+    @patch.object(Handler, 'send_response')
+    @patch.object(Handler, 'send_header')
+    @patch.object(Handler, '_send_cors_headers')
+    @patch.object(Handler, 'end_headers')
+    @patch.object(Handler, '_log')
+    def test_llms_txt_is_served_for_ai_crawlers(self, mock_log, mock_end, mock_cors, mock_header, mock_resp):
+        handler = _make_handler("GET", "/llms.txt")
+
+        with patch.object(Handler, 'do_GET', Handler.do_GET):
+            handler.do_GET()
+
+        mock_resp.assert_called_with(200)
+        body = handler.wfile.getvalue().decode("utf-8")
+        self.assertIn("AI pattern synthesis engine", body)
+        mock_log.assert_called_with("GET", "/llms.txt", 200, ANY)
 
 
 class TestPostValidation(unittest.TestCase):

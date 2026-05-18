@@ -1,4 +1,4 @@
-"""Output lens system for the Glass Bead Game.
+"""Output lens system for the pattern synthesis.
 
 Each lens takes (entities: list[dict], graph: dict) and returns a markdown string.
 Register new lenses by adding them to LENS_REGISTRY.
