@@ -1,8 +1,8 @@
 # Elixis
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs.
 
-Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, translation, run tracing, and backup/restore. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
+Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
 
 ## Use cases
 
@@ -10,7 +10,6 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 - Resolve the same pattern graph through identity, brand, and design lenses
 - Generate SOUL.md personas for OpenClaw, SoulClaw, and compatible systems
 - Analyze archetypal patterns, tensions, beads, and cross-domain threads in text
-- Check cross-language naming risks across 28+ languages
 - Generate semantically aligned names from raw references or synthesized graph context
 - Preserve creative reasoning with trace logging and backups
 
@@ -39,4 +38,4 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 
 ## Keywords
 
-AI pattern synthesis engine, AI identity generator, brand voice generator, design system generator, naming research tool, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, cross-language translation check, local-first LLM tool, MCP server, answer engine optimization.
+AI pattern synthesis engine, AI identity generator, brand voice generator, design system generator, naming research tool, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, local-first LLM tool, answer engine optimization.

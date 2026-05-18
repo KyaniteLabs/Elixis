@@ -5,7 +5,7 @@
 [![CI](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/Elixis.svg)](https://github.com/KyaniteLabs/Elixis/stargazers)
 
-> A local-first AI pattern synthesis engine for turning raw references into structured outputs: identity, brand voice, design systems, naming direction, translation checks, and SOUL.md documents.
+> A local-first AI pattern synthesis engine for turning raw references into structured outputs: identity, brand voice, design systems, naming direction, and SOUL.md documents.
 
 Elixis is a cross-domain synthesis engine. It transforms raw brain dump text — references, influences, values, works, people, places, aesthetics, constraints — into a pattern graph, then resolves that graph through output lenses. The identity lens generates **SOUL.md** documents for OpenClaw and Soul Spec, but SOUL.md is one output mode, not the whole scope. Current lenses also produce brand voice guidance and design-system direction, with naming research built on the same graph.
 
@@ -24,7 +24,7 @@ Elixis has one active product and package name:
 | Surface | Name |
 |---------|------|
 | Product and repository | Elixis |
-| Python distribution, import package, CLI, MCP server, Docker service | `elixis` |
+| Python distribution, import package, CLI, Docker service | `elixis` |
 | Compatibility targets, not package names | OpenClaw, SoulClaw, Soul Spec, SOUL.md |
 
 Archived pre-Elixis planning notes are preserved under `docs/archive/` for historical context only. They do not define the current package, product, or public positioning.
@@ -38,7 +38,6 @@ Archived pre-Elixis planning notes are preserved under `docs/archive/` for histo
 | Connection | Builds threads, cross-domain bridges, tensions, and archetypal patterns |
 | Resolution | Uses lenses to generate identity, brand, design, or future output forms |
 | Naming | Generates and scores names against the same pattern graph |
-| Translation | Checks cross-language risk and translates generated output |
 | Validation | Input sanitization, prompt-injection filtering, output validation |
 | Traces & Backups | Preserves synthesis runs and enables rollback |
 
@@ -51,7 +50,7 @@ elixis/              Core Python package
   lenses/               Output lenses: identity, brand, design
   patterns.py           Archetypal pattern discovery and graph
   synthesis.py          SOUL.md identity lens implementation
-  translate.py          Translation and cross-language checks
+  translate.py          Text localization helpers and language detection
   research.py           Wikipedia entity enrichment
   naming.py             Name research and variant generation
   llm.py                LLM interface (Ollama / OpenAI-compatible)
@@ -88,31 +87,11 @@ pip install -r requirements.txt
 python -m unittest discover tests/ -v
 ```
 
-## MCP Server (AI Agent Native)
-
-Elixis exposes an MCP server so any MCP-compatible AI assistant can use it directly:
-
-```json
-{
-  "mcpServers": {
-    "elixis": {
-      "command": "python",
-      "args": ["-m", "elixis.mcp_server"]
-    }
-  }
-}
-```
-
-Available tools: `create_soul`, `run_game`, `extract_entities`, `analyze_patterns`, `translate_text`, `research_name`, `name_from_identity`.
-
-Works with Claude Code, Cursor, Windsurf, and any MCP client.
-
 ## Best for
 
 - Mapping a constellation of cultural references into beads, threads, patterns, and tensions.
 - Resolving the same pattern graph into identity, brand voice, design direction, or naming options.
 - Creating AI agent personas for OpenClaw, SoulClaw, or any SOUL.md-compatible system.
-- Checking whether a name or phrase carries unwanted cross-language meaning.
 - Preserving creative reasoning instead of losing it in a chat transcript.
 
 ## Works With
@@ -129,16 +108,13 @@ Works with Claude Code, Cursor, Windsurf, and any MCP client.
 ## FAQ
 
 **What is Elixis?**
-Elixis is a local-first AI pattern synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.
+Elixis is a local-first AI pattern synthesis engine. It turns raw reference material into a pattern graph and resolves that graph through lenses for identity, brand voice, design systems, naming research, and SOUL.md output.
 
 **How do I create an output?**
 Start the server with `python app.py`, open `http://localhost:3110`, enter references and influences, choose a lens, and run the synthesis. The identity lens generates SOUL.md; the brand and design lenses generate different documents from the same graph.
 
 **What LLM providers does Elixis support?**
 Elixis works with any local LLM via Ollama (default: Gemma) or any OpenAI-compatible API (OpenAI, Anthropic via proxy, LM Studio, etc.). It falls back to template-based synthesis when no LLM is available.
-
-**Can Elixis check cross-language risks?**
-Yes. The translation module supports 28+ languages with streaming support, file-based caching, and automatic language detection.
 
 **Is Elixis free and open source?**
 Yes. Elixis is MIT-licensed and uses zero external Python dependencies (stdlib only).

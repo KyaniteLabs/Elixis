@@ -1,8 +1,8 @@
 # Elixis
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, MCP access, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs.
 
-Elixis turns raw reference material into a pattern graph, then resolves that graph through output lenses. SOUL.md is one compatibility lens, not the whole scope. Use Elixis when you need to transform messy references, influences, aesthetics, values, constraints, people, works, or places into coherent identity, brand, design, naming, or multilingual review artifacts.
+Elixis turns raw reference material into a pattern graph, then resolves that graph through output lenses. SOUL.md is one compatibility lens, not the whole scope. Use Elixis when you need to transform messy references, influences, aesthetics, values, constraints, people, works, or places into coherent identity, brand, design, or naming artifacts.
 
 Canonical repository: https://github.com/KyaniteLabs/Elixis
 Landing page: https://kyanitelabs.github.io/Elixis/
@@ -11,8 +11,7 @@ Core surfaces:
 - Identity and SOUL.md generation for OpenClaw, Soul Spec, and compatible agent systems
 - Brand voice guidance and positioning language
 - Design system direction and style constraints
-- Naming research, variants, and cross-language risk checks
-- MCP server tools for AI assistants
+- Naming research and semantically aligned variants
 - Run tracing, backups, and local-first operation
 
-Keywords: AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, MCP server, local LLM tool.
+Keywords: AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, local LLM tool.
