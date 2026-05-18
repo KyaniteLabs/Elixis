@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elixis | AI Pattern Synthesis for Identity, Brand, Design, and Naming</title>
+  <meta name="description" content="Elixis is a local-first AI pattern synthesis engine that turns raw references into identity, brand voice, design system, naming research, translation check, and SOUL.md outputs.">
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, MCP server">
+  <link rel="canonical" href="https://kyanitelabs.github.io/Elixis/">
+  <link rel="alternate" type="text/plain" href="https://kyanitelabs.github.io/Elixis/llms.txt" title="Elixis summary for AI assistants">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Elixis | AI Pattern Synthesis Engine">
+  <meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.">
+  <meta property="og:url" content="https://kyanitelabs.github.io/Elixis/">
+  <meta property="og:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Elixis | AI Pattern Synthesis Engine">
+  <meta name="twitter:description" content="Local-first synthesis for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.">
+  <meta name="twitter:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["SoftwareApplication", "WebApplication"],
+        "@id": "https://kyanitelabs.github.io/Elixis/#software",
+        "name": "Elixis",
+        "alternateName": [
+          "AI pattern synthesis engine",
+          "AI identity generator",
+          "brand voice generator",
+          "design system generator",
+          "SOUL.md generator"
+        ],
+        "description": "Local-first AI pattern synthesis engine that turns raw references into pattern graphs, then resolves them into identity, brand voice, design systems, naming research, translation checks, and SOUL.md output.",
+        "url": "https://kyanitelabs.github.io/Elixis/",
+        "codeRepository": "https://github.com/KyaniteLabs/Elixis",
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "AI identity, brand, design, and naming synthesis",
+        "operatingSystem": "macOS, Linux, Windows",
+        "programmingLanguage": "Python",
+        "softwareRequirements": "Python 3.12+; optional Ollama or OpenAI-compatible LLM backend",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "keywords": [
+          "AI identity generator",
+          "brand voice generator",
+          "design system generator",
+          "naming research tool",
+          "SOUL.md generator",
+          "OpenClaw companion",
+          "MCP server"
+        ],
+        "featureList": [
+          "Pattern graph synthesis from raw references",
+          "SOUL.md identity generation",
+          "Brand voice synthesis",
+          "Design system direction",
+          "Naming research and variants",
+          "Cross-language translation checks",
+          "MCP access for AI assistants"
+        ],
+        "author": {
+          "@type": "Organization",
+          "name": "Kyanite Labs",
+          "url": "https://kyanitelabs.tech"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://kyanitelabs.github.io/Elixis/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Elixis?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Elixis is a local-first AI pattern synthesis engine that turns raw references into pattern graphs for identity, brand voice, design systems, naming research, translation checks, and SOUL.md output."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Elixis only for SOUL.md files?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. SOUL.md is one compatibility lens. Elixis also supports brand voice guidance, design-system direction, naming research, multilingual checks, MCP access, traces, and backups."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can Elixis run locally?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Elixis is Python standard-library based, works with Ollama and OpenAI-compatible APIs, and can fall back to template-based synthesis when LLM inference is unavailable."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0c11;
+      --surface: #15141d;
+      --line: rgba(255,255,255,.12);
+      --text: #ece8e3;
+      --muted: #a6a1a0;
+      --dim: #77727b;
+      --accent: #c9956b;
+      --teal: #4ecdc4;
+      --violet: #a855f7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 56px;
+      padding: 0 32px;
+      background: rgba(13,12,17,.88);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-decoration: none;
+    }
+    nav {
+      display: flex;
+      gap: 20px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+    nav a {
+      text-decoration: none;
+    }
+    nav a:hover { color: var(--accent); }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 72px 28px 64px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr);
+      gap: 48px;
+      align-items: center;
+      min-height: calc(100vh - 160px);
+    }
+    h1 {
+      margin: 0 0 20px;
+      max-width: 820px;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 740px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 20px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 28px 0 0;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+    .button.primary {
+      background: var(--accent);
+      color: #111;
+      border-color: var(--accent);
+    }
+    .visual {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+      box-shadow: 0 20px 70px rgba(0,0,0,.32);
+    }
+    .visual img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .section {
+      padding: 52px 0;
+      border-top: 1px solid var(--line);
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 30px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .item {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+    }
+    .item h3 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .item p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .code {
+      overflow: auto;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111019;
+      color: #d7d1cb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      white-space: pre;
+    }
+    footer {
+      padding: 32px 28px 56px;
+      color: var(--dim);
+      text-align: center;
+      border-top: 1px solid var(--line);
+    }
+    @media (max-width: 820px) {
+      header { padding: 0 18px; }
+      nav { gap: 12px; }
+      main { padding: 48px 18px; }
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 44px; }
+      .lead { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="https://kyanitelabs.github.io/Elixis/">ELIXIS</a>
+    <nav aria-label="Primary navigation">
+      <a href="#about">About</a>
+      <a href="#outputs">Outputs</a>
+      <a href="https://github.com/KyaniteLabs/Elixis">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="about">
+      <div>
+        <h1>AI pattern synthesis for identity, brand, design, and naming.</h1>
+        <p class="lead">Elixis turns messy references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph. SOUL.md is one compatibility lens, not the whole product.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/KyaniteLabs/Elixis">View GitHub</a>
+          <a class="button" href="https://github.com/KyaniteLabs/Elixis#quick-start">Run Locally</a>
+          <a class="button" href="https://kyanitelabs.github.io/Elixis/llms.txt">LLMs.txt</a>
+        </div>
+      </div>
+      <figure class="visual" aria-label="Elixis pattern synthesis preview">
+        <img src="static/og-image.svg" alt="Elixis AI pattern synthesis preview showing connected concepts and outputs">
+      </figure>
+    </section>
+
+    <section class="section" id="outputs">
+      <h2>One graph, multiple output lenses.</h2>
+      <p class="lead">The same reference set can become an identity document, brand voice guide, design-system direction, naming research, or translation risk check.</p>
+      <div class="grid">
+        <article class="item">
+          <h3>Identity</h3>
+          <p>Generate SOUL.md-compatible identity documents for OpenClaw, Soul Spec, and agent systems that read markdown personas.</p>
+        </article>
+        <article class="item">
+          <h3>Brand Voice</h3>
+          <p>Turn references into voice principles, positioning language, tone constraints, and usable brand vocabulary.</p>
+        </article>
+        <article class="item">
+          <h3>Design System</h3>
+          <p>Resolve patterns into design direction, tokens, interface principles, and style constraints for product work.</p>
+        </article>
+        <article class="item">
+          <h3>Naming</h3>
+          <p>Research names, generate semantically aligned variants, and check cross-language risk before committing to a direction.</p>
+        </article>
+        <article class="item">
+          <h3>MCP</h3>
+          <p>Expose synthesis tools directly to MCP-compatible AI assistants through a zero-dependency stdio server.</p>
+        </article>
+        <article class="item">
+          <h3>Local First</h3>
+          <p>Run with Python 3.12+, Ollama or OpenAI-compatible APIs, and stdlib-only application code.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="quickstart">
+      <h2>Run Elixis locally.</h2>
+      <div class="code">git clone https://github.com/KyaniteLabs/Elixis.git
+cd Elixis
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py</div>
+    </section>
+  </main>
+
+  <footer>
+    Built by Kyanite Labs. MIT licensed. Local-first AI pattern synthesis for builders who need coherent outputs from messy references.
+  </footer>
+</body>
+</html>

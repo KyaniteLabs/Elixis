@@ -1,13 +1,13 @@
-# SoulCraft Marketing Strategy Pass
+# pre-Elixis working name Marketing Strategy Pass
 ## Comprehensive Positioning, Messaging & Go-to-Market
 
 ---
 
 ## Executive Summary
 
-**SoulCraft** is an AI persona synthesis engine that transforms unstructured reference points (characters, films, books, figures) into structured identity documents (SOUL.md). Unlike chatbot wrappers or prompt templates, SoulCraft discovers the *latent pattern* connecting a user's influences and codifies it into a portable identity specification.
+**pre-Elixis working name** is an AI persona synthesis engine that transforms unstructured reference points (characters, films, books, figures) into structured identity documents (SOUL.md). Unlike chatbot wrappers or prompt templates, pre-Elixis working name discovers the *latent pattern* connecting a user's influences and codifies it into a portable identity specification.
 
-**Core Insight**: The AI agent space has mastered *capabilities* (what agents can do) but ignored *identity* (who agents are). SoulCraft fills this gap.
+**Core Insight**: The AI agent space has mastered *capabilities* (what agents can do) but ignored *identity* (who agents are). pre-Elixis working name fills this gap.
 
 ---
 
@@ -18,18 +18,18 @@
 **Current Category**: AI Agent Development Tools
 **New Category**: *AI Identity Synthesis & Specification*
 
-SoulCraft doesn't compete with agent frameworks—it complements them. We are the "identity layer" that sits between user intent and agent execution.
+pre-Elixis working name doesn't compete with agent frameworks—it complements them. We are the "identity layer" that sits between user intent and agent execution.
 
 ### 1.2 Positioning Statement
 
-> For AI developers and power users who want agents with coherent, transferable personalities, SoulCraft is an identity synthesis engine that discovers the hidden patterns in your influences and generates OpenClaw-compatible SOUL.md specifications. Unlike character templates or prompt engineering, SoulCraft extracts the *essence* of your references and produces a rigorous identity document that works across frameworks.
+> For AI developers and power users who want agents with coherent, transferable personalities, pre-Elixis working name is an identity synthesis engine that discovers the hidden patterns in your influences and generates OpenClaw-compatible SOUL.md specifications. Unlike character templates or prompt engineering, pre-Elixis working name extracts the *essence* of your references and produces a rigorous identity document that works across frameworks.
 
 ### 1.3 Cross-Domain Synthesis Metaphor
 
 **Reference**: prior literary synthesis-game framing, kept out of front-facing branding
 **Concept**: A cerebral game where players synthesize insights across disciplines (music, math, philosophy) into unified patterns.
 
-**Application**: SoulCraft treats persona creation as cross-domain synthesis: taking disparate cultural references and finding the underlying pattern that connects them. This metaphor:
+**Application**: pre-Elixis working name treats persona creation as cross-domain synthesis: taking disparate cultural references and finding the underlying pattern that connects them. This metaphor:
 - Suggests intellectual rigor without being academic
 - Implies synthesis over aggregation
 - Creates mystique/artistic credibility
@@ -66,12 +66,12 @@ None. The space is wide open.
 
 ### 3.2 Adjacent Competitors
 
-| Competitor | Category | SoulCraft Differentiation |
+| Competitor | Category | pre-Elixis working name Differentiation |
 |------------|----------|---------------------------|
-| **OpenClaw** | Agent Framework | SoulCraft *generates* the identity files OpenClaw consumes |
-| **Character.AI** | Chat Experience | SoulCraft produces *specifications*, not chatbots |
-| **Nomi.ai** | AI Companions | SoulCraft is developer tooling, not consumer product |
-| **Prompt Marketplaces** | Content | SoulCraft synthesizes custom identity, doesn't sell templates |
+| **OpenClaw** | Agent Framework | pre-Elixis working name *generates* the identity files OpenClaw consumes |
+| **Character.AI** | Chat Experience | pre-Elixis working name produces *specifications*, not chatbots |
+| **Nomi.ai** | AI Companions | pre-Elixis working name is developer tooling, not consumer product |
+| **Prompt Marketplaces** | Content | pre-Elixis working name synthesizes custom identity, doesn't sell templates |
 
 ### 3.3 Competitive Moat
 
@@ -200,7 +200,7 @@ None. The space is wide open.
 
 ### 6.3 Naming Conventions
 
-**Product**: SoulCraft (one word, camelCase in code)
+**Product**: pre-Elixis working name (one word, camelCase in code)
 **Output**: SOUL.md (all caps, file extension included)
 **Process**: "The Pipeline" (3 stages)
 **Tagline**: "Find the Thread"
@@ -287,10 +287,10 @@ None. The space is wide open.
 1/ AGENTS.md handles what your AI does.
    SOUL.md handles who your AI is.
 
-   Introducing SoulCraft: cross-domain synthesis for AI personas.
+   Introducing pre-Elixis working name: cross-domain synthesis for AI personas.
 
 2/ Drop your references—characters, films, books, figures.
-   SoulCraft finds the pattern underneath.
+   pre-Elixis working name finds the pattern underneath.
 
    Not who they are. What it means that you chose them.
 
@@ -315,7 +315,7 @@ None. The space is wide open.
 ### README Hero Section
 
 ```markdown
-# SoulCraft — Cross-Domain Synthesis for AI Personas
+# pre-Elixis working name — Cross-Domain Synthesis for AI Personas
 
 > AGENTS.md handles operations. SOUL.md handles identity.
 
@@ -326,7 +326,7 @@ Drop your references. Find the pattern. Give your AI a soul.
 
 ### Pitch Deck One-Liner
 
-"SoulCraft is an identity synthesis engine that transforms unstructured cultural references into structured, transferable AI personality specifications—starting with the OpenClaw ecosystem."
+"pre-Elixis working name is an identity synthesis engine that transforms unstructured cultural references into structured, transferable AI personality specifications—starting with the OpenClaw ecosystem."
 
 ---
 

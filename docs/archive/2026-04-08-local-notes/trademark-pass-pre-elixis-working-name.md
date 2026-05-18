@@ -1,4 +1,4 @@
-# SoulCraft Trademark Clearance Pass
+# pre-Elixis working name Trademark Clearance Pass
 ## Comprehensive Legal Risk Assessment & Filing Strategy
 
 ---
@@ -7,7 +7,7 @@
 
 **⚠️ HIGH PRIORITY: CONFLICTING MARK EXISTS**
 
-**SOULCRAFT** is a **registered trademark** (Reg. #5439421) owned by **Hubbub Brewing LLC** in **Class 032** (beers, beverages, light beverages). The mark is **LIVE** and was registered April 3, 2018.
+**PRE-ELIXIS WORKING NAME** is a **registered trademark** (Reg. #5439421) owned by **Hubbub Brewing LLC** in **Class 032** (beers, beverages, light beverages). The mark is **LIVE** and was registered April 3, 2018.
 
 **Risk Level**: MODERATE to HIGH for direct use in US commerce without differentiation strategy.
 
@@ -19,7 +19,7 @@
 
 ### 1.1 Conflicting Marks (High Priority)
 
-#### SOULCRAFT (Hubbub Brewing LLC)
+#### PRE-ELIXIS WORKING NAME (Hubbub Brewing LLC)
 | Field | Value |
 |-------|-------|
 | **Owner** | Hubbub Brewing LLC (Salida, CO) |
@@ -31,19 +31,19 @@
 | **Classes** | 032 (Beers; mineral and aerated waters; non-alcoholic drinks) |
 | **Goods/Services** | Beer, brewing services, alcoholic beverages |
 
-**History**: Hubbub Brewing changed its name from "Hubbub" to "Soulcraft" in 2017 after settling a trademark infringement suit with a larger company.
+**History**: Hubbub Brewing changed its name from "Hubbub" to "pre-Elixis working name" in 2017 after settling a trademark infringement suit with a larger company.
 
 **Risk Assessment**:
-- **Same exact name** (SOULCRAFT vs SoulCraft)
+- **Same exact name** (PRE-ELIXIS WORKING NAME vs pre-Elixis working name)
 - **Different industry** (beer vs AI software) BUT...
 - **Likelihood of confusion** is LOW for direct competition
-- **Dilution risk** exists if SoulCraft AI becomes famous
+- **Dilution risk** exists if pre-Elixis working name AI becomes famous
 - **Coexistence agreements** may be needed at scale
 
-#### Soulcraft LLC
+#### pre-Elixis working name LLC
 | Field | Value |
 |-------|-------|
-| **Owner** | Soulcraft LLC |
+| **Owner** | pre-Elixis working name LLC |
 | **Trademarks Held** | 3 active marks |
 | **Primary Class** | 035 (Advertising, business & retail services) |
 | **Status** | Multiple registrations active |
@@ -57,13 +57,13 @@
 
 | Mark | Owner | Class | Risk |
 |------|-------|-------|------|
-| SOUL CRAFT | Various | Mixed | Medium |
-| SOULCRAFT BREWING | Hubbub Brewing | 032 | High |
-| Soul Craft | Craft businesses | Various | Low |
+| SIMILAR CRAFT MARK | Various | Mixed | Medium |
+| PRE-ELIXIS WORKING NAME BREWING | Hubbub Brewing | 032 | High |
+| Similar craft mark | Craft businesses | Various | Low |
 
 ### 1.3 Blizzard Entertainment Context
 
-**Note**: While researching, multiple references to Blizzard's "SoulCraft" appeared in gaming forums and literary analysis ("StarCraft as Soulcraft" article). However, **Blizzard does NOT hold a trademark for "SoulCraft"** specifically.
+**Note**: While researching, multiple references to Blizzard's "pre-Elixis working name" appeared in gaming forums and literary analysis ("StarCraft as pre-Elixis working name" article). However, **Blizzard does NOT hold a trademark for "pre-Elixis working name"** specifically.
 
 Blizzard's trademarks include:
 - StarCraft® (game franchise)
@@ -76,7 +76,7 @@ Blizzard's trademarks include:
 
 ## 2. Class Analysis
 
-### 2.1 Current SoulCraft Use (Proposed)
+### 2.1 Current pre-Elixis working name Use (Proposed)
 
 | Class | Description | Relevance |
 |-------|-------------|-----------|
@@ -98,10 +98,10 @@ Blizzard's trademarks include:
 
 ### 2.3 Related Class Concerns
 
-**Class 035** (Soulcraft LLC's primary class):
+**Class 035** (pre-Elixis working name LLC's primary class):
 - "Advertising, business & retail services"
 - AI software could be interpreted as business services
-- Overlap risk if SoulCraft offers enterprise consulting
+- Overlap risk if pre-Elixis working name offers enterprise consulting
 
 **Mitigation**: Clear specification focusing on "software" not "services"
 
@@ -129,7 +129,7 @@ Blizzard's trademarks include:
 
 Under the Federal Trademark Dilution Act, famous marks can claim dilution even without competition.
 
-**Is SOULCRAFT (brewing) "famous"?**
+**Is PRE-ELIXIS WORKING NAME (brewing) "famous"?**
 - Likely **NO** at national level
 - Possibly **YES** in Colorado/rocky mountain region
 - Definitely **NO** for dilution purposes (not household name)
@@ -138,7 +138,7 @@ Under the Federal Trademark Dilution Act, famous marks can claim dilution even w
 
 ### 3.3 Coexistence Agreement Potential
 
-Could SoulCraft AI and SoulCraft Brewing coexist?
+Could pre-Elixis working name AI and pre-Elixis working name Brewing coexist?
 
 **Factors Favoring Agreement**:
 - Completely different industries
@@ -157,12 +157,12 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
 
 ## 4. Name Modification Options
 
-### 4.1 Option 1: Keep "SoulCraft" with Risk Mitigation
+### 4.1 Option 1: Keep "pre-Elixis working name" with Risk Mitigation
 
-**Strategy**: Use "SoulCraft" but with explicit differentiation:
+**Strategy**: Use "pre-Elixis working name" but with explicit differentiation:
 - Always include tagline: "AI Identity Synthesis"
 - Never use in beverage/alcohol adjacent contexts
-- Consider stylization differences (SoulCraft vs SOULCRAFT)
+- Consider stylization differences (pre-Elixis working name vs PRE-ELIXIS WORKING NAME)
 
 **Pros**:
 - Brand recognition already established
@@ -176,7 +176,7 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
 
 **Risk**: MEDIUM
 
-### 4.2 Option 2: Modify to "SoulCraft AI"
+### 4.2 Option 2: Modify to "pre-Elixis working name AI"
 
 **Change**: Add "AI" suffix for disambiguation
 
@@ -191,7 +191,7 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
 - Likely sufficient for coexistence
 
 **Cons**:
-- Still contains full "SoulCraft"
+- Still contains full "pre-Elixis working name"
 - Brewing company might still object
 - Less elegant
 
@@ -215,7 +215,7 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
 
 ### 4.4 Option 4: Geographic Limitation
 
-**Strategy**: Operate as "SoulCraft Labs" with geographic carve-out:
+**Strategy**: Operate as "pre-Elixis working name Labs" with geographic carve-out:
 - Avoid Colorado/rocky mountain region initially
 - Focus on coastal tech markets
 - Build brand recognition before expanding nationally
@@ -243,7 +243,7 @@ Could SoulCraft AI and SoulCraft Brewing coexist?
    - Modify name (add "AI" or change entirely)
    - Pursue coexistence agreement first
 
-### 5.2 If Proceeding with "SoulCraft"
+### 5.2 If Proceeding with "pre-Elixis working name"
 
 **Classes to File**:
 - **009**: Downloadable computer software for AI persona generation
@@ -324,8 +324,8 @@ Keep the metaphor generic:
 
 Open sourcing the code (MIT license) does NOT affect trademark rights:
 - Code is free to use/modify
-- "SoulCraft" name remains protected (if registered)
-- Others can't call their forks "SoulCraft"
+- "pre-Elixis working name" name remains protected (if registered)
+- Others can't call their forks "pre-Elixis working name"
 
 ### 7.2 Defensive Publication
 
@@ -424,10 +424,10 @@ After US registration (or application), file international via Madrid System:
 ### USPTO TESS Search (April 2026)
 
 **Exact Matches**:
-- SOULCRAFT (Hubbub Brewing LLC) - LIVE, Class 032
+- PRE-ELIXIS WORKING NAME (Hubbub Brewing LLC) - LIVE, Class 032
 
 **Similar Matches**:
-- SOUL CRAFT (Soulcraft LLC) - LIVE, Class 035
+- SIMILAR CRAFT MARK (pre-Elixis working name LLC) - LIVE, Class 035
 - Various SOUL + CRAFT combinations (different industries)
 
 **No Conflicts In**:
@@ -437,24 +437,24 @@ After US registration (or application), file international via Madrid System:
 ### Common Law Search
 
 **Websites**:
-- soulcraft.com - Soulcraft product company (software)
-- soulcraftagency.com - Marketing agency (different space)
-- soulcraft.beer - Hubbub Brewing
+- pre-elixis-working-name.com - pre-Elixis working name product company (software)
+- pre-elixis-working-nameagency.com - Marketing agency (different space)
+- pre-elixis-working-name.beer - Hubbub Brewing
 
 **Social Media**:
-- @soulcraft - Multiple users, none in AI space
-- #soulcraft - Mixed usage, no dominant brand
+- @pre-elixis-working-name - Multiple users, none in AI space
+- #pre-elixis-working-name - Mixed usage, no dominant brand
 
 ### Domain Analysis
 
 | Domain | Status | Owner |
 |--------|--------|-------|
-| soulcraft.ai | Taken | Unknown (check availability) |
-| soulcraft.dev | Check | Likely available |
-| soulcraft.io | Taken | Different company |
-| soulcraft.org | Check | Possibly available |
+| pre-elixis-working-name.ai | Taken | Unknown (check availability) |
+| pre-elixis-working-name.dev | Check | Likely available |
+| pre-elixis-working-name.io | Taken | Different company |
+| pre-elixis-working-name.org | Check | Possibly available |
 
-**Recommendation**: Secure soulcraft.dev and soulcraft.ai immediately.
+**Recommendation**: Secure pre-elixis-working-name.dev and pre-elixis-working-name.ai immediately.
 
 ---
 
