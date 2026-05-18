@@ -1,6 +1,8 @@
-"""Tests for elixis.__main__ — entry point."""
+"""Tests for elixis.__main__ — CLI entry point."""
 
-from unittest.mock import patch, MagicMock
+import json
+import types
+from unittest.mock import MagicMock, patch
 
 
 class TestMain:
@@ -40,7 +42,9 @@ class TestMain:
 
         mock_app_main.assert_not_called()
         assert result == 0
-        assert "usage: elixis [--port PORT]" in capsys.readouterr().out
+        captured = capsys.readouterr()
+        assert "usage: elixis" in captured.out
+        assert "run" in captured.out
 
     @patch("app.main")
     def test_short_help_does_not_start_app(self, mock_app_main, capsys):
@@ -53,6 +57,16 @@ class TestMain:
         assert "show this help message and exit" in capsys.readouterr().out
 
     @patch("app.main")
+    def test_version_does_not_start_app(self, mock_app_main, capsys):
+        from elixis.__main__ import main
+
+        result = main(["--version"])
+
+        mock_app_main.assert_not_called()
+        assert result == 0
+        assert "elixis 1.0.0" in capsys.readouterr().out
+
+    @patch("app.main")
     def test_unknown_argument_fails_before_starting_server(self, mock_app_main, capsys):
         from elixis.__main__ import main
 
@@ -61,8 +75,8 @@ class TestMain:
         mock_app_main.assert_not_called()
         assert result == 2
         captured = capsys.readouterr()
-        assert "unknown argument" in captured.err
-        assert "usage: elixis [--port PORT]" in captured.err
+        assert "invalid choice" in captured.err
+        assert "usage: elixis" in captured.err
 
     @patch("app.main")
     def test_invalid_port_fails_before_starting_server(self, mock_app_main, capsys):
@@ -72,4 +86,71 @@ class TestMain:
 
         mock_app_main.assert_not_called()
         assert result == 2
-        assert "invalid --port value" in capsys.readouterr().err
+        assert "invalid int value" in capsys.readouterr().err
+
+    @patch("elixis.engine.GameEngine")
+    def test_run_command_outputs_json_summary(self, mock_engine_cls, capsys):
+        from elixis.__main__ import main
+
+        engine = mock_engine_cls.return_value
+        engine.run_full.return_value = "# Brand Output"
+        engine.state = types.SimpleNamespace(
+            beads=[object()],
+            threads=[object(), object()],
+            tensions=[],
+            metadata={
+                "pattern_graph": {
+                    "patterns": [{"name": "Wisdom"}],
+                    "emergent_topic": "clarity",
+                    "emergent_theme": "wise systems",
+                    "consensus_score": 0.9,
+                }
+            },
+        )
+
+        result = main(["run", "--text", "Athena and design systems", "--lens", "brand", "--json"])
+
+        assert result == 0
+        engine.run_full.assert_called_once()
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["lens"] == "brand"
+        assert payload["entity_count"] == 1
+        assert payload["output"] == "# Brand Output"
+
+    @patch("elixis.entities.extract_entities", return_value=[{"canonical": "Athena"}])
+    def test_extract_command_outputs_entities(self, _mock_extract, capsys):
+        from elixis.__main__ import main
+
+        result = main(["extract", "--text", "Athena and Batman"])
+
+        assert result == 0
+        assert json.loads(capsys.readouterr().out)[0]["canonical"] == "Athena"
+
+    @patch("elixis.patterns.build_pattern_graph", return_value={"patterns": [{"name": "Wisdom"}]})
+    @patch("elixis.entities.extract_entities", return_value=[{"canonical": "Athena"}])
+    def test_patterns_command_outputs_pattern_graph(self, _mock_extract, _mock_graph, capsys):
+        from elixis.__main__ import main
+
+        result = main(["patterns", "--text", "Athena and Batman"])
+
+        assert result == 0
+        assert json.loads(capsys.readouterr().out)["patterns"][0]["name"] == "Wisdom"
+
+    @patch("elixis.naming.research_name", return_value={"input_name": "Elixis", "variants": []})
+    def test_name_command_researches_name(self, mock_research, capsys):
+        from elixis.__main__ import main
+
+        result = main(["name", "--name", "Elixis", "--context", "AI tool", "--no-variants"])
+
+        assert result == 0
+        mock_research.assert_called_once_with("Elixis", "AI tool", generate_variants=False, source="taxonomy")
+        assert json.loads(capsys.readouterr().out)["input_name"] == "Elixis"
+
+    @patch("elixis.mcp_server.main")
+    def test_mcp_command_runs_stdio_server(self, mock_mcp_main):
+        from elixis.__main__ import main
+
+        result = main(["mcp"])
+
+        assert result == 0
+        mock_mcp_main.assert_called_once()

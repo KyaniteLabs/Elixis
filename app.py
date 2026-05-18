@@ -132,6 +132,7 @@ def run_pipeline(brain_dump):
     return {
         "stage1_entities": [b.to_dict() for b in state.beads],
         "stage2_graph": graph,
+        "output": output,
         "stage3_output": output,
         "stage3_soulmd": output,
         "timings": state.timings,
@@ -157,6 +158,7 @@ def run_game_pipeline(brain_dump, lens="identity"):
         "lens": lens,
         "stage1_entities": [b.to_dict() for b in state.beads],
         "stage2_graph": state.metadata.get("pattern_graph", {}),
+        "output": output,
         "stage3_output": output,
         "stage3_soulmd": output if lens == "identity" else None,
         "threads": [t.to_dict() for t in state.threads],

@@ -45,6 +45,7 @@ Archived pre-Elixis planning notes are preserved under `docs/archive/` for histo
 
 ```text
 elixis/              Core Python package
+  __main__.py           Operator CLI: serve, run, extract, patterns, name, mcp
   entities.py           Entity extraction and structured terms
   engine.py             Four-phase pattern synthesis orchestrator
   lenses/               Output lenses: identity, brand, design
@@ -58,9 +59,11 @@ elixis/              Core Python package
   traces.py             Run trace capture and diagnostics
   backup.py             Backup and restore helpers
   logging_config.py     Structured logging setup
+  mcp_server.py         Optional stdio adapter for MCP-compatible assistants
   templates/            Landing page UI with live multi-lens demo
 tests/                  Unit and integration tests
 app.py                  HTTP server entry point (stdlib, port 3110)
+openapi.yaml            HTTP API contract
 ```
 
 ## Quick start
@@ -70,6 +73,28 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python app.py
+```
+
+## Operator surfaces
+
+MCP is an integration adapter, not the product scope. The supported operator contract is the same engine behind three local-first surfaces:
+
+| Surface | Command / contract | Use |
+|---------|--------------------|-----|
+| CLI | `python -m elixis run --text "Athena, Batman, Musashi" --lens brand` | Local scripting and one-shot synthesis |
+| HTTP API | `python -m elixis serve --port 3110`; see `openapi.yaml` | Browser UI, services, and external clients |
+| MCP stdio | `python -m elixis mcp` | AI assistants that need tool access to the same engine |
+
+Useful CLI commands:
+
+```bash
+python -m elixis --version
+python -m elixis serve --port 3110
+python -m elixis run --file references.txt --lens design --json
+python -m elixis extract --text "Athena, Batman, Miyamoto Musashi"
+python -m elixis patterns --stdin < references.txt
+python -m elixis name --name Elixis --context "local AI synthesis tool"
+python -m elixis mcp
 ```
 
 ## Configuration

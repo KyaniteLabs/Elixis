@@ -24,6 +24,28 @@ Supporting modules:
 - `elixis/traces.py` — Run trace capture with automatic rotation
 - `elixis/backup.py` — Backup and restore with path traversal protection
 - `elixis/llm.py` — LLM interface supporting Ollama and OpenAI-compatible APIs
+- `elixis/__main__.py` — Operator CLI for serve, run, extract, patterns, name, and mcp commands
+- `elixis/mcp_server.py` — Optional MCP stdio adapter over the same engine
+
+## Operator Surfaces
+
+MCP is an adapter, not the product scope. Elixis exposes the same synthesis engine through three technical surfaces:
+
+- CLI: `python -m elixis run --text "Athena, Batman" --lens brand --json`
+- HTTP API: `python -m elixis serve --port 3110`; routes are defined in `openapi.yaml`
+- MCP stdio adapter: `python -m elixis mcp`
+
+Useful CLI commands:
+
+```bash
+python -m elixis --version
+python -m elixis serve --port 3110
+python -m elixis run --file references.txt --lens design --json
+python -m elixis extract --text "Athena, Batman, Miyamoto Musashi"
+python -m elixis patterns --stdin < references.txt
+python -m elixis name --name Elixis --context "local AI synthesis tool"
+python -m elixis mcp
+```
 
 ## HTTP API Reference
 
