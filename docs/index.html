@@ -117,13 +117,21 @@
       --muted: #b5ada8;
       --dim: #7f797b;
       --accent: #c9956b;
-      --teal: #4ecdc4;
-      --blue: #7cc7ff;
-      --tension: #e26d5c;
       --shadow: rgba(0, 0, 0, .48);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
@@ -149,8 +157,6 @@
     nav,
     .eyebrow,
     .button,
-    .metric-label,
-    .loom-label,
     .item h3,
     .code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -172,11 +178,12 @@
     main { overflow: hidden; }
     .hero {
       position: relative;
-      min-height: 94vh;
+      min-height: 100dvh;
       display: grid;
       align-items: center;
-      padding: 112px 32px 72px;
+      padding: 86px 32px 76px;
       isolation: isolate;
+      background: #000;
     }
     #semanticLoom {
       position: absolute;
@@ -184,10 +191,7 @@
       z-index: -2;
       width: 100%;
       height: 100%;
-      background:
-        radial-gradient(circle at 70% 28%, rgba(78,205,196,.12), transparent 34%),
-        radial-gradient(circle at 28% 72%, rgba(201,149,107,.13), transparent 36%),
-        #0b0a0e;
+      background: #000;
     }
     .hero::after {
       content: "";
@@ -195,28 +199,34 @@
       inset: 0;
       z-index: -1;
       background:
-        radial-gradient(circle at 50% 43%, rgba(11,10,14,.04), rgba(11,10,14,.48) 58%, rgba(11,10,14,.9) 100%),
-        linear-gradient(180deg, rgba(11,10,14,.22) 0%, rgba(11,10,14,.72) 100%);
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,.06), rgba(0,0,0,.12) 28%, rgba(0,0,0,.76) 72%),
+        linear-gradient(180deg, rgba(0,0,0,.12) 0%, rgba(0,0,0,.02) 45%, rgba(0,0,0,.62) 100%);
       pointer-events: none;
     }
     .hero-inner {
       width: min(1180px, 100%);
       margin: 0 auto;
-      min-height: calc(88vh - 184px);
+      min-height: calc(100dvh - 162px);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 34px;
       text-align: center;
     }
-    .hero-copy { max-width: 920px; }
+    .hero-copy { max-width: 900px; }
+    .hero-copy,
+    .eyebrow,
+    .lead,
+    .actions {
+      position: relative;
+      z-index: 1;
+    }
     .eyebrow {
       display: inline-flex;
       gap: 10px;
       align-items: center;
-      margin: 0 0 18px;
-      color: var(--accent);
+      margin: 0 0 20px;
+      color: rgba(255,255,255,.72);
       font-size: 12px;
       font-weight: 800;
       letter-spacing: 2px;
@@ -226,31 +236,38 @@
       content: "";
       width: 32px;
       height: 1px;
-      background: var(--accent);
+      background: rgba(255,255,255,.48);
     }
     .eyebrow::after {
       content: "";
       width: 32px;
       height: 1px;
-      background: var(--accent);
+      background: rgba(255,255,255,.48);
     }
     h1 {
       margin: 0 0 22px;
       font-family: "Playfair Display", Georgia, serif;
       font-weight: 800;
-      font-size: clamp(72px, 13vw, 178px);
-      line-height: .82;
+      font-size: clamp(86px, 15vw, 204px);
+      line-height: .78;
       letter-spacing: 0;
+      color: #fff;
       text-shadow:
-        0 0 34px rgba(241, 237, 231, .32),
-        0 0 86px rgba(78, 205, 196, .24),
-        0 0 130px rgba(201, 149, 107, .16);
+        0 10px 30px rgba(0,0,0,.88),
+        0 0 24px rgba(255,255,255,.34),
+        0 0 56px rgba(255,255,255,.2),
+        0 0 110px rgba(255,255,255,.14);
     }
     .lead {
-      max-width: 760px;
+      max-width: 650px;
       margin: 0 auto;
-      color: var(--muted);
-      font-size: clamp(18px, 2vw, 24px);
+      color: rgba(255,255,255,.72);
+      font-size: clamp(18px, 1.65vw, 22px);
+      text-wrap: balance;
+      text-shadow:
+        0 2px 12px rgba(0,0,0,1),
+        0 0 30px rgba(0,0,0,.94),
+        0 0 52px rgba(0,0,0,.82);
     }
     .actions {
       display: flex;
@@ -263,78 +280,26 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      padding: 0 18px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.035);
-      color: var(--text);
-      font-size: 12px;
+      min-height: 52px;
+      padding: 0 30px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.18),
+        0 16px 50px rgba(0,0,0,.45);
+      color: #fff;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 1.2px;
       text-decoration: none;
       text-transform: uppercase;
       backdrop-filter: blur(12px);
+      transition: transform .22s ease, background .22s ease, border-color .22s ease;
     }
-    .button.primary {
-      background: var(--accent);
-      color: #14110f;
-      border-color: var(--accent);
-    }
-    .loom-panel {
-      width: min(780px, 100%);
-      display: grid;
-      gap: 12px;
-    }
-    .loom-card {
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(15, 14, 20, .62);
-      box-shadow: 0 22px 60px var(--shadow);
-      backdrop-filter: blur(16px);
-    }
-    .loom-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--dim);
-      font-size: 11px;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-    }
-    .loom-card strong {
-      display: block;
-      margin-top: 8px;
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.22;
-    }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .metric {
-      padding: 14px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.025);
-    }
-    .metric-value {
-      display: block;
-      color: var(--text);
-      font-size: 24px;
-      line-height: 1;
-    }
-    .metric-label {
-      display: block;
-      margin-top: 8px;
-      color: var(--dim);
-      font-size: 10px;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-    }
+    .button:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.42); transform: translateY(-1px); }
+    .button:active { transform: translateY(1px) scale(.99); }
+    .button.primary { color: #fff; }
     .section {
       width: min(1120px, calc(100% - 56px));
       margin: 0 auto;
@@ -394,13 +359,14 @@
     @media (max-width: 860px) {
       header { padding: 0 18px; }
       nav { gap: 12px; }
-      .hero { min-height: auto; padding: 96px 20px 54px; }
+      .hero { min-height: 100dvh; padding: 92px 20px 56px; }
       .hero::after {
-        background: linear-gradient(180deg, rgba(11,10,14,.42) 0%, rgba(11,10,14,.9) 100%);
+        background: linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.72) 100%);
       }
-      .hero-inner { min-height: 0; }
-      .grid, .metrics { grid-template-columns: 1fr; }
-      h1 { font-size: 72px; }
+      .hero-inner { min-height: calc(100dvh - 148px); }
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: clamp(78px, 23vw, 104px); }
+      .actions { margin-top: 30px; }
       .section { width: min(100% - 36px, 1120px); }
     }
   </style>
@@ -420,36 +386,19 @@
       <canvas id="semanticLoom" aria-hidden="true"></canvas>
       <div class="hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow">Semantic loom</p>
+          <span class="sr-only">Semantic loom</span>
           <h1>Elixis</h1>
-          <p class="lead">A local-first pattern synthesis engine that turns messy references into beads, threads, tensions, and lens-specific outputs. SOUL.md is one compatibility lens, not the whole product.</p>
+          <p class="lead">An interactive synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md-compatible outputs.</p>
           <div class="actions">
-            <a class="button primary" href="https://github.com/KyaniteLabs/Elixis">View GitHub</a>
-            <a class="button" href="https://github.com/KyaniteLabs/Elixis#quick-start">Run Locally</a>
-            <a class="button" href="https://kyanitelabs.github.io/Elixis/llms.txt">LLMs.txt</a>
+            <a class="button primary" href="#outputs">Explore the synthesis</a>
           </div>
         </div>
-        <aside class="loom-panel" aria-label="Pattern graph summary">
-          <div class="loom-card">
-            <span class="loom-label"><span>Input</span><span>raw references</span></span>
-            <strong>people, works, places, values, constraints, aesthetics</strong>
-          </div>
-          <div class="metrics" aria-label="Elixis synthesis phases">
-            <div class="metric"><span class="metric-value">01</span><span class="metric-label">beads</span></div>
-            <div class="metric"><span class="metric-value">02</span><span class="metric-label">threads</span></div>
-            <div class="metric"><span class="metric-value">03</span><span class="metric-label">lenses</span></div>
-          </div>
-          <div class="loom-card">
-            <span class="loom-label"><span>Outputs</span><span>identity | brand | design | naming</span></span>
-            <strong>one graph, multiple resolved documents</strong>
-          </div>
-        </aside>
       </div>
     </section>
 
     <section class="section" id="outputs">
       <h2>One graph, multiple output lenses.</h2>
-      <p class="lead">The same reference set can become an identity document, brand voice guide, design-system direction, naming research, or another lens-specific output.</p>
+      <p class="lead">The same reference set can become an identity document, brand voice guide, design-system direction, naming research, or another lens-specific output. SOUL.md is one compatibility lens, not the whole product.</p>
       <div class="grid">
         <article class="item">
           <h3>Identity</h3>
@@ -492,160 +441,197 @@ python app.py</div>
   <footer>
     Built by Kyanite Labs. MIT licensed. Local-first AI pattern synthesis for builders who need coherent outputs from messy references.
   </footer>
-  <script>
-    (() => {
+  <script type="module">
+    (async () => {
       const canvas = document.getElementById('semanticLoom');
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const palette = {
-        bead: 'rgba(248, 245, 239, .92)',
-        copper: 'rgba(220, 156, 92, .96)',
-        teal: 'rgba(78, 215, 202, .92)',
-        blue: 'rgba(124, 199, 255, .82)',
-        rose: 'rgba(226, 109, 92, .78)',
-        silk: 'rgba(248, 245, 239, .18)'
-      };
-      const particleCount = 2200;
-      const particles = Array.from({ length: particleCount }, (_, index) => {
-        const u = (index / particleCount) * Math.PI * 2 * 7;
-        const lane = index % 7;
-        return {
-          u,
-          lane,
-          phase: index * .013,
-          size: 1 + (index % 7) * .2,
-          color: index % 109 === 0 ? palette.rose : index % 37 === 0 ? palette.copper : index % 23 === 0 ? palette.teal : index % 17 === 0 ? palette.blue : palette.bead,
-          x: 0,
-          y: 0,
-          px: 0,
-          py: 0
-        };
-      });
-      const pointer = { x: .5, y: .5, active: false };
-
-      function resize() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.floor(canvas.clientWidth * dpr);
-        canvas.height = Math.floor(canvas.clientHeight * dpr);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-
-      function updatePointer(event) {
-        const rect = canvas.getBoundingClientRect();
-        pointer.x = (event.clientX - rect.left) / rect.width;
-        pointer.y = (event.clientY - rect.top) / rect.height;
+      const pointer = { x: 0, y: 0, active: false };
+      const updatePointer = (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
         pointer.active = true;
+      };
+
+      function runCanvasFallback() {
+        const ctx = canvas.getContext('2d');
+        const particles = Array.from({ length: 6200 }, (_, index) => ({
+          u: (index / 6200) * Math.PI * 2 * 9,
+          lane: index % 9,
+          phase: index * .021,
+          x: 0,
+          y: 0
+        }));
+
+        const resize = () => {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.floor(canvas.clientWidth * dpr);
+          canvas.height = Math.floor(canvas.clientHeight * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+
+        const draw = (time = 0) => {
+          const width = canvas.clientWidth;
+          const height = canvas.clientHeight;
+          const scale = Math.min(width, height);
+          const centerX = width * .5;
+          const centerY = height * .5;
+          const t = time * .001;
+          ctx.clearRect(0, 0, width, height);
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, width, height);
+          ctx.globalCompositeOperation = 'lighter';
+
+          particles.forEach((particle, index) => {
+            const u = particle.u + (prefersReduced ? 0 : t * .16);
+            const major = 1.08 + .34 * Math.cos(3 * u + particle.lane * .24);
+            const x3 = major * Math.cos(2 * u);
+            const y3 = major * Math.sin(2 * u);
+            const z3 = Math.sin(3 * u + particle.phase);
+            const depth = 1.05 + z3 * .2;
+            let x = centerX + x3 * scale * .33 * depth;
+            let y = centerY + y3 * scale * .24 * depth;
+
+            if (pointer.active) {
+              const mouseX = ((pointer.x + 1) / 2) * width;
+              const mouseY = ((1 - pointer.y) / 2) * height;
+              const dx = x - mouseX;
+              const dy = y - mouseY;
+              const dist = Math.hypot(dx, dy);
+              if (dist < scale * .2) {
+                const force = (1 - dist / (scale * .2)) * 42;
+                x += (dx / Math.max(dist, 1)) * force;
+                y += (dy / Math.max(dist, 1)) * force;
+              }
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, index % 3 === 0 ? 1.35 : 1, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,.9)';
+            ctx.fill();
+          });
+
+          ctx.globalCompositeOperation = 'source-over';
+          if (!prefersReduced) requestAnimationFrame(draw);
+        };
+
+        resize();
+        window.addEventListener('resize', resize);
+        window.addEventListener('pointermove', updatePointer);
+        draw();
       }
 
-      function draw(time = 0) {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        const centerX = width * .5;
-        const centerY = height * .43;
-        const scale = Math.min(width, height);
-        const t = time * .001;
-        ctx.clearRect(0, 0, width, height);
+      try {
+        const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
 
-        const grd = ctx.createLinearGradient(0, 0, width, height);
-        grd.addColorStop(0, 'rgba(11, 10, 14, .2)');
-        grd.addColorStop(1, 'rgba(11, 10, 14, .72)');
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, width, height);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setClearColor(0x000000, 1);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-        particles.forEach((particle) => {
-          const wave = prefersReduced ? 0 : t * .22;
-          const u = particle.u + wave + Math.sin(t * .16 + particle.phase) * .025;
-          const major = 1.08 + .32 * Math.cos(3 * u + particle.lane * .38);
-          const strand = (particle.lane - 3) * .012;
-          const x3 = (major + strand) * Math.cos(2 * u);
-          const y3 = (major + strand) * Math.sin(2 * u);
-          const z3 = Math.sin(3 * u + particle.lane * .2);
-          const perspective = 1.08 + z3 * .18;
-          let x = centerX + x3 * scale * .28 * perspective;
-          let y = centerY + y3 * scale * .17 * perspective + Math.sin(5 * u + t) * scale * .018;
+        const clock = new THREE.Clock();
+        const particleCount = window.innerWidth < 760 ? 28000 : 50000;
+        const positions = new Float32Array(particleCount * 3);
+        const originalPositions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const velocities = new Float32Array(particleCount * 3);
+        const geometry = new THREE.BufferGeometry();
+        const torusKnot = new THREE.TorusKnotGeometry(1.5, 0.5, 240, 36);
+        const source = torusKnot.attributes.position;
 
-          if (pointer.active) {
-            const mouseX = pointer.x * width;
-            const mouseY = pointer.y * height;
-            const dx = x - mouseX;
-            const dy = y - mouseY;
-            const dist = Math.hypot(dx, dy);
-            if (dist < scale * .22) {
-              const force = (1 - dist / (scale * .22)) * 34;
-              x += (dx / Math.max(dist, 1)) * force;
-              y += (dy / Math.max(dist, 1)) * force;
-            }
-          }
+        for (let i = 0; i < particleCount; i += 1) {
+          const vertexIndex = i % source.count;
+          const ix = i * 3;
+          const x = source.getX(vertexIndex) + (Math.random() - .5) * .018;
+          const y = source.getY(vertexIndex) + (Math.random() - .5) * .018;
+          const z = source.getZ(vertexIndex) + (Math.random() - .5) * .018;
+          const light = .78 + Math.random() * .22;
 
-          particle.px = particle.x;
-          particle.py = particle.y;
-          particle.x = x;
-          particle.y = y;
-          particle.depth = perspective;
+          positions[ix] = x;
+          positions[ix + 1] = y;
+          positions[ix + 2] = z;
+          originalPositions[ix] = x;
+          originalPositions[ix + 1] = y;
+          originalPositions[ix + 2] = z;
+          colors[ix] = light;
+          colors[ix + 1] = light;
+          colors[ix + 2] = light;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: window.innerWidth < 760 ? 0.014 : 0.016,
+          vertexColors: true,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          opacity: 0.9,
+          depthWrite: false
         });
 
-        ctx.globalCompositeOperation = 'lighter';
-        for (let lane = 0; lane < 7; lane += 1) {
-          ctx.beginPath();
-          let started = false;
-          for (let i = lane; i < particles.length; i += 7) {
-            const p = particles[i];
-            if (!started) {
-              ctx.moveTo(p.x, p.y);
-              started = true;
-            } else {
-              ctx.lineTo(p.x, p.y);
+        const points = new THREE.Points(geometry, material);
+        points.rotation.x = -0.08;
+        points.position.y = 0.22;
+        scene.add(points);
+
+        const resize = () => {
+          const width = canvas.clientWidth;
+          const height = canvas.clientHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height, false);
+        };
+
+        const animate = () => {
+          const elapsedTime = clock.getElapsedTime();
+          const mouseX = pointer.active ? pointer.x * 3 : 0;
+          const mouseY = pointer.active ? pointer.y * 3 : 0;
+
+          if (!prefersReduced) {
+            for (let i = 0; i < particleCount; i += 1) {
+              const ix = i * 3;
+              const dx = positions[ix] - mouseX;
+              const dy = positions[ix + 1] - mouseY;
+              const dz = positions[ix + 2];
+              const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+              if (dist < 1.5) {
+                const force = (1.5 - dist) * 0.01;
+                const safe = Math.max(dist, 0.0001);
+                velocities[ix] += (dx / safe) * force;
+                velocities[ix + 1] += (dy / safe) * force;
+                velocities[ix + 2] += (dz / safe) * force;
+              }
+
+              velocities[ix] += (originalPositions[ix] - positions[ix]) * 0.001;
+              velocities[ix + 1] += (originalPositions[ix + 1] - positions[ix + 1]) * 0.001;
+              velocities[ix + 2] += (originalPositions[ix + 2] - positions[ix + 2]) * 0.001;
+              velocities[ix] *= 0.95;
+              velocities[ix + 1] *= 0.95;
+              velocities[ix + 2] *= 0.95;
+              positions[ix] += velocities[ix];
+              positions[ix + 1] += velocities[ix + 1];
+              positions[ix + 2] += velocities[ix + 2];
             }
+            geometry.attributes.position.needsUpdate = true;
           }
-          ctx.strokeStyle = lane % 2 ? 'rgba(78, 215, 202, .28)' : 'rgba(220, 156, 92, .24)';
-          ctx.lineWidth = lane === 3 ? 1.75 : .95;
-          ctx.stroke();
-        }
 
-        for (let i = 0; i < particles.length; i += 37) {
-          const a = particles[i];
-          const b = particles[(i + 203) % particles.length];
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - scale * .075, b.x, b.y);
-          ctx.strokeStyle = i % 2 ? 'rgba(124, 199, 255, .25)' : 'rgba(226, 109, 92, .18)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
+          points.rotation.y = elapsedTime * 0.05;
+          renderer.render(scene, camera);
+          if (!prefersReduced) requestAnimationFrame(animate);
+        };
 
-        for (let ring = 0; ring < 4; ring += 1) {
-          ctx.beginPath();
-          ctx.ellipse(
-            centerX,
-            centerY + scale * (.006 * ring),
-            scale * (.34 + ring * .04),
-            scale * (.18 + ring * .015),
-            (ring - 1.5) * .28 + t * .035,
-            0,
-            Math.PI * 2
-          );
-          ctx.strokeStyle = ring % 2 ? 'rgba(78, 215, 202, .16)' : 'rgba(220, 156, 92, .15)';
-          ctx.lineWidth = .9;
-          ctx.stroke();
-        }
-
-        particles.forEach((particle, index) => {
-          if (index % 2 && scale < 740) return;
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, particle.size * particle.depth, 0, Math.PI * 2);
-          ctx.fillStyle = particle.color;
-          ctx.fill();
-        });
-        ctx.globalCompositeOperation = 'source-over';
-
-        if (!prefersReduced) requestAnimationFrame(draw);
+        window.addEventListener('resize', resize);
+        window.addEventListener('pointermove', updatePointer);
+        resize();
+        animate();
+      } catch (error) {
+        runCanvasFallback();
       }
-
-      window.addEventListener('resize', resize);
-      window.addEventListener('pointermove', updatePointer);
-      resize();
-      draw();
     })();
   </script>
 </body>

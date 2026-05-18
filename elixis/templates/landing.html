@@ -414,9 +414,8 @@ body {
   border-radius: var(--radius-md);
   overflow: hidden;
   background:
-    radial-gradient(circle at 72% 24%, rgba(78, 205, 196, 0.12), transparent 38%),
-    radial-gradient(circle at 22% 78%, rgba(201, 149, 107, 0.14), transparent 40%),
-    rgba(255, 255, 255, 0.025);
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.13), transparent 34%),
+    #050505;
 }
 
 .about-loom canvas {
@@ -429,7 +428,7 @@ body {
   position: absolute;
   left: var(--space-base);
   bottom: var(--space-sm);
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.62);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   letter-spacing: 1.3px;
@@ -1312,7 +1311,7 @@ Fleabag"
       <span class="sidebar-label">About</span>
       <div class="about-loom" aria-hidden="true">
         <canvas id="aboutLoom"></canvas>
-        <span class="about-loom-label">beads / threads / lenses</span>
+        <span class="about-loom-label">semantic loom</span>
       </div>
       <h2 class="about-title" id="about-title">AI identity, brand voice, design system, and naming generator</h2>
       <p class="about-copy">Elixis is a local-first pattern synthesis engine from Kyanite Labs. It turns raw references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph.</p>
@@ -1994,10 +1993,10 @@ function initAboutLoom() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const nodes = Array.from({ length: 24 }, (_, index) => ({
-    cluster: index % 4,
-    ring: Math.floor(index / 4),
-    phase: index * 0.61,
+  const nodes = Array.from({ length: 96 }, (_, index) => ({
+    u: (index / 96) * Math.PI * 2 * 5,
+    lane: index % 6,
+    phase: index * 0.17,
     x: 0,
     y: 0
   }));
@@ -2012,49 +2011,43 @@ function initAboutLoom() {
   function draw(time = 0) {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    const cx = width * 0.54;
-    const cy = height * 0.46;
+    const cx = width * 0.52;
+    const cy = height * 0.47;
     const scale = Math.min(width, height);
     const t = time * 0.001;
     ctx.clearRect(0, 0, width, height);
 
     nodes.forEach((node) => {
-      const angle = node.cluster * Math.PI * 0.5 - Math.PI * 0.5;
-      const drift = reduced ? 0 : Math.sin(t * 0.4 + node.phase) * 0.1;
-      const radius = scale * (0.24 + node.ring * 0.035);
-      node.x = cx + Math.cos(angle + drift) * radius;
-      node.y = cy + Math.sin(angle + drift) * radius * 0.52;
+      const u = node.u + (reduced ? 0 : t * 0.22);
+      const major = 1.04 + 0.28 * Math.cos(3 * u + node.lane * 0.34);
+      const x3 = major * Math.cos(2 * u);
+      const y3 = major * Math.sin(2 * u);
+      const z3 = Math.sin(3 * u + node.phase);
+      const depth = 1 + z3 * 0.18;
+      node.x = cx + x3 * scale * 0.28 * depth;
+      node.y = cy + y3 * scale * 0.18 * depth;
+      node.depth = depth;
     });
 
-    for (let i = 0; i < nodes.length; i += 1) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < nodes.length; i += 2) {
       const a = nodes[i];
-      const b = nodes[(i + 5) % nodes.length];
-      const bridge = i % 7 === 0;
+      const b = nodes[(i + 17) % nodes.length];
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
-      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - (bridge ? 26 : 8), b.x, b.y);
-      ctx.strokeStyle = bridge ? 'rgba(78, 205, 196, 0.55)' : 'rgba(255, 255, 255, 0.13)';
-      ctx.lineWidth = bridge ? 1.1 : 0.7;
+      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - 14, b.x, b.y);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 0.7;
       ctx.stroke();
     }
 
     nodes.forEach((node, index) => {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, index % 6 === 0 ? 3.2 : 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = index % 6 === 0 ? 'rgba(201, 149, 107, 0.92)' : 'rgba(232, 230, 227, 0.72)';
+      ctx.arc(node.x, node.y, (index % 5 === 0 ? 1.7 : 1.15) * node.depth, 0, Math.PI * 2);
+      ctx.fillStyle = index % 7 === 0 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.68)';
       ctx.fill();
     });
-
-    ['identity', 'brand', 'design'].forEach((label, index) => {
-      const x = width * (0.24 + index * 0.25);
-      const y = height * 0.82;
-      ctx.strokeStyle = index === 1 ? 'rgba(78, 205, 196, 0.48)' : 'rgba(201, 149, 107, 0.42)';
-      ctx.strokeRect(x - 34, y - 10, 68, 20);
-      ctx.fillStyle = 'rgba(232, 230, 227, 0.62)';
-      ctx.font = '10px SFMono-Regular, Menlo, Consolas, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, x, y + 4);
-    });
+    ctx.globalCompositeOperation = 'source-over';
 
     if (!reduced) requestAnimationFrame(draw);
   }
