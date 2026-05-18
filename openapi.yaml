@@ -3,7 +3,7 @@ info:
   title: Elixis API
   description: |
     Local-first AI pattern synthesis engine for identity, brand voice, design systems,
-    naming research, and SOUL.md outputs. Elixis turns raw
+    naming research, and lens-specific outputs. Elixis turns raw
     references into beads, threads, pattern graphs, tensions, and lens-specific
     markdown documents.
   version: "1.0.0"

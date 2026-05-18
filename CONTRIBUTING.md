@@ -1,6 +1,6 @@
 # Contributing to Elixis
 
-Thanks for your interest! Elixis is a local-first AI pattern synthesis engine that turns brain dump text into structured outputs for identity, brand, design, naming, translation checks, and SOUL.md-compatible agents.
+Thanks for your interest! Elixis is a local-first AI pattern synthesis engine that turns brain dump text into structured outputs for identity, brand voice, design systems, naming research, and lens-specific documents.
 
 ## Quick Start
 

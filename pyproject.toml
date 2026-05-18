@@ -5,7 +5,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 [project]
 name = "elixis"
 version = "1.0.0"
-description = "Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs."
+description = "Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
