@@ -23,5 +23,5 @@
     <path d="M164 -42 C215 -18 250 6 292 14"/>
     <path d="M320 12 C370 -18 410 -35 456 -31"/>
   </g>
-  <text x="94" y="558" fill="#6b7280" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="24">Local-first | Python stdlib | MCP-ready | SOUL.md-compatible</text>
+  <text x="94" y="558" fill="#6b7280" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="24">Local-first | Pattern graphs | Lens outputs | SOUL.md-compatible</text>
 </svg>

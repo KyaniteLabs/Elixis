@@ -6,6 +6,7 @@ dist/
 build/
 .omc/
 .fugax/
+.elixis/
 .backups/
 .playwright-mcp/
 

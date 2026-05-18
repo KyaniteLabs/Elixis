@@ -1,10 +1,10 @@
 # Elixis — Full Documentation for AI Assistants
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, translation checks, and SOUL.md outputs.
+> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and SOUL.md outputs.
 
 ## Overview
 
-Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, translation, run tracing, and backup/restore.
+Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore.
 
 ## Architecture
 
@@ -24,8 +24,6 @@ Supporting modules:
 - `elixis/traces.py` — Run trace capture with automatic rotation
 - `elixis/backup.py` — Backup and restore with path traversal protection
 - `elixis/llm.py` — LLM interface supporting Ollama and OpenAI-compatible APIs
-
-MCP tools include `create_soul` for identity/SOUL.md compatibility and `run_game` for the broader lens-based engine (`identity`, `brand`, `design`).
 
 ## HTTP API Reference
 
