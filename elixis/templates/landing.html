@@ -401,7 +401,40 @@ body {
 }
 
 .about-section {
+  position: relative;
   scroll-margin-top: var(--space-lg);
+  overflow: hidden;
+}
+
+.about-loom {
+  position: relative;
+  height: 150px;
+  margin: 0 0 var(--space-base);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 24%, rgba(78, 205, 196, 0.12), transparent 38%),
+    radial-gradient(circle at 22% 78%, rgba(201, 149, 107, 0.14), transparent 40%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.about-loom canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.about-loom-label {
+  position: absolute;
+  left: var(--space-base);
+  bottom: var(--space-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 .about-section:focus {
@@ -1277,6 +1310,10 @@ Fleabag"
 
     <section class="sidebar-section about-section" id="about" aria-labelledby="about-title" tabindex="-1">
       <span class="sidebar-label">About</span>
+      <div class="about-loom" aria-hidden="true">
+        <canvas id="aboutLoom"></canvas>
+        <span class="about-loom-label">beads / threads / lenses</span>
+      </div>
       <h2 class="about-title" id="about-title">AI identity, brand voice, design system, and naming generator</h2>
       <p class="about-copy">Elixis is a local-first pattern synthesis engine from Kyanite Labs. It turns raw references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph.</p>
       <p class="about-copy">SOUL.md identity files are one compatibility lens. The same graph also powers brand voice guidance, design-system direction, naming research, run traces, and rollback-friendly backups.</p>
@@ -1952,6 +1989,81 @@ function initAboutLink() {
   }
 }
 
+function initAboutLoom() {
+  const canvas = document.getElementById('aboutLoom');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nodes = Array.from({ length: 24 }, (_, index) => ({
+    cluster: index % 4,
+    ring: Math.floor(index / 4),
+    phase: index * 0.61,
+    x: 0,
+    y: 0
+  }));
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(canvas.clientWidth * dpr);
+    canvas.height = Math.floor(canvas.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function draw(time = 0) {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const cx = width * 0.54;
+    const cy = height * 0.46;
+    const scale = Math.min(width, height);
+    const t = time * 0.001;
+    ctx.clearRect(0, 0, width, height);
+
+    nodes.forEach((node) => {
+      const angle = node.cluster * Math.PI * 0.5 - Math.PI * 0.5;
+      const drift = reduced ? 0 : Math.sin(t * 0.4 + node.phase) * 0.1;
+      const radius = scale * (0.24 + node.ring * 0.035);
+      node.x = cx + Math.cos(angle + drift) * radius;
+      node.y = cy + Math.sin(angle + drift) * radius * 0.52;
+    });
+
+    for (let i = 0; i < nodes.length; i += 1) {
+      const a = nodes[i];
+      const b = nodes[(i + 5) % nodes.length];
+      const bridge = i % 7 === 0;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - (bridge ? 26 : 8), b.x, b.y);
+      ctx.strokeStyle = bridge ? 'rgba(78, 205, 196, 0.55)' : 'rgba(255, 255, 255, 0.13)';
+      ctx.lineWidth = bridge ? 1.1 : 0.7;
+      ctx.stroke();
+    }
+
+    nodes.forEach((node, index) => {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, index % 6 === 0 ? 3.2 : 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = index % 6 === 0 ? 'rgba(201, 149, 107, 0.92)' : 'rgba(232, 230, 227, 0.72)';
+      ctx.fill();
+    });
+
+    ['identity', 'brand', 'design'].forEach((label, index) => {
+      const x = width * (0.24 + index * 0.25);
+      const y = height * 0.82;
+      ctx.strokeStyle = index === 1 ? 'rgba(78, 205, 196, 0.48)' : 'rgba(201, 149, 107, 0.42)';
+      ctx.strokeRect(x - 34, y - 10, 68, 20);
+      ctx.fillStyle = 'rgba(232, 230, 227, 0.62)';
+      ctx.font = '10px SFMono-Regular, Menlo, Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x, y + 4);
+    });
+
+    if (!reduced) requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════════════════════════════════════ */
@@ -1960,6 +2072,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLensSelector();
   initExamples();
   initAboutLink();
+  initAboutLoom();
   updateOutputMeta();
 
   dom.playBtn.addEventListener('click', runPipeline);

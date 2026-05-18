@@ -78,6 +78,8 @@ class TestDocsLanding(unittest.TestCase):
         self.assertIn("AI Pattern Synthesis", parser.title)
         self.assertIn("about", parser.ids)
         self.assertIn("outputs", parser.ids)
+        self.assertIn("semanticLoom", parser.ids)
+        self.assertIn("Semantic loom", html)
         self.assertIn("llms.txt", parser.meta["description"] + html)
         self.assertTrue(any(link.get("rel") == "canonical" for link in parser.links))
 

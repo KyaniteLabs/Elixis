@@ -4,20 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Elixis | AI Pattern Synthesis for Identity, Brand, Design, and Naming</title>
-  <meta name="description" content="Elixis is a local-first AI pattern synthesis engine that turns raw references into identity, brand voice, design system, naming research, and SOUL.md outputs.">
+  <meta name="description" content="Elixis is a local-first AI pattern synthesis engine that turns raw references into semantic pattern graphs for identity, brand voice, design systems, naming research, and SOUL.md outputs.">
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion">
   <link rel="canonical" href="https://kyanitelabs.github.io/Elixis/">
   <link rel="alternate" type="text/plain" href="https://kyanitelabs.github.io/Elixis/llms.txt" title="Elixis summary for AI assistants">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Elixis | AI Pattern Synthesis Engine">
-  <meta property="og:description" content="Turn raw references into pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
+  <meta property="og:description" content="Turn raw references into semantic pattern graphs, then resolve them into identity, brand voice, design systems, naming research, and SOUL.md output.">
   <meta property="og:url" content="https://kyanitelabs.github.io/Elixis/">
   <meta property="og:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Elixis | AI Pattern Synthesis Engine">
-  <meta name="twitter:description" content="Local-first synthesis for identity, brand voice, design systems, naming research, and SOUL.md output.">
+  <meta name="twitter:description" content="Local-first semantic synthesis for identity, brand voice, design systems, naming research, and SOUL.md output.">
   <meta name="twitter:image" content="https://kyanitelabs.github.io/Elixis/static/og-image.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -33,7 +36,7 @@
           "design system generator",
           "SOUL.md generator"
         ],
-        "description": "Local-first AI pattern synthesis engine that turns raw references into pattern graphs, then resolves them into identity, brand voice, design systems, naming research, and SOUL.md output.",
+        "description": "Local-first AI pattern synthesis engine that turns raw references into semantic pattern graphs, then resolves them into identity, brand voice, design systems, naming research, and SOUL.md output.",
         "url": "https://kyanitelabs.github.io/Elixis/",
         "codeRepository": "https://github.com/KyaniteLabs/Elixis",
         "applicationCategory": "DeveloperApplication",
@@ -106,18 +109,22 @@
   <style>
     :root {
       color-scheme: dark;
-      --bg: #0d0c11;
-      --surface: #15141d;
-      --line: rgba(255,255,255,.12);
-      --text: #ece8e3;
-      --muted: #a6a1a0;
-      --dim: #77727b;
+      --bg: #0b0a0e;
+      --surface: rgba(19, 18, 25, .78);
+      --line: rgba(236, 232, 227, .14);
+      --line-strong: rgba(236, 232, 227, .28);
+      --text: #f1ede7;
+      --muted: #b5ada8;
+      --dim: #7f797b;
       --accent: #c9956b;
       --teal: #4ecdc4;
-      --violet: #a855f7;
+      --blue: #7cc7ff;
+      --tension: #e26d5c;
+      --shadow: rgba(0, 0, 0, .48);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       background: var(--bg);
@@ -126,20 +133,29 @@
     }
     a { color: inherit; }
     header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      min-height: 56px;
+      min-height: 58px;
       padding: 0 32px;
-      background: rgba(13,12,17,.88);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(11,10,14,.92), rgba(11,10,14,.52));
+      border-bottom: 1px solid rgba(236,232,227,.08);
+      backdrop-filter: blur(18px);
+    }
+    .brand,
+    nav,
+    .eyebrow,
+    .button,
+    .metric-label,
+    .loom-label,
+    .item h3,
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     }
     .brand {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
       font-weight: 800;
       letter-spacing: 4px;
@@ -149,43 +165,99 @@
       display: flex;
       gap: 20px;
       color: var(--muted);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
     }
-    nav a {
-      text-decoration: none;
-    }
+    nav a { text-decoration: none; }
     nav a:hover { color: var(--accent); }
-    main {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 72px 28px 64px;
-    }
+    main { overflow: hidden; }
     .hero {
+      position: relative;
+      min-height: 94vh;
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr);
-      gap: 48px;
       align-items: center;
-      min-height: calc(100vh - 160px);
+      padding: 112px 32px 72px;
+      isolation: isolate;
+    }
+    #semanticLoom {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 70% 28%, rgba(78,205,196,.12), transparent 34%),
+        radial-gradient(circle at 28% 72%, rgba(201,149,107,.13), transparent 36%),
+        #0b0a0e;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 50% 43%, rgba(11,10,14,.04), rgba(11,10,14,.48) 58%, rgba(11,10,14,.9) 100%),
+        linear-gradient(180deg, rgba(11,10,14,.22) 0%, rgba(11,10,14,.72) 100%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      min-height: calc(88vh - 184px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 34px;
+      text-align: center;
+    }
+    .hero-copy { max-width: 920px; }
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 18px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .eyebrow::after {
+      content: "";
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
     }
     h1 {
-      margin: 0 0 20px;
-      max-width: 820px;
-      font-size: clamp(42px, 7vw, 82px);
-      line-height: .96;
+      margin: 0 0 22px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-weight: 800;
+      font-size: clamp(72px, 13vw, 178px);
+      line-height: .82;
       letter-spacing: 0;
+      text-shadow:
+        0 0 34px rgba(241, 237, 231, .32),
+        0 0 86px rgba(78, 205, 196, .24),
+        0 0 130px rgba(201, 149, 107, .16);
     }
     .lead {
-      max-width: 740px;
-      margin: 0 0 28px;
+      max-width: 760px;
+      margin: 0 auto;
       color: var(--muted);
-      font-size: 20px;
+      font-size: clamp(18px, 2vw, 24px);
     }
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin: 28px 0 0;
+      margin: 34px 0 0;
+      justify-content: center;
     }
     .button {
       display: inline-flex;
@@ -195,33 +267,78 @@
       padding: 0 18px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(255,255,255,.035);
+      color: var(--text);
       font-size: 12px;
       font-weight: 800;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
       text-decoration: none;
       text-transform: uppercase;
+      backdrop-filter: blur(12px);
     }
     .button.primary {
       background: var(--accent);
-      color: #111;
+      color: #14110f;
       border-color: var(--accent);
     }
-    .visual {
-      width: 100%;
+    .loom-panel {
+      width: min(780px, 100%);
+      display: grid;
+      gap: 12px;
+    }
+    .loom-card {
+      padding: 16px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      overflow: hidden;
-      background: var(--surface);
-      box-shadow: 0 20px 70px rgba(0,0,0,.32);
+      background: rgba(15, 14, 20, .62);
+      box-shadow: 0 22px 60px var(--shadow);
+      backdrop-filter: blur(16px);
     }
-    .visual img {
+    .loom-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--dim);
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+    .loom-card strong {
       display: block;
-      width: 100%;
-      height: auto;
+      margin-top: 8px;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.22;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+    }
+    .metric-value {
+      display: block;
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1;
+    }
+    .metric-label {
+      display: block;
+      margin-top: 8px;
+      color: var(--dim);
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
     }
     .section {
-      padding: 52px 0;
+      width: min(1120px, calc(100% - 56px));
+      margin: 0 auto;
+      padding: 62px 0;
       border-top: 1px solid var(--line);
     }
     h2 {
@@ -229,6 +346,10 @@
       font-size: 30px;
       line-height: 1.1;
       letter-spacing: 0;
+    }
+    .section .lead {
+      font-size: 20px;
+      max-width: 780px;
     }
     .grid {
       display: grid;
@@ -238,14 +359,14 @@
     }
     .item {
       padding: 20px;
+      min-height: 154px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(255,255,255,.025);
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.014));
     }
     .item h3 {
       margin: 0 0 8px;
       color: var(--accent);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
@@ -261,7 +382,6 @@
       border-radius: 8px;
       background: #111019;
       color: #d7d1cb;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
       white-space: pre;
     }
@@ -271,14 +391,17 @@
       text-align: center;
       border-top: 1px solid var(--line);
     }
-    @media (max-width: 820px) {
+    @media (max-width: 860px) {
       header { padding: 0 18px; }
       nav { gap: 12px; }
-      main { padding: 48px 18px; }
-      .hero { grid-template-columns: 1fr; min-height: auto; }
-      .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 44px; }
-      .lead { font-size: 18px; }
+      .hero { min-height: auto; padding: 96px 20px 54px; }
+      .hero::after {
+        background: linear-gradient(180deg, rgba(11,10,14,.42) 0%, rgba(11,10,14,.9) 100%);
+      }
+      .hero-inner { min-height: 0; }
+      .grid, .metrics { grid-template-columns: 1fr; }
+      h1 { font-size: 72px; }
+      .section { width: min(100% - 36px, 1120px); }
     }
   </style>
 </head>
@@ -293,19 +416,35 @@
   </header>
 
   <main>
-    <section class="hero" id="about">
-      <div>
-        <h1>AI pattern synthesis for identity, brand, design, and naming.</h1>
-        <p class="lead">Elixis turns messy references, influences, values, aesthetics, constraints, people, works, and places into a reusable pattern graph. SOUL.md is one compatibility lens, not the whole product.</p>
-        <div class="actions">
-          <a class="button primary" href="https://github.com/KyaniteLabs/Elixis">View GitHub</a>
-          <a class="button" href="https://github.com/KyaniteLabs/Elixis#quick-start">Run Locally</a>
-          <a class="button" href="https://kyanitelabs.github.io/Elixis/llms.txt">LLMs.txt</a>
+    <section class="hero" id="about" aria-label="Elixis semantic loom">
+      <canvas id="semanticLoom" aria-hidden="true"></canvas>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">Semantic loom</p>
+          <h1>Elixis</h1>
+          <p class="lead">A local-first pattern synthesis engine that turns messy references into beads, threads, tensions, and lens-specific outputs. SOUL.md is one compatibility lens, not the whole product.</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/KyaniteLabs/Elixis">View GitHub</a>
+            <a class="button" href="https://github.com/KyaniteLabs/Elixis#quick-start">Run Locally</a>
+            <a class="button" href="https://kyanitelabs.github.io/Elixis/llms.txt">LLMs.txt</a>
+          </div>
         </div>
+        <aside class="loom-panel" aria-label="Pattern graph summary">
+          <div class="loom-card">
+            <span class="loom-label"><span>Input</span><span>raw references</span></span>
+            <strong>people, works, places, values, constraints, aesthetics</strong>
+          </div>
+          <div class="metrics" aria-label="Elixis synthesis phases">
+            <div class="metric"><span class="metric-value">01</span><span class="metric-label">beads</span></div>
+            <div class="metric"><span class="metric-value">02</span><span class="metric-label">threads</span></div>
+            <div class="metric"><span class="metric-value">03</span><span class="metric-label">lenses</span></div>
+          </div>
+          <div class="loom-card">
+            <span class="loom-label"><span>Outputs</span><span>identity | brand | design | naming</span></span>
+            <strong>one graph, multiple resolved documents</strong>
+          </div>
+        </aside>
       </div>
-      <figure class="visual" aria-label="Elixis pattern synthesis preview">
-        <img src="static/og-image.svg" alt="Elixis AI pattern synthesis preview showing connected concepts and outputs">
-      </figure>
     </section>
 
     <section class="section" id="outputs">
@@ -353,5 +492,161 @@ python app.py</div>
   <footer>
     Built by Kyanite Labs. MIT licensed. Local-first AI pattern synthesis for builders who need coherent outputs from messy references.
   </footer>
+  <script>
+    (() => {
+      const canvas = document.getElementById('semanticLoom');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const palette = {
+        bead: 'rgba(248, 245, 239, .92)',
+        copper: 'rgba(220, 156, 92, .96)',
+        teal: 'rgba(78, 215, 202, .92)',
+        blue: 'rgba(124, 199, 255, .82)',
+        rose: 'rgba(226, 109, 92, .78)',
+        silk: 'rgba(248, 245, 239, .18)'
+      };
+      const particleCount = 2200;
+      const particles = Array.from({ length: particleCount }, (_, index) => {
+        const u = (index / particleCount) * Math.PI * 2 * 7;
+        const lane = index % 7;
+        return {
+          u,
+          lane,
+          phase: index * .013,
+          size: 1 + (index % 7) * .2,
+          color: index % 109 === 0 ? palette.rose : index % 37 === 0 ? palette.copper : index % 23 === 0 ? palette.teal : index % 17 === 0 ? palette.blue : palette.bead,
+          x: 0,
+          y: 0,
+          px: 0,
+          py: 0
+        };
+      });
+      const pointer = { x: .5, y: .5, active: false };
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(canvas.clientWidth * dpr);
+        canvas.height = Math.floor(canvas.clientHeight * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function updatePointer(event) {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = (event.clientX - rect.left) / rect.width;
+        pointer.y = (event.clientY - rect.top) / rect.height;
+        pointer.active = true;
+      }
+
+      function draw(time = 0) {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const centerX = width * .5;
+        const centerY = height * .43;
+        const scale = Math.min(width, height);
+        const t = time * .001;
+        ctx.clearRect(0, 0, width, height);
+
+        const grd = ctx.createLinearGradient(0, 0, width, height);
+        grd.addColorStop(0, 'rgba(11, 10, 14, .2)');
+        grd.addColorStop(1, 'rgba(11, 10, 14, .72)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, width, height);
+
+        particles.forEach((particle) => {
+          const wave = prefersReduced ? 0 : t * .22;
+          const u = particle.u + wave + Math.sin(t * .16 + particle.phase) * .025;
+          const major = 1.08 + .32 * Math.cos(3 * u + particle.lane * .38);
+          const strand = (particle.lane - 3) * .012;
+          const x3 = (major + strand) * Math.cos(2 * u);
+          const y3 = (major + strand) * Math.sin(2 * u);
+          const z3 = Math.sin(3 * u + particle.lane * .2);
+          const perspective = 1.08 + z3 * .18;
+          let x = centerX + x3 * scale * .28 * perspective;
+          let y = centerY + y3 * scale * .17 * perspective + Math.sin(5 * u + t) * scale * .018;
+
+          if (pointer.active) {
+            const mouseX = pointer.x * width;
+            const mouseY = pointer.y * height;
+            const dx = x - mouseX;
+            const dy = y - mouseY;
+            const dist = Math.hypot(dx, dy);
+            if (dist < scale * .22) {
+              const force = (1 - dist / (scale * .22)) * 34;
+              x += (dx / Math.max(dist, 1)) * force;
+              y += (dy / Math.max(dist, 1)) * force;
+            }
+          }
+
+          particle.px = particle.x;
+          particle.py = particle.y;
+          particle.x = x;
+          particle.y = y;
+          particle.depth = perspective;
+        });
+
+        ctx.globalCompositeOperation = 'lighter';
+        for (let lane = 0; lane < 7; lane += 1) {
+          ctx.beginPath();
+          let started = false;
+          for (let i = lane; i < particles.length; i += 7) {
+            const p = particles[i];
+            if (!started) {
+              ctx.moveTo(p.x, p.y);
+              started = true;
+            } else {
+              ctx.lineTo(p.x, p.y);
+            }
+          }
+          ctx.strokeStyle = lane % 2 ? 'rgba(78, 215, 202, .28)' : 'rgba(220, 156, 92, .24)';
+          ctx.lineWidth = lane === 3 ? 1.75 : .95;
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < particles.length; i += 37) {
+          const a = particles[i];
+          const b = particles[(i + 203) % particles.length];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.quadraticCurveTo((a.x + b.x) / 2, (a.y + b.y) / 2 - scale * .075, b.x, b.y);
+          ctx.strokeStyle = i % 2 ? 'rgba(124, 199, 255, .25)' : 'rgba(226, 109, 92, .18)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        for (let ring = 0; ring < 4; ring += 1) {
+          ctx.beginPath();
+          ctx.ellipse(
+            centerX,
+            centerY + scale * (.006 * ring),
+            scale * (.34 + ring * .04),
+            scale * (.18 + ring * .015),
+            (ring - 1.5) * .28 + t * .035,
+            0,
+            Math.PI * 2
+          );
+          ctx.strokeStyle = ring % 2 ? 'rgba(78, 215, 202, .16)' : 'rgba(220, 156, 92, .15)';
+          ctx.lineWidth = .9;
+          ctx.stroke();
+        }
+
+        particles.forEach((particle, index) => {
+          if (index % 2 && scale < 740) return;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.size * particle.depth, 0, Math.PI * 2);
+          ctx.fillStyle = particle.color;
+          ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+
+        if (!prefersReduced) requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('pointermove', updatePointer);
+      resize();
+      draw();
+    })();
+  </script>
 </body>
 </html>
