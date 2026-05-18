@@ -52,7 +52,7 @@ python -m elixis mcp
 Base URL: `http://localhost:3110`
 
 ### POST /api/extract
-Run the identity-compatible pipeline on a brain dump. This is the legacy SOUL.md route; use `/api/game` for explicit lens selection.
+Run the identity-compatible pipeline on a brain dump. This compatibility route resolves through the identity lens; use `/api/game` for explicit lens selection.
 
 **Request:**
 ```json
@@ -122,7 +122,7 @@ Run the full pattern synthesis pipeline through a selected output lens.
 {"brain_dump": "Batman, Athena, blueprints, ritual, clarity", "lens": "brand"}
 ```
 
-The server also accepts legacy `text` as an alias for `brain_dump`.
+The server also accepts `text` as an alias for `brain_dump`.
 
 ### POST /api/game/stream
 Stream the four-phase synthesis pipeline with SSE events for beads, graph, tensions, output tokens, and completion.

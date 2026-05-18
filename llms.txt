@@ -35,7 +35,6 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 
 - [docker-compose.yml](https://github.com/KyaniteLabs/Elixis/blob/main/docker-compose.yml): Production Docker Compose config
 - [.env.example](https://github.com/KyaniteLabs/Elixis/blob/main/.env.example): Environment variable template
-- [.github/workflows/ci.yml](https://github.com/KyaniteLabs/Elixis/blob/main/.github/workflows/ci.yml): CI/CD pipeline with Blacksmith runners
 - [elixis/templates/landing.html](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/templates/landing.html): Interactive UI with SSE streaming demo
 
 ## Technical surfaces
