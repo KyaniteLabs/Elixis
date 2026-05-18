@@ -15,6 +15,20 @@ Elixis takes a messy constellation of references and turns it into usable struct
 
 **AI discovery:** [`llms.txt`](llms.txt) provides a compact project summary for AI assistants and search crawlers.
 
+**Public landing page:** https://kyanitelabs.github.io/Elixis/
+
+## Canonical Names
+
+Elixis has one active product and package name:
+
+| Surface | Name |
+|---------|------|
+| Product and repository | Elixis |
+| Python distribution, import package, CLI, MCP server, Docker service | `elixis` |
+| Compatibility targets, not package names | OpenClaw, SoulClaw, Soul Spec, SOUL.md |
+
+Archived pre-Elixis planning notes are preserved under `docs/archive/` for historical context only. They do not define the current package, product, or public positioning.
+
 ## What it does
 
 | Phase / Surface | Function |

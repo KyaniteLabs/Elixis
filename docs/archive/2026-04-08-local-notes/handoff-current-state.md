@@ -1,4 +1,4 @@
-# SoulCraft Project Handoff Document
+# pre-Elixis working name Project Handoff Document
 ## Current State & Pending Items
 **Date:** 2026-04-08
 **Author:** Claude Code Session
@@ -39,28 +39,28 @@
 
 ---
 
-### 2. SoulCraft Core (Python Project)
+### 2. pre-Elixis working name Core (Python Project)
 
-**Location:** `/Users/simongonzalezdecruz/workspaces/SoulCraft/`
+**Location:** `/Users/simongonzalezdecruz/workspaces/pre-Elixis working name/`
 
 **Status:** Core engine functional, translation integration ready
 
 **Integration with Translation Service:**
-- SoulCraft now uses Kyanite Translation Service client
+- pre-Elixis working name now uses Kyanite Translation Service client
 - Replaced inline translation with service-based architecture
 - 29-language persona generation capability
 
 **Key Files:**
 - `src/` — Core Python modules
-- `docs/marketing-pass-soulcraft.md` — Full marketing strategy
-- `docs/trademark-pass-soulcraft.md` — Legal risk assessment
+- `docs/marketing-pass-pre-elixis-working-name.md` — Full marketing strategy
+- `docs/trademark-pass-pre-elixis-working-name.md` — Legal risk assessment
 - `LICENSE` — MIT License (Kyanite Labs 2026)
 
 ---
 
 ### 3. Marketing Strategy Pass
 
-**Document:** `docs/marketing-pass-soulcraft.md`
+**Document:** `docs/marketing-pass-pre-elixis-working-name.md`
 
 **Key Decisions:**
 - **Category:** AI Identity Synthesis & Specification (new category)
@@ -86,22 +86,22 @@
 
 ### 4. Trademark Risk Assessment Pass
 
-**Document:** `docs/trademark-pass-soulcraft.md`
+**Document:** `docs/trademark-pass-pre-elixis-working-name.md`
 
 **⚠️ CRITICAL FINDING:**
-- **SOULCRAFT** is a LIVE registered trademark (#5439421)
+- **PRE-ELIXIS WORKING NAME** is a LIVE registered trademark (#5439421)
 - **Owner:** Hubbub Brewing LLC (Salida, CO)
 - **Class:** 032 (beers, beverages)
 - **Registered:** April 3, 2018
 - **Risk Level:** MODERATE to HIGH
 
 **Context:**
-Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settling a trademark infringement suit—indicating litigious history and willingness to defend marks.
+Hubbub Brewing CHANGED its name FROM "Hubbub" TO "pre-Elixis working name" in 2017 after settling a trademark infringement suit—indicating litigious history and willingness to defend marks.
 
 **Analysis:**
 - Different industries (beer vs AI software) = LOW likelihood of confusion
 - BUT identical mark creates legal exposure
-- Dilution risk if SoulCraft AI becomes famous
+- Dilution risk if pre-Elixis working name AI becomes famous
 - Coexistence agreement: 60% chance if approached professionally
 - Opposition outcome: 70% chance of winning (but $10K-50K legal fees)
 
@@ -114,7 +114,7 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
 **Status:** User favorites identified — **Prism** and **Lattice**
 
 **Exploration History:**
-- ❌ SoulCraft — trademark conflict with brewery
+- ❌ pre-Elixis working name — trademark conflict with brewery
 - ❌ PatternSoul, AnimaCraft — rejected by user
 - ❌ Short words (Loom, Knot, Echo, etc.) — rejected as "sucking"
 - ❌ Prior literary source terms (Knecht, Castalia, Ludus) — not quite right
@@ -194,7 +194,7 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
    - [ ] Update all documentation with new name
 
 5. **Rebranding Tasks:**
-   - [ ] Rename SoulCraft references in codebase
+   - [ ] Rename pre-Elixis working name references in codebase
    - [ ] Update marketing materials
    - [ ] Update GitHub repo
    - [ ] Create new logo/visual identity concepts
@@ -220,7 +220,7 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│  SoulCraft      │────▶│ Kyanite Translate│────▶│   Ollama    │
+│  pre-Elixis working name      │────▶│ Kyanite Translate│────▶│   Ollama    │
 │  (Python/Flask) │     │ Service (Port    │     │   (Local    │
 │                 │     │ 3111)            │     │   LLM)      │
 └─────────────────┘     └──────────────────┘     └─────────────┘
@@ -234,7 +234,7 @@ Hubbub Brewing CHANGED its name FROM "Hubbub" TO "SoulCraft" in 2017 after settl
 
 ### Key Integration Points
 
-**For SoulCraft:**
+**For pre-Elixis working name:**
 ```python
 from kyanite_translate import KyaniteTranslator
 translator = KyaniteTranslator('http://localhost:3111')
@@ -253,8 +253,8 @@ const translator = new KyaniteTranslator('/api/translate-proxy');
 
 | Document | Location | Purpose |
 |----------|----------|---------|
-| Marketing Strategy | `docs/marketing-pass-soulcraft.md` | Positioning, messaging, GTM |
-| Trademark Assessment | `docs/trademark-pass-soulcraft.md` | Legal risk, name options, filing strategy |
+| Marketing Strategy | `docs/marketing-pass-pre-elixis-working-name.md` | Positioning, messaging, GTM |
+| Trademark Assessment | `docs/trademark-pass-pre-elixis-working-name.md` | Legal risk, name options, filing strategy |
 | Integration Guide | `kyanite-translation-service/INTEGRATION.md` | How to use translation service |
 | This Handoff | `docs/handoff-current-state.md` | You are here |
 
