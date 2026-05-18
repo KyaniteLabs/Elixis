@@ -43,7 +43,7 @@ jobs:
             fi
           }
 
-          require_file "docs/agent-law/empower-orchestrator.md"
+          require_file "agent-law/empower-orchestrator.md"
           require_marker "AGENTS.md"
           require_marker "CLAUDE.md"
 
@@ -55,8 +55,8 @@ jobs:
             fail=1
           fi
 
-          if ! grep -q 'four-question blast-radius check' docs/agent-law/empower-orchestrator.md; then
-            echo "::error file=docs/agent-law/empower-orchestrator.md::Recipe must name the four-question blast-radius check"
+          if ! grep -q 'four-question blast-radius check' agent-law/empower-orchestrator.md; then
+            echo "::error file=agent-law/empower-orchestrator.md::Recipe must name the four-question blast-radius check"
             fail=1
           fi
 
