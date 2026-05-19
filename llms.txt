@@ -11,7 +11,7 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 - Generate SOUL.md personas for OpenClaw, SoulClaw, and compatible systems
 - Analyze archetypal patterns, tensions, beads, and cross-domain threads in text
 - Generate semantically aligned names from raw references or synthesized graph context
-- Preserve creative reasoning with trace logging and backups
+- Inspect auditable process evidence with model metadata, phase timings, pattern scores, entity support, bridges, and backups
 
 ## Ecosystem
 

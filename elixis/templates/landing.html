@@ -1245,6 +1245,104 @@ body {
 .copied-toast.visible { display: inline; }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   TRACE — Tab 5: Process evidence
+   ════════════════════════════════════════════════════════════════════════════ */
+.trace-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.trace-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  padding: var(--space-lg);
+}
+
+.trace-section-title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 1.2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: var(--space-base);
+}
+
+.trace-meta-grid,
+.trace-phase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-sm);
+}
+
+.trace-meta-item,
+.trace-phase-item,
+.trace-evidence-item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+  padding: var(--space-sm);
+  min-width: 0;
+}
+
+.trace-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.trace-value {
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.trace-phase-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.trace-phase-method {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.trace-evidence-list {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.trace-probability {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.trace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.trace-tag {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.045);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    FOOTER (inside sidebar)
    ════════════════════════════════════════════════════════════════════════════ */
 .sidebar-footer {
@@ -1429,6 +1527,9 @@ Fleabag"
       <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-output" id="tab-output">
         Output <span class="tab-badge" id="badge-output" style="display:none;">!</span>
       </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-trace" id="tab-trace">
+        Trace <span class="tab-badge" id="badge-trace">0</span>
+      </button>
     </div>
 
     <!-- Tab Panels -->
@@ -1485,6 +1586,15 @@ Fleabag"
           <pre class="output-content" id="outputContentPre"><span class="streaming-cursor" id="streamingCursor"></span></pre>
         </div>
       </div>
+
+      <!-- Panel 5: Trace -->
+      <div class="tab-panel" role="tabpanel" id="panel-trace" aria-labelledby="tab-trace">
+        <div class="panel-placeholder" id="tracePlaceholder">
+          <div class="panel-placeholder-icon" aria-hidden="true">&#8981;</div>
+          <p>Awaiting process trace.</p>
+        </div>
+        <div class="trace-content" id="traceContent" style="display:none;"></div>
+      </div>
     </div>
   </main>
 </div>
@@ -1498,6 +1608,8 @@ const state = {
   loading: false,
   entities: [],
   graph: null,
+  processTrace: null,
+  telemetry: null,
   outputText: '',
 };
 
@@ -1574,6 +1686,8 @@ const dom = {
   outputContentPre: $('#outputContentPre'),
   outputTitle: $('#outputTitle'),
   outputActions: $('#outputActions'),
+  traceContent: $('#traceContent'),
+  tracePlaceholder: $('#tracePlaceholder'),
   streamingCursor: $('#streamingCursor'),
   copiedToast: $('#copiedToast'),
 };
@@ -1817,6 +1931,144 @@ function renderPatternRadar(graph) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   RENDER: PROCESS TRACE
+   ════════════════════════════════════════════════════════════════════════════ */
+function fmtMs(ms) {
+  if (ms === null || ms === undefined || ms === '') return '—';
+  const n = Number(ms);
+  if (!Number.isFinite(n)) return '—';
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}s`;
+  return `${Math.round(n)}ms`;
+}
+
+function fmtPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return `${Math.round(n * 100)}%`;
+}
+
+function renderProcessTrace() {
+  const trace = state.processTrace;
+  if (!trace) return;
+
+  dom.tracePlaceholder.style.display = 'none';
+  dom.traceContent.style.display = 'flex';
+  showBadge('badge-trace', '!');
+
+  const model = trace.model || {};
+  const telemetry = state.telemetry || {};
+  const topPatterns = (trace.pattern_matching?.top_patterns || []).slice(0, 6);
+  const entities = (trace.entities || []).slice(0, 8);
+  const bridges = (trace.pattern_matching?.bridges || []).slice(0, 5);
+  const notes = trace.pattern_matching?.analysis_notes || [];
+
+  dom.traceContent.innerHTML = `
+    <section class="trace-section" aria-label="Model">
+      <div class="trace-section-title">Model</div>
+      <div class="trace-meta-grid">
+        <div class="trace-meta-item">
+          <span class="trace-label">Provider</span>
+          <span class="trace-value">${esc(model.provider || telemetry.provider || 'unknown')}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Model</span>
+          <span class="trace-value">${esc(model.model || telemetry.model || 'unknown')}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Host</span>
+          <span class="trace-value">${esc(model.base_host || 'configured backend')}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Tokens</span>
+          <span class="trace-value">${telemetry.tokens_total || '—'}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Pipeline phases">
+      <div class="trace-section-title">Phases</div>
+      <div class="trace-phase-grid">
+        ${(trace.phases || []).map((phase) => `
+          <div class="trace-phase-item">
+            <div class="trace-phase-name">${esc(phase.name || '')} · ${fmtMs(phase.duration_ms)}</div>
+            <div class="trace-phase-method">${esc(phase.method || '')}</div>
+            ${phase.source ? `<div class="trace-tags"><span class="trace-tag">${esc(phase.source)}</span></div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Pattern matching">
+      <div class="trace-section-title">Pattern Matching</div>
+      <div class="trace-meta-grid">
+        <div class="trace-meta-item">
+          <span class="trace-label">Method</span>
+          <span class="trace-value">${esc(trace.pattern_matching?.method || '')}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Emergent</span>
+          <span class="trace-value">${esc(trace.pattern_matching?.emergent_topic || '—')}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Consensus</span>
+          <span class="trace-value">${fmtPct(trace.pattern_matching?.consensus_score)}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Top pattern scores">
+      <div class="trace-section-title">Top Scores</div>
+      <div class="trace-evidence-list">
+        ${topPatterns.map((p) => `
+          <div class="trace-evidence-item">
+            <span class="trace-value">${esc(p.name)} <span class="trace-probability">${fmtPct(p.probability)}</span></span>
+            <div class="trace-tags">
+              <span class="trace-tag">${p.supporting_entities || 0} entities</span>
+              ${(p.sub_patterns || []).slice(0, 3).map((s) => `<span class="trace-tag">${esc(s)}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Entity evidence">
+      <div class="trace-section-title">Entity Evidence</div>
+      <div class="trace-evidence-list">
+        ${entities.map((entity) => `
+          <div class="trace-evidence-item">
+            <span class="trace-value">${esc(entity.name || '')} · ${esc(entity.type || 'entity')}</span>
+            <div class="trace-tags">
+              ${(entity.themes || []).slice(0, 6).map((theme) => `<span class="trace-tag">${esc(theme)}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Bridge evidence">
+      <div class="trace-section-title">Bridges</div>
+      <div class="trace-evidence-list">
+        ${(bridges.length ? bridges : [{ entity: 'No bridge detected', pattern_a: '', pattern_b: '' }]).map((bridge) => `
+          <div class="trace-evidence-item">
+            <span class="trace-value">${esc(bridge.entity || '')}</span>
+            ${bridge.pattern_a ? `<div class="trace-tags"><span class="trace-tag">${esc(bridge.pattern_a)} ${bridge.score_a ? fmtPct(bridge.score_a) : ''}</span><span class="trace-tag">${esc(bridge.pattern_b)} ${bridge.score_b ? fmtPct(bridge.score_b) : ''}</span></div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    ${notes.length ? `
+      <section class="trace-section" aria-label="Analysis notes">
+        <div class="trace-section-title">Notes</div>
+        <div class="trace-evidence-list">
+          ${notes.map((note) => `<div class="trace-evidence-item"><span class="trace-value">${esc(note)}</span></div>`).join('')}
+        </div>
+      </section>
+    ` : ''}
+  `;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    SSE HANDLER
    ════════════════════════════════════════════════════════════════════════════ */
 function handleSSEEvent(event, outputEl) {
@@ -1836,6 +2088,16 @@ function handleSSEEvent(event, outputEl) {
       renderThreads(state.graph.threads || []);
       setPipelineStage(2);
       dom.pipelineLabel.textContent = 'Connection: Threads woven';
+      break;
+
+    case 'process_trace':
+      state.processTrace = event.data || null;
+      renderProcessTrace();
+      break;
+
+    case 'telemetry':
+      state.telemetry = event.data || null;
+      renderProcessTrace();
       break;
 
     case 'soulmd_token':
@@ -1897,6 +2159,8 @@ async function runPipeline() {
   resetPanels();
   state.entities = [];
   state.graph = null;
+  state.processTrace = null;
+  state.telemetry = null;
   state.outputText = '';
   updateOutputMeta();
 
@@ -2014,6 +2278,13 @@ function resetPanels() {
   dom.outputContentPre.innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
   const outputBadge = document.getElementById('badge-output');
   outputBadge.style.display = 'none';
+
+  // Trace
+  dom.tracePlaceholder.style.display = 'flex';
+  dom.traceContent.style.display = 'none';
+  dom.traceContent.innerHTML = '';
+  const traceBadge = document.getElementById('badge-trace');
+  traceBadge.classList.remove('visible');
 
   // Pipeline
   dom.pipelineStatus.classList.remove('active');

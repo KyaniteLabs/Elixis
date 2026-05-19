@@ -148,6 +148,18 @@ class TestDocsLanding(unittest.TestCase):
             for term in blocked_terms:
                 self.assertNotIn(term.lower(), lower_text, f"{term!r} leaked in {path}")
 
+    def test_live_landing_exposes_auditable_trace_surface(self):
+        html = (ROOT / "elixis" / "templates" / "landing.html").read_text()
+        parser = LandingParser()
+        parser.feed(html)
+
+        self.assertIn("tab-trace", parser.ids)
+        self.assertIn("panel-trace", parser.ids)
+        self.assertIn("traceContent", parser.ids)
+        self.assertIn("process_trace", html)
+        self.assertIn("Pattern Matching", html)
+        self.assertIn("trace.pattern_matching?.method", html)
+
 
 if __name__ == "__main__":
     unittest.main()

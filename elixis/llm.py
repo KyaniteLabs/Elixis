@@ -116,7 +116,7 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
                 response=content,
                 latency_ms=latency_ms,
                 model=used_model,
-                extra={"tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
+                extra={"provider": cfg.provider, "tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
             )
             return {
                 "content": content,
@@ -299,7 +299,7 @@ def _call_anthropic(messages, model=None, max_tokens=2048):
             response=content,
             latency_ms=latency_ms,
             model=used_model,
-            extra={"tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
+            extra={"provider": "anthropic", "tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
         )
         return {
             "content": content,

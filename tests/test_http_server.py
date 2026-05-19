@@ -494,28 +494,82 @@ class TestGamePayloads(unittest.TestCase):
     def test_legacy_pipeline_includes_normalized_output_alias(self):
         class FakeBead:
             def to_dict(self):
-                return {"canonical": "Athena"}
+                return {
+                    "canonical": "Athena",
+                    "type": "mythological",
+                    "themes": ["wisdom", "strategy"],
+                    "traits": ["strategic clarity"],
+                    "confidence": 0.92,
+                }
 
         class FakeEngine:
             def __init__(self):
                 self.state = MagicMock()
                 self.state.beads = [FakeBead()]
-                self.state.metadata = {"pattern_graph": {}}
-                self.state.timings = {}
+                self.state.metadata = {
+                    "pattern_graph": {
+                        "patterns": [
+                            {
+                                "id": "wisdom",
+                                "name": "Wisdom & Knowledge",
+                                "probability": 0.88,
+                                "supporting_entities": 1,
+                                "sub_patterns": ["strategy"],
+                            }
+                        ],
+                        "bridges": [],
+                    },
+                    "pattern_telemetry": {
+                        "llm_available": True,
+                        "llm_classification": {
+                            "source": "llm",
+                            "provider": "anthropic",
+                            "model": "glm-4.5",
+                        },
+                    },
+                }
+                self.state.timings = {"declaration_ms": 12, "connection_ms": 34}
 
             def run_full(self, brain_dump, lens="identity"):
                 return "# SOUL.md"
 
-        with patch("app.GameEngine", FakeEngine), patch("app.save_run"):
+        model_config = {
+            "provider": "anthropic",
+            "model": "glm-4.5",
+            "base_host": "api.z.ai",
+            "classify_model": "glm-4.5",
+        }
+        with (
+            patch("app.GameEngine", FakeEngine),
+            patch("app.save_run"),
+            patch("app._llm_public_config", return_value=model_config),
+        ):
             result = run_pipeline("Batman and Athena")
 
         self.assertEqual(result["output"], result["stage3_output"])
         self.assertEqual(result["stage3_output"], result["stage3_soulmd"])
+        self.assertEqual(result["process_trace"]["lens"], "identity")
+        self.assertEqual(result["process_trace"]["model"]["model"], "glm-4.5")
+        self.assertEqual(
+            result["process_trace"]["pattern_matching"]["method"],
+            "0.7 LLM classification + 0.3 keyword/theme/type/knowledge scoring",
+        )
+        self.assertEqual(
+            result["process_trace"]["pattern_matching"]["top_patterns"][0]["name"],
+            "Wisdom & Knowledge",
+        )
+        self.assertEqual(result["process_trace"]["entities"][0]["name"], "Athena")
 
     def test_game_pipeline_includes_normalized_output_alias(self):
         class FakeBead:
             def to_dict(self):
-                return {"canonical": "Athena"}
+                return {
+                    "canonical": "Athena",
+                    "type": "mythological",
+                    "themes": ["wisdom", "strategy"],
+                    "traits": ["strategic clarity"],
+                    "confidence": 0.92,
+                }
 
         class FakeThread:
             def to_dict(self):
@@ -527,18 +581,157 @@ class TestGamePayloads(unittest.TestCase):
                 self.state.beads = [FakeBead()]
                 self.state.threads = [FakeThread()]
                 self.state.tensions = []
-                self.state.metadata = {"pattern_graph": {}}
-                self.state.timings = {}
+                self.state.metadata = {
+                    "pattern_graph": {
+                        "patterns": [
+                            {
+                                "id": "wisdom",
+                                "name": "Wisdom & Knowledge",
+                                "probability": 0.88,
+                                "supporting_entities": 1,
+                                "sub_patterns": ["strategy"],
+                            }
+                        ],
+                        "bridges": [
+                            {
+                                "entity": "Athena",
+                                "pattern_a": "Wisdom & Knowledge",
+                                "score_a": 0.88,
+                                "pattern_b": "Power & Ambition",
+                                "score_b": 0.62,
+                            }
+                        ],
+                        "analysis_notes": ["Athena supports strategic clarity."],
+                        "emergent_topic": "Wisdom & Knowledge",
+                        "consensus_score": 0.75,
+                    },
+                    "pattern_telemetry": {
+                        "llm_available": True,
+                        "llm_classification": {
+                            "source": "llm",
+                            "provider": "anthropic",
+                            "model": "glm-4.5",
+                            "tokens_in": 100,
+                            "tokens_out": 40,
+                        },
+                    },
+                }
+                self.state.timings = {"declaration_ms": 12, "connection_ms": 34, "resolution_ms": 56}
 
             def run_full(self, brain_dump, lens="identity"):
                 return "# Brand Output"
 
-        with patch("app.GameEngine", FakeEngine):
+        model_config = {
+            "provider": "anthropic",
+            "model": "glm-4.5",
+            "base_host": "api.z.ai",
+            "classify_model": "glm-4.5",
+        }
+        with (
+            patch("app.GameEngine", FakeEngine),
+            patch("app._llm_public_config", return_value=model_config),
+        ):
             result = run_game_pipeline("Batman and Athena", lens="brand")
 
         self.assertEqual(result["output"], "# Brand Output")
         self.assertEqual(result["stage3_output"], "# Brand Output")
         self.assertIsNone(result["stage3_soulmd"])
+        trace = result["process_trace"]
+        self.assertEqual(trace["lens"], "brand")
+        self.assertEqual(trace["model"]["model"], "glm-4.5")
+        self.assertEqual(trace["phases"][2]["name"], "connection")
+        self.assertEqual(trace["phases"][2]["model"], "glm-4.5")
+        self.assertEqual(trace["phases"][2]["tokens_in"], 100)
+        self.assertEqual(trace["pattern_matching"]["top_patterns"][0]["probability"], 0.88)
+        self.assertEqual(trace["pattern_matching"]["bridges"][0]["entity"], "Athena")
+        self.assertEqual(trace["pattern_matching"]["consensus_score"], 0.75)
+
+    @patch.object(Handler, '_begin_sse_response')
+    @patch.object(Handler, '_log')
+    def test_game_stream_emits_process_trace_event(self, mock_log, mock_begin_sse):
+        class FakeBead:
+            def to_dict(self):
+                return {
+                    "canonical": "Athena",
+                    "type": "mythological",
+                    "themes": ["wisdom", "strategy"],
+                    "traits": ["strategic clarity"],
+                }
+
+        class FakeState:
+            def __init__(self):
+                self.beads = [FakeBead()]
+                self.threads = []
+                self.tensions = []
+                self.timings = {"declaration_ms": 1, "elaboration_ms": 2, "connection_ms": 3}
+                self.metadata = {
+                    "pattern_graph": {
+                        "patterns": [
+                            {
+                                "id": "wisdom",
+                                "name": "Wisdom & Knowledge",
+                                "probability": 0.88,
+                                "supporting_entities": 1,
+                            }
+                        ],
+                        "bridges": [],
+                    },
+                    "pattern_telemetry": {
+                        "llm_available": True,
+                        "llm_classification": {
+                            "source": "llm",
+                            "provider": "anthropic",
+                            "model": "glm-4.5",
+                        },
+                    },
+                }
+
+        class FakeEngine:
+            def __init__(self):
+                self.state = FakeState()
+
+            def declare_themes(self, brain_dump):
+                return self.state
+
+            def elaborate(self):
+                return self.state
+
+            def connect_domains(self):
+                return self.state
+
+            def resolve_stream(self, lens="identity", stage_timings=None):
+                yield {"type": "soulmd_token", "content": "# Output"}
+                yield {"type": "soulmd_done", "data": {"length": 8}}
+
+        model_config = {
+            "provider": "anthropic",
+            "model": "glm-4.5",
+            "base_host": "api.z.ai",
+            "classify_model": "glm-4.5",
+        }
+        handler = _make_handler("POST", "/api/game/stream", body={"text": "Batman and Athena", "lens": "brand"})
+
+        with (
+            patch("app.GameEngine", FakeEngine),
+            patch("app._llm_public_config", return_value=model_config),
+        ):
+            handler._handle_game_stream(start=0)
+
+        events = [
+            json.loads(line.removeprefix("data: "))
+            for line in handler.wfile.getvalue().decode().splitlines()
+            if line.startswith("data: ")
+        ]
+        event_types = [event["type"] for event in events]
+        self.assertIn("process_trace", event_types)
+        trace_event = next(event for event in events if event["type"] == "process_trace")
+        self.assertEqual(trace_event["data"]["lens"], "brand")
+        self.assertEqual(trace_event["data"]["model"]["model"], "glm-4.5")
+        self.assertEqual(
+            trace_event["data"]["pattern_matching"]["top_patterns"][0]["name"],
+            "Wisdom & Knowledge",
+        )
+        self.assertLess(event_types.index("process_trace"), event_types.index("soulmd_done"))
 
 
 if __name__ == "__main__":
