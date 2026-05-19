@@ -139,6 +139,25 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
         self.assertEqual(telemetry["entity_count"], 0)
 
     @patch("elixis.llm.chat")
+    def test_accepts_empty_nested_score_containers(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"classifications":{"Quiet Signal":{"scores":{},"patterns":[]}}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 8,
+        }
+        telemetry = {}
+
+        result = llm_classify_patterns([
+            {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
+        ], telemetry=telemetry)
+
+        self.assertEqual(result, {})
+        self.assertEqual(telemetry["source"], "llm")
+        self.assertEqual(telemetry["entity_count"], 0)
+
+    @patch("elixis.llm.chat")
     def test_empty_classification_does_not_retry_or_record_llm_unavailable(self, mock_chat):
         mock_chat.return_value = {
             "content": "{}",

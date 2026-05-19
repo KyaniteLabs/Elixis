@@ -389,6 +389,20 @@ def _normalize_pattern_classifications(parsed):
 
 def _is_valid_empty_classification_payload(value):
     """Return True when parsed JSON is a valid classification shape with no scores."""
+    empty_score_container_keys = {"scores", "patterns"}
+
+    def is_empty_score_container(candidate):
+        if candidate in ({}, []):
+            return True
+        if not isinstance(candidate, dict):
+            return False
+        if _scores_from_value(candidate):
+            return False
+        return bool(candidate) and all(
+            key in empty_score_container_keys and is_empty_score_container(child)
+            for key, child in candidate.items()
+        )
+
     if value == {} or value == []:
         return True
 
@@ -403,7 +417,6 @@ def _is_valid_empty_classification_payload(value):
 
     wrapper_keys = ("classifications", "classification", "results", "result", "entities", "items", "data")
     entity_metadata_keys = {"entity", "name", "canonical", "reason", "rationale", "notes", "confidence"}
-    empty_score_container_keys = {"scores", "patterns"}
     present_wrappers = [key for key in wrapper_keys if key in value]
     if len(value) == 1 and present_wrappers:
         return _is_valid_empty_classification_payload(value[present_wrappers[0]])
@@ -414,14 +427,14 @@ def _is_valid_empty_classification_payload(value):
         for key, child in value.items():
             if key in entity_metadata_keys:
                 continue
-            if key in empty_score_container_keys and child in ({}, []):
+            if key in empty_score_container_keys and is_empty_score_container(child):
                 continue
             return False
         return True
 
     if value:
         return all(
-            scores in ({}, [])
+            is_empty_score_container(scores)
             or (
                 isinstance(scores, dict)
                 and bool(scores.get("entity") or scores.get("name") or scores.get("canonical"))
