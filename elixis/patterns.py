@@ -402,16 +402,31 @@ def _is_valid_empty_classification_payload(value):
         return False
 
     wrapper_keys = ("classifications", "classification", "results", "result", "entities", "items", "data")
+    entity_metadata_keys = {"entity", "name", "canonical", "reason", "rationale", "notes", "confidence"}
+    empty_score_container_keys = {"scores", "patterns"}
     present_wrappers = [key for key in wrapper_keys if key in value]
     if len(value) == 1 and present_wrappers:
         return _is_valid_empty_classification_payload(value[present_wrappers[0]])
 
     if value.get("entity") or value.get("name") or value.get("canonical"):
-        return not _scores_from_value(value)
+        if _scores_from_value(value):
+            return False
+        for key, child in value.items():
+            if key in entity_metadata_keys:
+                continue
+            if key in empty_score_container_keys and child in ({}, []):
+                continue
+            return False
+        return True
 
     if value:
         return all(
-            isinstance(scores, (dict, list)) and not _scores_from_value(scores)
+            scores in ({}, [])
+            or (
+                isinstance(scores, dict)
+                and bool(scores.get("entity") or scores.get("name") or scores.get("canonical"))
+                and _is_valid_empty_classification_payload(scores)
+            )
             for scores in value.values()
         )
 

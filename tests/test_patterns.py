@@ -177,6 +177,36 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
                 {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
             ])
 
+    @patch("elixis.llm.chat")
+    def test_rejects_unknown_score_maps_as_invalid_schema(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"classifications":{"Quiet Signal":{"unknown":0.9}}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 8,
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "unsupported JSON schema"):
+            llm_classify_patterns([
+                {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
+            ])
+
+    @patch("elixis.llm.chat")
+    def test_rejects_metadata_only_nested_classification_maps(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"classifications":{"Quiet Signal":{"reason":"no matching pattern"}}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 8,
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "unsupported JSON schema"):
+            llm_classify_patterns([
+                {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()
