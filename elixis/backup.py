@@ -52,6 +52,7 @@ def create_backup() -> Dict:
 
     # Ensure backup directory exists
     backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_dir_resolved = backup_dir.resolve()
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     backup_name = f"elixis_backup_{timestamp}"
@@ -76,6 +77,12 @@ def create_backup() -> Dict:
         # Create tar.gz archive
         with tarfile.open(backup_path, "w:gz") as tar:
             for item in data_dir.rglob("*"):
+                try:
+                    item_resolved = item.resolve()
+                except OSError:
+                    continue
+                if item_resolved == backup_dir_resolved or backup_dir_resolved in item_resolved.parents:
+                    continue
                 if item.is_file():
                     arcname = item.relative_to(data_dir.parent)
                     tar.add(item, arcname=arcname)

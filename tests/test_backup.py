@@ -7,6 +7,7 @@ import tempfile
 import shutil
 import tarfile
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -96,6 +97,26 @@ class TestBackup(unittest.TestCase):
         self.assertTrue(os.path.exists(first["path"]))
         self.assertTrue(os.path.exists(second["path"]))
 
+    def test_backup_dir_inside_data_dir_is_excluded_from_archive(self):
+        """Backups stored in the data volume are not recursively backed up."""
+        import elixis.backup as backup
+
+        backup_dir = Path(self.data_dir) / "backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        prior_backup = backup_dir / "elixis_backup_prior.tar.gz"
+        prior_backup.write_text("old archive placeholder", encoding="utf-8")
+        backup.get_backup_dir = lambda: backup_dir
+
+        result = create_backup()
+
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["files_backed_up"], 1)
+        with tarfile.open(result["path"], "r:gz") as tar:
+            names = tar.getnames()
+        self.assertIn(".elixis/test.txt", names)
+        self.assertNotIn(".elixis/backups/elixis_backup_prior.tar.gz", names)
+        self.assertFalse(any(name.startswith(".elixis/backups/") for name in names))
+
     def test_get_backup_status(self):
         """Backup status returns correct info."""
         create_backup()
@@ -113,7 +134,7 @@ class TestBackup(unittest.TestCase):
         configured_backups = configured_data / "backups"
         backup.get_data_dir = self.original_get_data_dir
         backup.get_backup_dir = self.original_get_backup_dir
-        with unittest.mock.patch.dict(os.environ, {
+        with mock.patch.dict(os.environ, {
             "ELIXIS_DATA_DIR": str(configured_data),
             "ELIXIS_BACKUP_DIR": str(configured_backups),
         }):

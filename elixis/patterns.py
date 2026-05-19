@@ -387,6 +387,37 @@ def _normalize_pattern_classifications(parsed):
     return classifications
 
 
+def _is_valid_empty_classification_payload(value):
+    """Return True when parsed JSON is a valid classification shape with no scores."""
+    if value == {} or value == []:
+        return True
+
+    if isinstance(value, list):
+        return all(
+            isinstance(item, dict) and _is_valid_empty_classification_payload(item)
+            for item in value
+        )
+
+    if not isinstance(value, dict):
+        return False
+
+    wrapper_keys = ("classifications", "classification", "results", "result", "entities", "items", "data")
+    present_wrappers = [key for key in wrapper_keys if key in value]
+    if len(value) == 1 and present_wrappers:
+        return _is_valid_empty_classification_payload(value[present_wrappers[0]])
+
+    if value.get("entity") or value.get("name") or value.get("canonical"):
+        return not _scores_from_value(value)
+
+    if value:
+        return all(
+            isinstance(scores, (dict, list)) and not _scores_from_value(scores)
+            for scores in value.values()
+        )
+
+    return False
+
+
 def _score_from_knowledge_base(entity):
     """Score entity against patterns using curated knowledge base data."""
     from .knowledge import character_by_name
@@ -462,7 +493,8 @@ def llm_classify_patterns(entities, telemetry=None):
             llm_meta["llm_error"] = result["error"]
 
     response = result["content"] if isinstance(result, dict) else result
-    if not response or len(response) < 10:
+    stripped_response = str(response or "").strip()
+    if not stripped_response or (len(stripped_response) < 10 and stripped_response not in ("{}", "[]")):
         if telemetry is not None:
             telemetry.update({"source": "empty_response", "duration_ms": duration_ms, **llm_meta})
         raise RuntimeError("LLM pattern classification returned empty response")
@@ -490,6 +522,18 @@ def llm_classify_patterns(entities, telemetry=None):
     # Build entity_name -> {pattern_id: score} mapping
     classifications = _normalize_pattern_classifications(data)
     if not classifications:
+        if _is_valid_empty_classification_payload(data):
+            if telemetry is not None:
+                telemetry.update({
+                    "source": "llm",
+                    "duration_ms": duration_ms,
+                    "entity_count": 0,
+                    "items_in_raw_response": len(data) if hasattr(data, "__len__") else 0,
+                    "max_tokens": classification_max_tokens,
+                    **llm_meta,
+                })
+            logger.info("LLM classified 0 entities in %dms (valid empty result)", duration_ms)
+            return {}
         if telemetry is not None:
             telemetry.update({
                 "source": "schema_failure", "duration_ms": duration_ms,
@@ -596,10 +640,12 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
     # --- LLM classification (primary signal, weight 0.7) ---
     llm_scores = {}
     llm_tele = {}
+    llm_classification_succeeded = False
     classification_error = ""
     for attempt in range(2):
         try:
             llm_scores = llm_classify_patterns(entities, telemetry=llm_tele)
+            llm_classification_succeeded = True
             classification_error = ""
             break
         except RuntimeError as exc:
@@ -754,6 +800,8 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
         notes.append("Low consensus - synthesis draws from diverse, equally weighted influences")
     if llm_scores:
         notes.append("Classification: LLM-assisted (0.7) + keyword analysis (0.3)")
+    elif llm_classification_succeeded:
+        notes.append("Classification: LLM returned no scores above threshold; keyword analysis carried scoring")
     else:
         note = "Classification: keyword-only (LLM classification unavailable)"
         if classification_error:
@@ -763,7 +811,7 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
     if telemetry is not None:
         telemetry.update({
             "llm_classification": llm_tele,
-            "llm_available": bool(llm_scores),
+            "llm_available": llm_classification_succeeded,
             "entity_count": len(entities),
             "pattern_count": len(result_patterns),
             "bridge_count": len(bridges),
@@ -771,7 +819,7 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
         })
     logger.info("Pattern graph built: %d patterns, %d bridges, consensus=%.2f (LLM: %s)",
                 len(result_patterns), len(bridges), consensus,
-                "yes" if llm_scores else "no")
+                "yes" if llm_classification_succeeded else "no")
 
     return {
         "patterns": result_patterns,

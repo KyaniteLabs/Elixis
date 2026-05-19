@@ -705,6 +705,7 @@ class TestGamePayloads(unittest.TestCase):
 
             def resolve_stream(self, lens="identity", stage_timings=None):
                 yield {"type": "soulmd_token", "content": "# Output"}
+                self.state.timings["resolution_ms"] = 9
                 yield {"type": "soulmd_done", "data": {"length": 8}}
 
         model_config = {
@@ -729,7 +730,10 @@ class TestGamePayloads(unittest.TestCase):
         ]
         event_types = [event["type"] for event in events]
         self.assertIn("process_trace", event_types)
-        trace_event = next(event for event in events if event["type"] == "process_trace")
+        trace_events = [event for event in events if event["type"] == "process_trace"]
+        self.assertEqual(len(trace_events), 2)
+        trace_event = trace_events[0]
+        final_trace_event = trace_events[-1]
         self.assertEqual(trace_event["data"]["lens"], "brand")
         self.assertEqual(trace_event["data"]["model"]["model"], "glm-5.1")
         self.assertEqual(
@@ -737,6 +741,9 @@ class TestGamePayloads(unittest.TestCase):
             "Wisdom & Knowledge",
         )
         self.assertLess(event_types.index("process_trace"), event_types.index("soulmd_done"))
+        final_trace_index = max(i for i, event_type in enumerate(event_types) if event_type == "process_trace")
+        self.assertGreater(final_trace_index, event_types.index("soulmd_done"))
+        self.assertEqual(final_trace_event["data"]["phases"][3]["duration_ms"], 9)
         mock_save_run.assert_called_once()
         self.assertEqual(mock_save_run.call_args.args[0], "Batman and Athena")
         self.assertEqual(mock_save_run.call_args.args[3], "# Output")
@@ -779,6 +786,8 @@ class TestGamePayloads(unittest.TestCase):
                 yield {"type": "soulmd_token", "content": "# "}
                 yield {"type": "soulmd_token", "content": "Output"}
                 yield {"type": "telemetry", "data": {"model": "glm-5.1"}}
+                if stage_timings is not None:
+                    stage_timings["stage3_synthesis_ms"] = 17
                 yield {"type": "soulmd_done", "data": {"length": 8}}
 
         handler = _make_handler("POST", "/api/extract/stream", body={"brain_dump": "Batman and Athena"})
@@ -794,6 +803,13 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(mock_save_run.call_args.args[3], "# Output")
         self.assertEqual(mock_save_run.call_args.kwargs["lens"], "identity")
         self.assertEqual(mock_save_run.call_args.kwargs["telemetry"]["model"], "glm-5.1")
+        events = [
+            json.loads(line.removeprefix("data: "))
+            for line in handler.wfile.getvalue().decode().splitlines()
+            if line.startswith("data: ")
+        ]
+        final_trace_event = [event for event in events if event["type"] == "process_trace"][-1]
+        self.assertEqual(final_trace_event["data"]["phases"][3]["duration_ms"], 17)
 
 
 if __name__ == "__main__":
