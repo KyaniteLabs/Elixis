@@ -99,6 +99,10 @@ class TestDocsLanding(unittest.TestCase):
         ET.fromstring((ROOT / "docs" / "sitemap.xml").read_text())
         ET.fromstring((ROOT / "docs" / "static" / "og-image.svg").read_text())
 
+    def test_container_packages_ai_crawler_files(self):
+        dockerfile = (ROOT / "Dockerfile").read_text()
+        self.assertIn("COPY llms.txt llms-full.txt ./", dockerfile)
+
     def test_public_surfaces_do_not_leak_process_language(self):
         self.assertFalse((ROOT / "docs" / "agent-law").exists())
         self.assertFalse((ROOT / "docs" / "agents").exists())

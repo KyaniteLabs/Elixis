@@ -54,7 +54,7 @@ elixis/              Core Python package
   translate.py          Text localization helpers and language detection
   research.py           Wikipedia entity enrichment
   naming.py             Name research and variant generation
-  llm.py                LLM interface (Ollama / OpenAI-compatible)
+  llm.py                LLM interface (Ollama / OpenAI-compatible / Anthropic)
   validation.py         Input sanitization and validation
   traces.py             Run trace capture and diagnostics
   backup.py             Backup and restore helpers
@@ -139,7 +139,7 @@ Elixis is a local-first AI pattern synthesis engine. It turns raw reference mate
 Start the server with `python app.py`, open `http://localhost:3110`, enter references and influences, choose a lens, and run the synthesis. The identity lens generates SOUL.md; the brand and design lenses generate different documents from the same graph.
 
 **What LLM providers does Elixis support?**
-Elixis works with any local LLM via Ollama (default: Gemma) or any OpenAI-compatible API (OpenAI, Anthropic via proxy, LM Studio, etc.). It falls back to template-based synthesis when no LLM is available.
+Elixis works with local LLMs via Ollama, OpenAI-compatible APIs, and Anthropic's Messages API. It falls back to template-based synthesis when no LLM is available.
 
 **Is Elixis free and open source?**
 Yes. Elixis is MIT-licensed and uses zero external Python dependencies (stdlib only).

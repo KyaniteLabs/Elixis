@@ -6,13 +6,13 @@
 [Internet] → [Traefik (443)] → [Elixis (3110)]
                                    ↕
                     [llama-local (8085)] ← primary LLM
-                    [LM Studio (1234)]  ← fallback (via Tailscale)
+                    [Optional OpenAI-compatible fallback]  ← configured only when explicitly set
 ```
 
 - **VPS**: `srv1542844.hstgr.cloud` (Ubuntu 24.04, Docker + Traefik)
 - **Domain**: `elixis.kyanitelabs.tech` (Let's Encrypt via Traefik)
 - **LLM primary**: `llama-local` on VPS (Qwen3.5-0.8B via llama.cpp)
-- **LLM fallback**: `llama-local` on the same Docker network
+- **LLM fallback**: disabled by default; set `LLM_FALLBACK_URL` explicitly only for OpenAI-compatible fallback routing
 
 ## Quick Deploy
 
@@ -71,8 +71,9 @@ All config is in `docker-compose.yml` environment variables:
 | Variable | Value | Purpose |
 |----------|-------|---------|
 | `LLM_BASE_URL` | `http://llama-local:8085/v1` | Docker network → llama-local |
-| `LLM_FALLBACK_URL` | `http://llama-local:8085/v1` | Same local inference service |
+| `LLM_FALLBACK_URL` | empty | Optional OpenAI-compatible fallback endpoint |
 | `LLM_MODEL` | `Qwen3.5-0.8B-Q4_K_M.gguf` | Model file in llama.cpp |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` | secret | Cloud inference credentials when `LLM_PROVIDER=anthropic` |
 | `ADMIN_API_KEY` | secret | Required for diagnostics, run history, backups, and cache deletion |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
 | `VPS_HOST` | deploy target | Required by `scripts/deploy.sh` |

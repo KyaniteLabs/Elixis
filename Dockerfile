@@ -31,6 +31,7 @@ ENV PATH=/opt/venv/bin:$PATH
 COPY elixis/ ./elixis/
 COPY app.py .
 COPY requirements.txt .
+COPY llms.txt llms-full.txt ./
 
 # Create data directory and set permissions
 RUN mkdir -p /app/.elixis && \
