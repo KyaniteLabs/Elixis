@@ -39,6 +39,13 @@ def _make_graph(*patterns):
     }
 
 
+def _sample_entities():
+    return [
+        {"canonical": "Athena", "themes": ["wisdom"], "traits": ["strategic clarity"]},
+        {"canonical": "operator clarity", "themes": ["wisdom", "reformer"], "traits": ["calm exact systems"]},
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Lens registry tests
 # ---------------------------------------------------------------------------
@@ -84,8 +91,10 @@ class TestGenerateBrandValid(unittest.TestCase):
 
     def test_returns_markdown_with_expected_sections(self):
         p = _make_good_pattern()
-        result = generate_brand([], _make_graph(p))
+        result = generate_brand(_sample_entities(), _make_graph(p))
         expected_sections = [
+            "Source Anchors",
+            "Pattern Rationale",
             "Core Identity",
             "Voice Attributes",
             "Tone Spectrum",
@@ -103,12 +112,12 @@ class TestGenerateBrandValid(unittest.TestCase):
 
     def test_uses_pattern_topic(self):
         p = _make_good_pattern()
-        result = generate_brand([], _make_graph(p))
+        result = generate_brand(_sample_entities(), _make_graph(p))
         self.assertIn("Test Topic", result)
 
     def test_uses_pattern_colors(self):
         p = _make_good_pattern()
-        result = generate_brand([], _make_graph(p))
+        result = generate_brand(_sample_entities(), _make_graph(p))
         self.assertIn("#e74c3c", result)
 
     def test_brand_output_is_string(self):
@@ -135,6 +144,13 @@ class TestGenerateBrandToneVariants(unittest.TestCase):
         result = generate_brand([], _make_graph(p))
         # Should still produce a valid brand doc (falls back to wisdom default)
         self.assertIn("Core Identity", result)
+
+    def test_reformer_archetype_is_specific(self):
+        p = {"id": "reformer", "name": "The Reformer", "color": "#2dd4bf", "probability": 0.4, "supporting_entities": 2}
+        result = generate_brand(_sample_entities(), _make_graph(p))
+        self.assertIn("principled improvement", result)
+        self.assertIn("operator clarity", result)
+        self.assertIn("Pattern Rationale", result)
 
 
 # ---------------------------------------------------------------------------
@@ -168,8 +184,10 @@ class TestGenerateDesignValid(unittest.TestCase):
 
     def test_contains_expected_sections(self):
         p = _make_good_pattern()
-        result = generate_design([], _make_graph(p))
+        result = generate_design(_sample_entities(), _make_graph(p))
         expected = [
+            "Source Anchors",
+            "Pattern Rationale",
             "Color Palette",
             "Typography Scale",
             "Spacing Scale",
@@ -182,8 +200,15 @@ class TestGenerateDesignValid(unittest.TestCase):
 
     def test_design_output_is_string(self):
         p = _make_good_pattern()
-        result = generate_design([], _make_graph(p))
+        result = generate_design(_sample_entities(), _make_graph(p))
         self.assertIsInstance(result, str)
+
+    def test_reformer_archetype_has_specific_design_principles(self):
+        p = {"id": "reformer", "name": "The Reformer", "color": "#2dd4bf", "probability": 0.4, "supporting_entities": 2}
+        result = generate_design(_sample_entities(), _make_graph(p))
+        self.assertIn("principled order", result)
+        self.assertIn("operator clarity", result)
+        self.assertIn("Pattern Rationale", result)
 
 
 class TestGenerateDesignEdgeCases(unittest.TestCase):

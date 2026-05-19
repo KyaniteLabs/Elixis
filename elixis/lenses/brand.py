@@ -196,6 +196,153 @@ _TONE_TABLE = {
     },
 }
 
+_STYLE_ALIASES = {
+    "caregiver": "connection",
+    "sage": "wisdom",
+    "achiever": "power",
+    "loyalist": "connection",
+    "enthusiast": "freedom",
+    "challenger": "power",
+    "peacemaker": "connection",
+    "reformer": "wisdom",
+    "herald": "explorer",
+    "guardian": "connection",
+    "shapeshifter": "transformation",
+    "mentor": "wisdom",
+}
+
+_IDENTITY_TEMPLATES.update({
+    "caregiver": (
+        "A brand built around care as a disciplined practice. It stands for protection, "
+        "repair, and the quiet work of making people feel held. Every message carries "
+        "warmth with a spine."
+    ),
+    "sage": (
+        "A brand devoted to discernment. It stands for patient understanding, clean "
+        "models, and the courage to name what is true before it is popular. Every "
+        "message carries earned clarity."
+    ),
+    "achiever": (
+        "A brand organized around progress and standards. It stands for competence, "
+        "momentum, and the satisfaction of measurable excellence. Every message carries "
+        "forward motion."
+    ),
+    "loyalist": (
+        "A brand grounded in commitment. It stands for trust, preparedness, and showing "
+        "up when consistency matters most. Every message carries dependable presence."
+    ),
+    "enthusiast": (
+        "A brand animated by possibility. It stands for curiosity, range, and the joy of "
+        "finding another door to open. Every message carries contagious momentum."
+    ),
+    "challenger": (
+        "A brand that protects by confronting. It stands for decisive action, strength in "
+        "the open, and the refusal to outsource courage. Every message carries force "
+        "under control."
+    ),
+    "peacemaker": (
+        "A brand that turns tension into coherence. It stands for steadiness, mediation, "
+        "and calm that does real work. Every message carries ease without avoidance."
+    ),
+    "reformer": (
+        "A brand built on principled improvement. It stands for order, precision, and "
+        "making the system worthy of the people inside it. Every message carries exacting "
+        "care."
+    ),
+    "herald": (
+        "A brand that signals the next threshold. It stands for clarity of invitation, "
+        "timely revelation, and the call that makes action possible. Every message carries "
+        "arrival."
+    ),
+    "guardian": (
+        "A brand that makes trust visible. It stands for protection, boundaries, and "
+        "stewardship without paranoia. Every message carries watchful calm."
+    ),
+    "shapeshifter": (
+        "A brand fluent in change. It stands for adaptation, translation, and the ability "
+        "to hold multiple truths without losing form. Every message carries elegant motion."
+    ),
+    "mentor": (
+        "A brand that guides without grandstanding. It stands for experience, patience, "
+        "and useful wisdom passed hand to hand. Every message carries generous authority."
+    ),
+})
+
+_VOCABULARY_MAP.update({
+    "caregiver": ["care", "repair", "shelter", "nourish", "protect", "tend", "restore", "hold", "comfort", "devotion"],
+    "sage": ["discern", "clarify", "study", "counsel", "truth", "model", "context", "reason", "depth", "insight"],
+    "achiever": ["progress", "standard", "momentum", "mastery", "measure", "execute", "advance", "competence", "finish", "earn"],
+    "loyalist": ["trust", "steady", "prepared", "reliable", "covenant", "commit", "anchor", "defend", "vigilant", "faithful"],
+    "enthusiast": ["possibility", "range", "spark", "discover", "momentum", "joy", "open", "wonder", "alive", "next"],
+    "challenger": ["force", "confront", "protect", "decide", "command", "direct", "fierce", "boundary", "stand", "resolve"],
+    "peacemaker": ["steady", "harmonize", "mediate", "ease", "balance", "listen", "settle", "calm", "reconcile", "cohere"],
+    "reformer": ["clarity", "standard", "precision", "order", "principle", "improve", "correct", "system", "discipline", "integrity"],
+    "herald": ["signal", "announce", "call", "threshold", "message", "reveal", "summon", "arrive", "declare", "awake"],
+    "guardian": ["protect", "steward", "boundary", "watch", "safeguard", "preserve", "custody", "shield", "haven", "trust"],
+    "shapeshifter": ["adapt", "translate", "fluid", "mirror", "shift", "form", "motion", "versatile", "bridge", "transform"],
+    "mentor": ["guide", "teach", "prepare", "counsel", "practice", "legacy", "experience", "patience", "support", "wisdom"],
+})
+
+_ANTI_VOCABULARY_MAP.update({
+    "caregiver": ["not my problem", "sink or swim", "perform empathy", "soft enough", "ignore the wound"],
+    "sage": ["trust the vibes", "close enough", "nobody reads context", "hot take", "obviously"],
+    "achiever": ["someday", "good intentions", "activity theater", "almost done", "busy work"],
+    "loyalist": ["fair-weather", "figure it out alone", "unreliable by design", "maybe later", "not my lane"],
+    "enthusiast": ["nothing new here", "stay bored", "too much curiosity", "that's excessive", "kill the spark"],
+    "challenger": ["let it slide", "avoid the hard thing", "looks strong enough", "permission first", "soft no"],
+    "peacemaker": ["keep everyone comfortable", "avoid the conflict", "false harmony", "don't name it", "smooth it over"],
+    "reformer": ["good enough", "messy is fine", "standards are optional", "nobody will notice", "ship the slop"],
+    "herald": ["bury the lead", "maybe mention it", "signal later", "unclear ask", "soft launch forever"],
+    "guardian": ["trust me blindly", "leave it exposed", "security theater", "boundaryless", "who's watching"],
+    "shapeshifter": ["pick one forever", "never adapt", "rigid identity", "context doesn't matter", "same answer everywhere"],
+    "mentor": ["because I said so", "figure it out", "perform expertise", "gatekeep", "lesson learned?"],
+})
+
+_FONT_MAP.update({
+    "caregiver": ("Lora", "Nunito"),
+    "sage": ("Source Serif Pro", "Inter"),
+    "achiever": ("Inter Tight", "Inter"),
+    "loyalist": ("IBM Plex Sans", "Karla"),
+    "enthusiast": ("Fraunces", "Nunito"),
+    "challenger": ("Oswald", "Inter"),
+    "peacemaker": ("Lora", "Karla"),
+    "reformer": ("Source Sans 3", "IBM Plex Mono"),
+    "herald": ("Cinzel", "Inter"),
+    "guardian": ("Libre Baskerville", "IBM Plex Sans"),
+    "shapeshifter": ("Space Grotesk", "Inter"),
+    "mentor": ("Source Serif Pro", "Karla"),
+})
+
+
+def _style_key(pattern_id):
+    return pattern_id if pattern_id in _IDENTITY_TEMPLATES else _STYLE_ALIASES.get(pattern_id, "wisdom")
+
+
+def _format_anchor(entity):
+    name = entity.get("canonical") or entity.get("name") or entity.get("original") or "Unknown"
+    themes = entity.get("themes") or []
+    traits = entity.get("traits") or []
+    context = ", ".join([*themes[:3], *traits[:1]])
+    return f"- **{name}**" + (f": {context}" if context else "")
+
+
+def _pattern_rationale(patterns, graph):
+    lines = []
+    for p in patterns[:4]:
+        name = p.get("name", "Unknown")
+        prob = p.get("probability")
+        support = p.get("supporting_entities", 0)
+        if isinstance(prob, (int, float)):
+            lines.append(f"- **{name}**: {prob:.0%} probability across {support} supporting entities")
+        else:
+            lines.append(f"- **{name}**: {support} supporting entities")
+    for bridge in graph.get("bridges", [])[:2]:
+        lines.append(
+            f"- **Bridge**: {bridge.get('entity')} connects {bridge.get('pattern_a')} "
+            f"and {bridge.get('pattern_b')}"
+        )
+    return lines
+
 
 def generate_brand(entities: list, graph: dict) -> str:
     """Generate a brand voice guidelines document from entity and pattern data."""
@@ -206,11 +353,12 @@ def generate_brand(entities: list, graph: dict) -> str:
     top = patterns[:3]
     primary = top[0]
     pid = primary.get("id", primary.get("name", "unknown"))
+    style = _style_key(pid)
     topic = graph.get("emergent_topic", primary.get("name", "Unknown"))
-    tones = _TONE_MAP.get(pid, ("formal", "bold", "accessible", "direct"))
+    tones = _TONE_MAP.get(style, ("formal", "bold", "accessible", "direct"))
 
     # Core Identity
-    identity = _IDENTITY_TEMPLATES.get(pid, _IDENTITY_TEMPLATES["wisdom"])
+    identity = _IDENTITY_TEMPLATES.get(style, _IDENTITY_TEMPLATES["wisdom"])
 
     # Voice Attributes
     voice_lines = [
@@ -225,15 +373,15 @@ def generate_brand(entities: list, graph: dict) -> str:
     tone_rows = []
     for situation in tone_situations:
         mapping = _TONE_TABLE.get(situation, {})
-        entry = mapping.get(pid, mapping.get("wisdom", ("Measured", "\"...\"")))
+        entry = mapping.get(style, mapping.get("wisdom", ("Measured", "\"...\"")))
         tone_rows.append(f"| {situation.title()} | {entry[0]} | {entry[1]} |")
     tone_table = "| Situation | Tone | Example |\n|---|---|---|\n" + "\n".join(tone_rows)
 
     # Vocabulary
-    vocab = _VOCABULARY_MAP.get(pid, _VOCABULARY_MAP["wisdom"])[:10]
+    vocab = _VOCABULARY_MAP.get(style, _VOCABULARY_MAP["wisdom"])[:10]
 
     # Anti-Vocabulary
-    anti_vocab = _ANTI_VOCABULARY_MAP.get(pid, _ANTI_VOCABULARY_MAP["wisdom"])[:5]
+    anti_vocab = _ANTI_VOCABULARY_MAP.get(style, _ANTI_VOCABULARY_MAP["wisdom"])[:5]
 
     # Color Direction
     colors = []
@@ -241,10 +389,23 @@ def generate_brand(entities: list, graph: dict) -> str:
         colors.append(p.get("color", "#666666"))
 
     # Typography
-    fonts = _FONT_MAP.get(pid, _FONT_MAP["wisdom"])
+    fonts = _FONT_MAP.get(style, _FONT_MAP["wisdom"])
 
     sections = [
         f"# Brand Voice: {topic}",
+        "",
+        "## Source Anchors",
+        "",
+    ]
+    anchors = [_format_anchor(e) for e in entities[:8]]
+    sections.extend(anchors or ["- No source anchors available."])
+    sections.extend([
+        "",
+        "## Pattern Rationale",
+        "",
+    ])
+    sections.extend(_pattern_rationale(patterns, graph))
+    sections.extend([
         "",
         "## Core Identity",
         "",
@@ -252,7 +413,7 @@ def generate_brand(entities: list, graph: dict) -> str:
         "",
         "## Voice Attributes",
         "",
-    ]
+    ])
     sections.extend(voice_lines)
     sections.extend([
         "",

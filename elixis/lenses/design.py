@@ -61,7 +61,112 @@ _DESIGN_PRINCIPLES = {
         "Wide-open layouts with clear sightlines suggest horizon and possibility.",
         "Maps, grids, and coordinates as visual motifs reinforce the navigation metaphor.",
     ],
+    "caregiver": [
+        "Design for care: interfaces should feel protective, legible, and quietly generous.",
+        "Use warm contrast, soft pacing, and clear recovery states so people never feel abandoned.",
+        "Every surface should make the next helpful action obvious without becoming sentimental.",
+    ],
+    "sage": [
+        "Design for discernment: structure dense ideas into calm, scan-friendly layers.",
+        "Use typographic hierarchy, citations, and measured spacing to make insight feel earned.",
+        "Avoid visual noise; the interface should make thinking easier, not louder.",
+    ],
+    "achiever": [
+        "Design for momentum: progress, completion, and priority should be visually unmistakable.",
+        "Use crisp hierarchy, measurable states, and compact controls that reward repeated use.",
+        "Visual polish should communicate competence rather than decoration.",
+    ],
+    "loyalist": [
+        "Design for trust: make status, history, and commitments visible.",
+        "Use stable layouts, predictable controls, and reassuring confirmation states.",
+        "The system should feel prepared, dependable, and difficult to misread.",
+    ],
+    "enthusiast": [
+        "Design for possibility: create a sense of range without scattering attention.",
+        "Use lively accents, modular discovery, and small moments of delight tied to progress.",
+        "Keep the experience energetic, but let structure keep the energy useful.",
+    ],
+    "challenger": [
+        "Design for force under control: high contrast, decisive hierarchy, no decorative hesitation.",
+        "Use strong alignment, compact density, and clear affordances for irreversible actions.",
+        "The interface should feel capable of confrontation without feeling reckless.",
+    ],
+    "peacemaker": [
+        "Design for coherence: reduce friction, soften transitions, and organize disagreement.",
+        "Use balanced spacing, gentle contrast, and language that lowers cognitive load.",
+        "The visual system should calm the room while preserving clarity.",
+    ],
+    "reformer": [
+        "Design for principled order: grids, alignment, and naming must be exact.",
+        "Use restrained color and visible system logic so quality feels enforced, not decorative.",
+        "Every inconsistency should feel intentionally eliminated.",
+    ],
+    "herald": [
+        "Design for signal: the most important message should arrive first and unmistakably.",
+        "Use strong lead elements, clear next actions, and threshold moments that invite motion.",
+        "The system should feel like a call to step through, not a wall of information.",
+    ],
+    "guardian": [
+        "Design for protection: risk, state, and boundaries should be visible before action.",
+        "Use sturdy spacing, sober contrast, and confirmation patterns that inspire confidence.",
+        "The interface should feel watchful without becoming cold.",
+    ],
+    "shapeshifter": [
+        "Design for adaptation: components should flex by context without losing identity.",
+        "Use responsive density, modular views, and transitions that make change intelligible.",
+        "The system should translate between modes elegantly, not disguise inconsistency.",
+    ],
+    "mentor": [
+        "Design for guidance: teach through progressive disclosure and useful defaults.",
+        "Use examples, checkpoints, and clear wayfinding so expertise feels accessible.",
+        "The interface should support practice without patronizing the operator.",
+    ],
 }
+
+_DESIGN_ALIASES = {
+    "sage": "wisdom",
+    "mentor": "wisdom",
+    "caregiver": "connection",
+    "loyalist": "connection",
+    "peacemaker": "connection",
+    "achiever": "power",
+    "challenger": "power",
+    "reformer": "wisdom",
+    "guardian": "connection",
+    "herald": "explorer",
+    "shapeshifter": "transformation",
+    "enthusiast": "freedom",
+}
+
+
+def _design_key(pattern_id):
+    return pattern_id if pattern_id in _DESIGN_PRINCIPLES else _DESIGN_ALIASES.get(pattern_id, "wisdom")
+
+
+def _format_anchor(entity):
+    name = entity.get("canonical") or entity.get("name") or entity.get("original") or "Unknown"
+    themes = entity.get("themes") or []
+    traits = entity.get("traits") or []
+    context = ", ".join([*themes[:3], *traits[:1]])
+    return f"- **{name}**" + (f": {context}" if context else "")
+
+
+def _pattern_rationale(patterns, graph):
+    lines = []
+    for p in patterns[:4]:
+        name = p.get("name", "Unknown")
+        prob = p.get("probability")
+        support = p.get("supporting_entities", 0)
+        if isinstance(prob, (int, float)):
+            lines.append(f"- **{name}**: {prob:.0%} probability across {support} supporting entities")
+        else:
+            lines.append(f"- **{name}**: {support} supporting entities")
+    for bridge in graph.get("bridges", [])[:2]:
+        lines.append(
+            f"- **Bridge**: {bridge.get('entity')} connects {bridge.get('pattern_a')} "
+            f"and {bridge.get('pattern_b')}"
+        )
+    return lines
 
 
 def _hex_to_hsl(hex_color):
@@ -148,13 +253,27 @@ def generate_design(entities: list, graph: dict) -> str:
 
     top = patterns[:2]
     pid = top[0].get("id", top[0].get("name", "unknown"))
+    design_key = _design_key(pid)
     topic = graph.get("emergent_topic", top[0].get("name", "Unknown"))
 
     palette = _derive_palette(top)
-    principles = _DESIGN_PRINCIPLES.get(pid, _DESIGN_PRINCIPLES["wisdom"])
+    principles = _DESIGN_PRINCIPLES.get(design_key, _DESIGN_PRINCIPLES["wisdom"])
 
     sections = [
         f"# Design System: {topic}",
+        "",
+        "## Source Anchors",
+        "",
+    ]
+    anchors = [_format_anchor(e) for e in entities[:8]]
+    sections.extend(anchors or ["- No source anchors available."])
+    sections.extend([
+        "",
+        "## Pattern Rationale",
+        "",
+    ])
+    sections.extend(_pattern_rationale(patterns, graph))
+    sections.extend([
         "",
         "## Color Palette",
         "",
@@ -198,7 +317,7 @@ def generate_design(entities: list, graph: dict) -> str:
         "",
         "## Design Principles",
         "",
-    ]
+    ])
     for p in principles:
         sections.append(f"- {p}")
     sections.append("")

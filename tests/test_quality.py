@@ -188,6 +188,8 @@ class TestValidateOutputLenses(unittest.TestCase):
 
     def test_brand_lens_checks_brand_sections(self):
         output = (
+            "# Source Anchors\n\nInput anchors.\n\n"
+            "# Pattern Rationale\n\nPattern support.\n\n"
             "# Core Identity\n\nBrand identity here.\n\n"
             "# Voice Attributes\n\nVoice details.\n\n"
             "# Tone Spectrum\n\nTone info.\n\n"
@@ -201,6 +203,8 @@ class TestValidateOutputLenses(unittest.TestCase):
 
     def test_design_lens_checks_design_sections(self):
         output = (
+            "# Source Anchors\n\nInput anchors.\n\n"
+            "# Pattern Rationale\n\nPattern support.\n\n"
             "# Color Palette\n\nColors.\n\n"
             "# Typography\n\nType.\n\n"
             "# Spacing\n\nSpace.\n\n"

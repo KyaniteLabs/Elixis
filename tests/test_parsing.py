@@ -43,6 +43,14 @@ class TestParseLlmJsonArray:
         result = parse_llm_json_array('```\n[{"x": 1}]\n```')
         assert result == [{"x": 1}]
 
+    def test_array_wrapped_in_object(self):
+        result = parse_llm_json_array('{"results": [{"entity": "Athena"}]}')
+        assert result == [{"entity": "Athena"}]
+
+    def test_array_with_trailing_commas(self):
+        result = parse_llm_json_array('[{"entity": "Athena", "scores": {"wisdom": 0.8,},},]')
+        assert result == [{"entity": "Athena", "scores": {"wisdom": 0.8}}]
+
 
 class TestParseLlmJsonObject:
     def test_valid_json_object(self):
@@ -79,3 +87,7 @@ class TestParseLlmJsonObject:
     def test_empty_object(self):
         result = parse_llm_json_object('{}')
         assert result == {}
+
+    def test_object_with_trailing_comma(self):
+        result = parse_llm_json_object('{"name": "Test",}')
+        assert result == {"name": "Test"}
