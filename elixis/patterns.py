@@ -7,6 +7,7 @@ Finds bridge concepts, consensus, sub-patterns, and emergent patterns.
 
 import logging
 import math
+import re
 import time
 from collections import defaultdict
 
@@ -269,6 +270,123 @@ _TYPE_AFFINITIES = {
 }
 
 
+def _pattern_key(key):
+    """Normalize model-returned pattern keys for id/name matching."""
+    return re.sub(r"[^a-z0-9]+", "_", str(key).lower().replace("&", "and")).strip("_")
+
+
+def _pattern_id_for_key(key):
+    """Return the canonical pattern id for a model-returned id or display name."""
+    aliases = {}
+    for pattern in PATTERNS:
+        aliases[_pattern_key(pattern["id"])] = pattern["id"]
+        aliases[_pattern_key(pattern["name"])] = pattern["id"]
+        if pattern["name"].lower().startswith("the "):
+            aliases[_pattern_key(pattern["name"][4:])] = pattern["id"]
+    return aliases.get(_pattern_key(key))
+
+
+def _score_value(value):
+    """Coerce a model-returned score cell to a clamped float."""
+    if isinstance(value, dict):
+        for key in ("score", "probability", "value", "weight"):
+            if key in value:
+                value = value[key]
+                break
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _scores_from_value(value):
+    """Extract pattern scores from common array, map, and nested score shapes."""
+    if isinstance(value, dict):
+        if isinstance(value.get("scores"), (dict, list)):
+            return _scores_from_value(value["scores"])
+        if isinstance(value.get("patterns"), (dict, list)):
+            return _scores_from_value(value["patterns"])
+
+        ignored = {"entity", "name", "canonical", "reason", "rationale", "notes", "confidence"}
+        scores = {}
+        for key, score in value.items():
+            if key in ignored:
+                continue
+            pid = _pattern_id_for_key(key)
+            if pid:
+                scores[pid] = _score_value(score)
+        return scores
+
+    if isinstance(value, list):
+        scores = {}
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            key = (
+                item.get("pattern")
+                or item.get("pattern_id")
+                or item.get("id")
+                or item.get("name")
+            )
+            pid = _pattern_id_for_key(key)
+            if not pid:
+                continue
+            scores[pid] = _score_value(
+                item.get("score", item.get("probability", item.get("value", item.get("weight"))))
+            )
+        return scores
+
+    return {}
+
+
+def _classification_entries(value):
+    """Yield (entity name, score payload) from common model response shapes."""
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, dict):
+                name = item.get("entity") or item.get("name") or item.get("canonical")
+                yield name, item
+        return
+
+    if not isinstance(value, dict):
+        return
+
+    if value.get("entity") or value.get("name") or value.get("canonical"):
+        yield value.get("entity") or value.get("name") or value.get("canonical"), value
+        return
+
+    wrapper_keys = ("classifications", "classification", "results", "result", "entities", "items", "data")
+    for key in wrapper_keys:
+        child = value.get(key)
+        if isinstance(child, (dict, list)):
+            yield from _classification_entries(child)
+            return
+
+    for name, scores in value.items():
+        if isinstance(scores, (dict, list)):
+            yield name, scores
+
+
+def _normalize_pattern_classifications(parsed):
+    """Normalize LLM classification JSON into {entity: {pattern_id: score}}."""
+    pattern_ids = [p["id"] for p in PATTERNS]
+    classifications = {}
+
+    for raw_name, raw_scores in _classification_entries(parsed):
+        name = str(raw_name or "").strip()
+        if not name:
+            continue
+        scores = _scores_from_value(raw_scores)
+        if not scores:
+            continue
+        clean = {pid: 0.0 for pid in pattern_ids}
+        for pid, value in scores.items():
+            clean[pid] = value
+        classifications[name] = clean
+
+    return classifications
+
+
 def _score_from_knowledge_base(entity):
     """Score entity against patterns using curated knowledge base data."""
     from .knowledge import character_by_name
@@ -345,8 +463,16 @@ def llm_classify_patterns(entities, telemetry=None):
             telemetry.update({"source": "empty_response", "duration_ms": duration_ms, **llm_meta})
         raise RuntimeError("LLM pattern classification returned empty response")
 
-    from .parsing import parse_llm_json_array
-    data = parse_llm_json_array(response)
+    from .parsing import parse_llm_json_array, parse_llm_json_object
+    obj_pos = response.find("{")
+    arr_pos = response.find("[")
+    data = None
+    if obj_pos != -1 and (arr_pos == -1 or obj_pos < arr_pos):
+        data = parse_llm_json_object(response)
+    if data is None:
+        data = parse_llm_json_array(response)
+    if data is None:
+        data = parse_llm_json_object(response)
     if data is None:
         if telemetry is not None:
             telemetry.update({
@@ -356,32 +482,21 @@ def llm_classify_patterns(entities, telemetry=None):
         raise RuntimeError("LLM pattern classification returned invalid JSON")
 
     # Build entity_name -> {pattern_id: score} mapping
-    classifications = {}
-    pattern_ids = [p["id"] for p in PATTERNS]
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        name = item.get("entity", "").strip()
-        scores = item.get("scores", {})
-        if not name:
-            continue
-        # Normalize scores: clamp to 0-1
-        clean = {}
-        for pid in pattern_ids:
-            val = scores.get(pid, 0)
-            try:
-                val = float(val)
-            except (ValueError, TypeError):
-                val = 0
-            clean[pid] = max(0.0, min(1.0, val))
-        classifications[name] = clean
+    classifications = _normalize_pattern_classifications(data)
+    if not classifications:
+        if telemetry is not None:
+            telemetry.update({
+                "source": "schema_failure", "duration_ms": duration_ms,
+                "response_length": len(response), **llm_meta,
+            })
+        raise RuntimeError("LLM pattern classification returned unsupported JSON schema")
 
     if telemetry is not None:
         telemetry.update({
             "source": "llm",
             "duration_ms": duration_ms,
             "entity_count": len(classifications),
-            "items_in_raw_response": len(data),
+            "items_in_raw_response": len(data) if hasattr(data, "__len__") else 0,
             **llm_meta,
         })
     logger.info("LLM classified %d entities in %dms (tokens: %d→%d)",

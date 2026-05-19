@@ -3,10 +3,11 @@
 import unittest
 import sys
 import os
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from elixis.patterns import build_pattern_graph
+from elixis.patterns import build_pattern_graph, llm_classify_patterns
 
 
 class TestPatternGraph(unittest.TestCase):
@@ -55,6 +56,49 @@ class TestPatternGraph(unittest.TestCase):
             self.assertIn("name", pattern)
             self.assertIn("probability", pattern)
             self.assertIn("supporting_entities", pattern)
+
+
+class TestLlmPatternClassificationParsing(unittest.TestCase):
+    """Regression tests for model JSON shapes seen in cloud classification."""
+
+    @patch("elixis.llm.chat")
+    def test_accepts_entity_keyed_object_response(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"Athena": {"Wisdom & Knowledge": 0.91, "Power & Ambition": 0.22}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 20,
+            "tokens_out": 10,
+        }
+
+        result = llm_classify_patterns([
+            {"canonical": "Athena", "type": "mythological", "themes": [], "traits": []},
+        ])
+
+        self.assertEqual(result["Athena"]["wisdom"], 0.91)
+        self.assertEqual(result["Athena"]["power"], 0.22)
+
+    @patch("elixis.llm.chat")
+    def test_accepts_wrapped_mapping_with_pattern_list_scores(self, mock_chat):
+        mock_chat.return_value = {
+            "content": (
+                '{"classifications": {"Batman": ['
+                '{"pattern": "The Guardian", "score": 0.82},'
+                '{"pattern_id": "shadow", "probability": 0.41}'
+                ']}}'
+            ),
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 20,
+            "tokens_out": 10,
+        }
+
+        result = llm_classify_patterns([
+            {"canonical": "Batman", "type": "character", "themes": [], "traits": []},
+        ])
+
+        self.assertEqual(result["Batman"]["guardian"], 0.82)
+        self.assertEqual(result["Batman"]["shadow"], 0.41)
 
 
 if __name__ == "__main__":
