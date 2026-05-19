@@ -19,10 +19,10 @@
 ### From local machine
 
 ```bash
-VPS_HOST=srv1542844.hstgr.cloud ADMIN_API_KEY="$(openssl rand -hex 32)" ./scripts/deploy.sh
+VPS_HOST=100.92.68.103 ADMIN_API_KEY="$(openssl rand -hex 32)" ./scripts/deploy.sh
 ```
 
-Builds the image locally, transfers it to the VPS, and restarts the container.
+Builds the image locally, transfers it to the VPS over Tailscale, and restarts the container.
 
 ### Manual deploy on VPS
 
@@ -47,10 +47,20 @@ ADMIN_API_KEY="<long-random-token>" docker compose up -d --build
 
 ## CI/CD
 
-Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, copies `docker-compose.yml` to the VPS, logs the VPS into GHCR, persists `ELIXIS_IMAGE` in `/docker/elixis/.env` to the pushed SHA image, starts Compose, and fails the deploy if the running `elixis` container does not report that exact image.
+Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, joins the tailnet with the Tailscale GitHub Action, copies `docker-compose.yml` to the VPS over its tailnet address, logs the VPS into GHCR, persists `ELIXIS_IMAGE` in `/docker/elixis/.env` to the pushed SHA image, starts Compose, and fails the deploy if the running `elixis` container does not report that exact image.
 
 Required production environment secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `ADMIN_API_KEY`.
-The deploy job intentionally fails when any of these are missing. A green deploy means the workflow reached the VPS and verified the running container image; it is not allowed to silently skip production deployment.
+`VPS_HOST` must be the Tailscale address or MagicDNS name, not the public VPS hostname. Current target: `100.92.68.103`.
+
+The GitHub runner must also receive one Tailscale credential path:
+
+- Federated identity: `TS_OAUTH_CLIENT_ID` and `TS_AUDIENCE`
+- OAuth client secret: `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET`
+- Auth key fallback: `TAILSCALE_AUTHKEY`
+
+The default Tailscale tag is `tag:ci`; override with the production environment variable `TAILSCALE_TAGS` only if the tailnet ACL uses a different tag.
+
+The deploy job intentionally fails when any required secret is missing or when `VPS_HOST` points at a public address. A green deploy means the workflow reached the VPS over Tailscale and verified the running container image; it is not allowed to silently skip production deployment or open public SSH as a shortcut.
 
 ## Monitoring
 
@@ -79,7 +89,10 @@ All config is in `docker-compose.yml` environment variables:
 | `ELIXIS_DATA_DIR` | `/app/.elixis` | Persistent run, trace, and cache data directory |
 | `ELIXIS_BACKUP_DIR` | `/app/.elixis/backups` | Backup archive directory inside the persistent Docker volume |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
-| `VPS_HOST` | deploy target | Required by `scripts/deploy.sh` |
+| `VPS_HOST` | `100.92.68.103` | Tailscale deploy target |
+| `TAILSCALE_AUTHKEY` | secret | Optional reusable ephemeral tagged auth key for GitHub Actions deploy |
+| `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET` | secret | Optional Tailscale OAuth client deploy credentials |
+| `TS_OAUTH_CLIENT_ID` / `TS_AUDIENCE` | secret | Preferred Tailscale federated identity deploy credentials |
 
 ## Data
 
