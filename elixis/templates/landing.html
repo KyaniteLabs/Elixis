@@ -202,31 +202,32 @@
   --type-default: var(--text-dim);
 
   /* Spacing */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 0.75rem;
+  --space-xs: 0.35rem;
+  --space-sm: 0.65rem;
+  --space-md: 0.875rem;
   --space-base: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
+  --space-lg: 1.35rem;
+  --space-xl: 1.75rem;
+  --space-2xl: 2.5rem;
 
   /* Sizing */
-  --sidebar-width: 300px;
-  --tab-bar-height: 44px;
+  --header-height: 64px;
+  --sidebar-width: clamp(360px, 30vw, 430px);
+  --tab-bar-height: 54px;
   --bead-dot-size: 8px;
   --min-tap-target: 44px;
 
   /* Typography */
   --font-sans: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Consolas', monospace;
-  --font-size-xs: 0.625rem;
-  --font-size-sm: 0.75rem;
-  --font-size-base: 0.8125rem;
-  --font-size-md: 0.875rem;
-  --font-size-lg: 1rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.0625rem;
+  --font-size-lg: 1.2rem;
+  --font-size-xl: 1.45rem;
+  --font-size-2xl: 1.9rem;
+  --font-size-3xl: 2.5rem;
 
   /* Radius */
   --radius-sm: 4px;
@@ -273,7 +274,8 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
-  line-height: 1.6;
+  line-height: 1.58;
+  text-rendering: optimizeLegibility;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -341,11 +343,11 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 48px;
+  height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-lg);
+  padding: 0 clamp(var(--space-lg), 2vw, var(--space-2xl));
   background: rgba(6, 6, 14, 0.85);
   backdrop-filter: blur(var(--blur-heavy));
   border-bottom: 1px solid var(--border-subtle);
@@ -357,9 +359,9 @@ body {
   align-items: center;
   min-height: 44px;
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  letter-spacing: 3px;
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -371,7 +373,7 @@ body {
 .header-links {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: clamp(var(--space-base), 2vw, var(--space-xl));
 }
 
 .header-link {
@@ -382,7 +384,8 @@ body {
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-family: var(--font-mono);
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
   transition: color var(--transition-fast);
 }
 
@@ -398,7 +401,7 @@ body {
 /* ── Sidebar ── */
 .sidebar {
   position: fixed;
-  top: 48px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   width: var(--sidebar-width);
@@ -412,7 +415,7 @@ body {
 
 .sidebar-section {
   flex-shrink: 0;
-  padding: var(--space-lg);
+  padding: var(--space-xl);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -423,18 +426,19 @@ body {
 .sidebar-label {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1.1px;
   color: var(--accent);
   margin-bottom: var(--space-sm);
   display: block;
 }
 
 .sidebar-description {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
   margin-bottom: var(--space-base);
+  text-wrap: pretty;
 }
 
 .about-section {
@@ -445,7 +449,7 @@ body {
 
 .about-loom {
   position: relative;
-  height: 150px;
+  height: clamp(170px, 15vw, 220px);
   margin: 0 0 var(--space-base);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -469,8 +473,7 @@ body {
   color: var(--kyanite-300);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
   pointer-events: none;
 }
 
@@ -481,16 +484,18 @@ body {
 
 .about-title {
   color: var(--text-primary);
-  font-size: var(--font-size-lg);
-  line-height: 1.25;
+  font-size: var(--font-size-xl);
+  line-height: 1.16;
   margin-bottom: var(--space-sm);
+  text-wrap: balance;
 }
 
 .about-copy {
   color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: 1.55;
+  font-size: var(--font-size-base);
+  line-height: 1.58;
   margin-bottom: var(--space-base);
+  text-wrap: pretty;
 }
 
 .about-links {
@@ -503,16 +508,16 @@ body {
 .about-link {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 var(--space-sm);
+  min-height: 36px;
+  padding: 0 var(--space-md);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   color: var(--kyanite-200);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.8px;
+  font-weight: 700;
+  letter-spacing: 0.45px;
   text-decoration: none;
-  text-transform: uppercase;
   transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 
@@ -525,7 +530,7 @@ body {
 .about-list {
   color: var(--text-muted);
   font-size: var(--font-size-sm);
-  line-height: 1.5;
+  line-height: 1.6;
   padding-left: var(--space-lg);
 }
 
@@ -536,7 +541,7 @@ body {
 /* Textarea */
 .theme-textarea {
   width: 100%;
-  min-height: 180px;
+  min-height: clamp(220px, 25dvh, 300px);
   background: var(--bg-glass);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -544,9 +549,13 @@ body {
   padding: var(--space-base);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
-  line-height: 1.7;
+  line-height: 1.65;
   resize: vertical;
   transition: border-color var(--transition-fast);
+}
+
+.input-label {
+  margin-top: var(--space-base);
 }
 
 .theme-textarea:focus {
@@ -575,8 +584,8 @@ body {
   padding: var(--space-sm) var(--space-xs);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.45px;
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: center;
@@ -609,15 +618,14 @@ body {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  letter-spacing: 1.4px;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  min-height: var(--min-tap-target);
+  min-height: 54px;
 }
 
 .play-btn:hover:not(:disabled) {
@@ -710,7 +718,7 @@ body {
   color: var(--text-dim);
   margin-top: var(--space-sm);
   text-align: center;
-  letter-spacing: 1px;
+  letter-spacing: 0.55px;
 }
 
 /* Example Buttons */
@@ -728,6 +736,7 @@ body {
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
   min-height: 32px;
@@ -755,11 +764,11 @@ body {
 /* ── Main Content Area ── */
 .main-content {
   margin-left: var(--sidebar-width);
-  margin-top: 48px;
+  margin-top: var(--header-height);
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - 48px);
+  height: calc(100dvh - var(--header-height));
   overflow: hidden;
 }
 
@@ -767,11 +776,14 @@ body {
 .tab-bar {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
   border-bottom: 1px solid var(--border-subtle);
   background: rgba(6, 6, 14, 0.6);
   backdrop-filter: blur(var(--blur-glass));
   flex-shrink: 0;
-  padding: 0 var(--space-base);
+  min-height: var(--tab-bar-height);
+  padding: 0 var(--space-lg);
+  overflow-x: auto;
 }
 
 .tab-btn {
@@ -781,7 +793,8 @@ body {
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
   padding: var(--space-md) var(--space-base);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -821,7 +834,7 @@ body {
 
 .tab-panel {
   display: none;
-  padding: var(--space-xl);
+  padding: clamp(var(--space-lg), 2.4vw, var(--space-2xl));
   min-height: 100%;
   animation: fadeIn var(--transition-base);
 }
@@ -837,39 +850,43 @@ body {
 .panel-placeholder {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: min(520px, calc(100dvh - 180px));
-  text-align: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: min(760px, 100%);
+  min-height: clamp(180px, 24dvh, 260px);
+  text-align: left;
   color: var(--text-muted);
   gap: var(--space-base);
-  padding: var(--space-2xl);
+  padding: clamp(var(--space-xl), 3vw, 3.5rem);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 50% 38%, rgba(56, 189, 248, 0.07), transparent 36%),
-    linear-gradient(180deg, rgba(148, 179, 232, 0.035), rgba(148, 179, 232, 0.018));
+    radial-gradient(circle at 16% 16%, rgba(56, 189, 248, 0.13), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(148, 179, 232, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(148, 179, 232, 0.045), rgba(148, 179, 232, 0.018));
 }
 
 .panel-placeholder-icon {
   font-size: var(--font-size-3xl);
   color: var(--accent);
-  opacity: 0.46;
+  opacity: 0.58;
+  line-height: 1;
 }
 
 .panel-placeholder p {
-  font-size: var(--font-size-md);
-  max-width: 320px;
-  line-height: 1.6;
+  font-size: var(--font-size-lg);
+  max-width: 36rem;
+  line-height: 1.55;
+  text-wrap: balance;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   BEAD BOARD — Tab 1: Grid of bead cards
+   SIGNAL BOARD — Tab 1: Grid of extracted signal cards
    ════════════════════════════════════════════════════════════════════════════ */
 .bead-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-base);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-lg);
 }
 
 .bead-card {
@@ -877,7 +894,7 @@ body {
   backdrop-filter: blur(var(--blur-glass));
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: var(--space-base);
+  padding: var(--space-lg);
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
@@ -1129,9 +1146,9 @@ body {
 }
 
 .pattern-bar-name {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--text-primary);
-  width: 140px;
+  width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1186,8 +1203,8 @@ body {
 .output-title {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1px;
   color: var(--sentiment-neutral);
 }
 
@@ -1203,13 +1220,14 @@ body {
   color: var(--text-secondary);
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  min-height: 32px;
+  min-height: 38px;
 }
 
 .output-btn:hover {
@@ -1223,8 +1241,8 @@ body {
   border-radius: var(--radius-md);
   padding: var(--space-xl);
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  line-height: 1.8;
+  font-size: var(--font-size-base);
+  line-height: 1.72;
   color: var(--text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
@@ -1275,9 +1293,9 @@ body {
 .trace-section-title {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  letter-spacing: 1.2px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
   color: var(--accent);
-  text-transform: uppercase;
   margin-bottom: var(--space-base);
 }
 
@@ -1303,8 +1321,8 @@ body {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  font-weight: 800;
+  letter-spacing: 0.45px;
   margin-bottom: 4px;
 }
 
@@ -1362,7 +1380,7 @@ body {
   margin-top: auto;
   padding: var(--space-base) var(--space-lg);
   border-top: 1px solid var(--border-subtle);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-dim);
   line-height: 1.5;
 }
@@ -1392,11 +1410,12 @@ body {
     flex-direction: column;
     min-height: 100dvh;
     height: auto;
+    padding-top: var(--header-height);
   }
 
   .sidebar {
     position: relative;
-    top: 0;
+    top: auto;
     width: 100%;
     max-height: none;
     border-right: none;
@@ -1412,12 +1431,20 @@ body {
   }
 
   .bead-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 
   .tab-btn {
     font-size: var(--font-size-xs);
     padding: var(--space-sm) var(--space-md);
+  }
+
+  .theme-textarea {
+    min-height: 180px;
+  }
+
+  .panel-placeholder {
+    min-height: 180px;
   }
 }
 </style>
@@ -1441,9 +1468,9 @@ body {
   <!-- ── Sidebar: Theme Declaration ── -->
   <aside class="sidebar" role="complementary" aria-label="Theme declaration input">
     <div class="sidebar-section">
-      <span class="sidebar-label">Theme Declaration</span>
+      <span class="sidebar-label">Theme declaration</span>
       <p class="sidebar-description">Drop your references. Elixis builds a pattern graph, then resolves it through identity, brand voice, design system, and naming lenses.</p>
-      <label for="brainDump" class="sidebar-label" style="margin-top: var(--space-base);">Your Brain Dump</label>
+      <label for="brainDump" class="sidebar-label input-label">Reference brief</label>
       <textarea
         class="theme-textarea"
         id="brainDump"
@@ -1529,7 +1556,7 @@ Fleabag"
     <!-- Tab Bar -->
     <div class="tab-bar" role="tablist" aria-label="Analysis panels">
       <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-beads" id="tab-beads">
-        Bead Board <span class="tab-badge" id="badge-beads">0</span>
+        Signals <span class="tab-badge" id="badge-beads">0</span>
       </button>
       <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-threads" id="tab-threads">
         Thread View <span class="tab-badge" id="badge-threads">0</span>
@@ -1547,11 +1574,11 @@ Fleabag"
 
     <!-- Tab Panels -->
     <div class="tab-panel-container">
-      <!-- Panel 1: Bead Board -->
+      <!-- Panel 1: Signal board -->
       <div class="tab-panel active" role="tabpanel" id="panel-beads" aria-labelledby="tab-beads">
         <div class="panel-placeholder" id="beadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9673;</div>
-          <p>Awaiting extracted beads.</p>
+          <p>No extracted signals yet.</p>
         </div>
         <div class="bead-grid" id="beadGrid" style="display:none;"></div>
       </div>
@@ -1560,7 +1587,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-threads" aria-labelledby="tab-threads">
         <div class="panel-placeholder" id="threadsPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#10697;</div>
-          <p>Awaiting cross-domain threads.</p>
+          <p>No cross-domain threads yet.</p>
         </div>
         <div class="thread-list" id="threadList" style="display:none;"></div>
       </div>
@@ -1569,7 +1596,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-radar" aria-labelledby="tab-radar">
         <div class="panel-placeholder" id="radarPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9881;</div>
-          <p>Awaiting pattern scores.</p>
+          <p>No pattern scores yet.</p>
         </div>
         <div id="radarContent" style="display:none;">
           <div class="radar-summary" id="radarSummary"></div>
@@ -1581,7 +1608,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-output" aria-labelledby="tab-output">
         <div class="panel-placeholder" id="outputPlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#9997;</div>
-          <p>Awaiting generated document.</p>
+          <p>No generated document yet.</p>
         </div>
         <div id="outputContent" style="display:none;">
           <div class="output-header">
@@ -1604,7 +1631,7 @@ Fleabag"
       <div class="tab-panel" role="tabpanel" id="panel-trace" aria-labelledby="tab-trace">
         <div class="panel-placeholder" id="tracePlaceholder">
           <div class="panel-placeholder-icon" aria-hidden="true">&#8981;</div>
-          <p>Awaiting process trace.</p>
+          <p>No process trace yet.</p>
         </div>
         <div class="trace-content" id="traceContent" style="display:none;"></div>
       </div>
@@ -1826,7 +1853,7 @@ function initExamples() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   RENDER: BEAD BOARD
+   RENDER: SIGNAL BOARD
    ════════════════════════════════════════════════════════════════════════════ */
 function renderBeadBoard(entities) {
   if (!entities || entities.length === 0) return;
@@ -2091,7 +2118,7 @@ function handleSSEEvent(event, outputEl) {
       state.entities = event.data || [];
       renderBeadBoard(state.entities);
       setPipelineStage(1);
-      dom.pipelineLabel.textContent = 'Declaration: Beads surfaced';
+      dom.pipelineLabel.textContent = 'Declaration: Signals surfaced';
       break;
 
     case 'graph':
@@ -2161,7 +2188,7 @@ async function runPipeline() {
   const text = dom.textarea.value.trim();
 
   if (!text) {
-    showError('Drop your brain dump first.');
+    showError('Add a reference brief first.');
     return;
   }
 
@@ -2184,7 +2211,7 @@ async function runPipeline() {
   dom.playBtn.querySelector('.btn-label').textContent = 'Analyzing...';
   dom.pipelineStatus.classList.add('active');
   setPipelineStage(1);
-  dom.pipelineLabel.textContent = 'Declaration: Surfacing beads...';
+  dom.pipelineLabel.textContent = 'Declaration: Surfacing signals...';
 
   const outputEl = dom.outputContentPre;
 
@@ -2264,7 +2291,7 @@ async function runPipeline() {
 }
 
 function resetPanels() {
-  // Beads
+  // Signals
   dom.beadsPlaceholder.style.display = 'flex';
   dom.beadGrid.style.display = 'none';
   dom.beadGrid.innerHTML = '';
