@@ -13,7 +13,8 @@ dist/
 build/
 
 # Local data (will be mounted as volume)
-.fugax/
+.elixis/
+.backups/
 
 # IDE
 .vscode/

@@ -8,6 +8,15 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+NON_PROJECT_SCAN_PARTS = {
+    ".git",
+    ".mypy_cache",
+    ".omx",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".worktrees",
+    "__pycache__",
+}
 
 
 class LandingParser(HTMLParser):
@@ -58,7 +67,11 @@ class TestDocsLanding(unittest.TestCase):
     def test_stale_working_names_are_not_exposed(self):
         checked_suffixes = {".md", ".txt", ".html", ".yaml", ".toml", ".py", ".yml"}
         for path in ROOT.rglob("*"):
-            if ".git" in path.parts or not path.is_file() or path.suffix not in checked_suffixes:
+            if (
+                NON_PROJECT_SCAN_PARTS.intersection(path.parts)
+                or not path.is_file()
+                or path.suffix not in checked_suffixes
+            ):
                 continue
             text = path.read_text(errors="ignore")
             stale_working_name = "soul" + "craft"
@@ -119,7 +132,7 @@ class TestDocsLanding(unittest.TestCase):
             ROOT / "elixis" / "templates" / "landing.html",
         ]
         blocked_terms = [
-            "Glass Bead Game",
+            " ".join(("Glass", "Bead", "Game")),
             "SOUL.md outputs",
             "translation checks",
             "MCP access",
