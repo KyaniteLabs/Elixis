@@ -75,12 +75,15 @@ All config is in `docker-compose.yml` environment variables:
 | `LLM_MODEL` | `Qwen3.5-0.8B-Q4_K_M.gguf` | Model file in llama.cpp |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` | secret | Cloud inference credentials when `LLM_PROVIDER=anthropic` |
 | `ADMIN_API_KEY` | secret | Required for diagnostics, run history, backups, and cache deletion |
+| `ELIXIS_DATA_DIR` | `/app/.elixis` | Persistent run, trace, and cache data directory |
+| `ELIXIS_BACKUP_DIR` | `/app/.elixis/backups` | Backup archive directory inside the persistent Docker volume |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
 | `VPS_HOST` | deploy target | Required by `scripts/deploy.sh` |
 
 ## Data
 
 Persistent data lives in the `elixis-data` Docker volume (`/app/.elixis` inside container).
+In-app backups are stored under `/app/.elixis/backups`, so archive files survive container replacement with the rest of the run data.
 
 ```bash
 # Inspect

@@ -1,9 +1,8 @@
 """Elixis MCP Server — stdio transport, zero external dependencies.
 
-Exposes Elixis's pipeline as MCP tools for Claude Code, Cursor,
-and any MCP-compatible AI assistant.
+Exposes Elixis's pipeline as tools for any MCP-compatible AI assistant.
 
-Usage in Claude Code settings:
+Usage in an MCP client config:
   {
     "mcpServers": {
       "elixis": {
@@ -21,6 +20,7 @@ import traceback
 from .entities import extract_entities
 from .naming import research_name
 from .patterns import build_pattern_graph
+from .process_trace import process_trace_from_state
 from .research import enrich_entities
 from .synthesis import synthesize_soulmd
 from .translate import translate_text
@@ -206,8 +206,9 @@ def _handle_tools_call(params):
         else:
             return {"content": [{"type": "text", "text": f"Unknown tool: {name}"}], "isError": True}
     except Exception as e:
+        traceback.print_exc(file=sys.stderr)
         return {
-            "content": [{"type": "text", "text": f"Error: {e}\n{traceback.format_exc()}"}],
+            "content": [{"type": "text", "text": f"Error: {e}"}],
             "isError": True,
         }
 
@@ -263,6 +264,7 @@ def _tool_run_game(args):
         "emergent_topic": graph.get("emergent_topic"),
         "emergent_theme": graph.get("emergent_theme"),
         "consensus_score": graph.get("consensus_score"),
+        "process_trace": process_trace_from_state(state, lens=lens),
         "output": output,
     }
     return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}

@@ -323,6 +323,18 @@ body {
   position: relative;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ── Header Bar ── */
 .header-bar {
   position: fixed;
@@ -1513,6 +1525,7 @@ Fleabag"
 
   <!-- ── Main Content ── -->
   <main id="main-content" class="main-content" role="main">
+    <h1 class="visually-hidden">Elixis AI identity, brand voice, design system, and naming generator</h1>
     <!-- Tab Bar -->
     <div class="tab-bar" role="tablist" aria-label="Analysis panels">
       <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-beads" id="tab-beads">

@@ -3,6 +3,7 @@
 Manages backup creation, rotation, and restoration of .elixis/ data.
 """
 
+import os
 import re
 import shutil
 import tarfile
@@ -22,15 +23,22 @@ MAX_BACKUP_SIZE_MB = 100
 def get_backup_dir() -> Path:
     """Get backup directory path."""
     base_dir = Path(__file__).parent.parent
-    backup_dir = base_dir / BACKUP_DIR
-    backup_dir.mkdir(exist_ok=True)
+    configured = os.environ.get("ELIXIS_BACKUP_DIR")
+    backup_dir = Path(configured) if configured else base_dir / BACKUP_DIR
+    if not backup_dir.is_absolute():
+        backup_dir = base_dir / backup_dir
+    backup_dir.mkdir(parents=True, exist_ok=True)
     return backup_dir
 
 
 def get_data_dir() -> Path:
     """Get data directory path."""
     base_dir = Path(__file__).parent.parent
-    return base_dir / ".elixis"
+    configured = os.environ.get("ELIXIS_DATA_DIR")
+    data_dir = Path(configured) if configured else base_dir / ".elixis"
+    if not data_dir.is_absolute():
+        data_dir = base_dir / data_dir
+    return data_dir
 
 
 def create_backup() -> Dict:

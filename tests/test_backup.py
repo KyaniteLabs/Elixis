@@ -105,6 +105,22 @@ class TestBackup(unittest.TestCase):
         self.assertIn("latest_backup", status)
         self.assertTrue(status["data_dir_exists"])
 
+    def test_backup_and_data_dirs_can_be_configured_by_environment(self):
+        """Deployment can place backups inside the persisted data volume."""
+        import elixis.backup as backup
+
+        configured_data = Path(self.temp_dir) / "volume" / ".elixis"
+        configured_backups = configured_data / "backups"
+        backup.get_data_dir = self.original_get_data_dir
+        backup.get_backup_dir = self.original_get_backup_dir
+        with unittest.mock.patch.dict(os.environ, {
+            "ELIXIS_DATA_DIR": str(configured_data),
+            "ELIXIS_BACKUP_DIR": str(configured_backups),
+        }):
+            self.assertEqual(backup.get_data_dir(), configured_data)
+            self.assertEqual(backup.get_backup_dir(), configured_backups)
+            self.assertTrue(configured_backups.exists())
+
     def test_cleanup_old_backups(self):
         """Cleanup removes old backups."""
         # Create backup

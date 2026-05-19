@@ -7,8 +7,6 @@ Uses LLM (Ollama) for synthesis when available, template fallback otherwise.
 
 from datetime import datetime
 from .llm import chat, chat_stream, is_available as llm_available
-from .traces import save_run
-
 # Template-based fallback content (used when no LLM is available)
 
 _VOICE_PROFILES = {
@@ -198,12 +196,6 @@ def synthesize_soulmd_stream(entities, graph, stage_timings=None):
             }
             yield {"type": "telemetry", "data": telemetry}
 
-            # Save run with full telemetry
-            save_run(
-                "", entities, graph, result,
-                stage_timings=timings,
-                telemetry=telemetry,
-            )
             yield {"type": "soulmd_done", "data": {
                 "length": len(result),
                 "source": "llm",

@@ -32,6 +32,10 @@ from elixis.logging_config import (
     set_request_id,
 )
 from elixis.naming import research_name
+from elixis.process_trace import (
+    llm_public_config as _llm_public_config,
+    process_trace_from_state as _process_trace_from_state,
+)
 from elixis.quality import validate_output
 from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
 from elixis.translate import (
@@ -110,112 +114,6 @@ def _lens_error(lens):
     return f"Invalid lens '{lens}'. Must be one of: {', '.join(sorted(VALID_LENSES))}"
 
 
-def _llm_public_config():
-    """Return model configuration safe to expose in per-run process traces."""
-    from elixis.llm import cfg
-
-    parsed = urlparse(cfg.base_url or "")
-    host = parsed.netloc or parsed.path or ""
-    return {
-        "provider": cfg.provider,
-        "model": cfg.default_model,
-        "base_host": host,
-        "classify_model": cfg.classify_model or cfg.default_model,
-    }
-
-
-def _process_trace_from_state(state, lens="identity"):
-    """Build an auditable public trace for a pipeline run."""
-    graph = state.metadata.get("pattern_graph", {})
-    extraction = state.metadata.get("extraction_telemetry", {})
-    enrichment = state.metadata.get("enrichment_telemetry", {})
-    pattern_telemetry = state.metadata.get("pattern_telemetry", {})
-    classification = pattern_telemetry.get("llm_classification", {})
-    timings = state.timings or {}
-
-    entities = []
-    for bead in state.beads:
-        data = bead.to_dict()
-        entities.append({
-            "name": data.get("canonical") or data.get("name"),
-            "type": data.get("type"),
-            "themes": data.get("themes", [])[:8],
-            "traits": data.get("traits", [])[:6],
-            "domains": data.get("domains", [])[:5],
-            "confidence": data.get("confidence"),
-            "provenance": data.get("provenance"),
-        })
-
-    return {
-        "visibility": (
-            "Auditable process trace. Internal token-level reasoning is not exposed; "
-            "this shows the observable extraction, scoring, evidence, timings, and model metadata."
-        ),
-        "lens": lens,
-        "model": _llm_public_config(),
-        "phases": [
-            {
-                "name": "declaration",
-                "method": "LLM entity extraction with heuristic fallback",
-                "duration_ms": timings.get("declaration_ms"),
-                "source": extraction.get("source"),
-                "entity_count": extraction.get("entity_count", len(entities)),
-                "model": extraction.get("model"),
-                "provider": extraction.get("provider"),
-                "tokens_in": extraction.get("tokens_in"),
-                "tokens_out": extraction.get("tokens_out"),
-            },
-            {
-                "name": "elaboration",
-                "method": "External/curated enrichment plus knowledge-base cross-reference",
-                "duration_ms": timings.get("elaboration_ms"),
-                "source": enrichment.get("source") or "research+knowledge_base",
-            },
-            {
-                "name": "connection",
-                "method": "Pattern graph: LLM classification blended with keyword/type/knowledge scoring",
-                "duration_ms": timings.get("connection_ms"),
-                "source": "llm+rules" if pattern_telemetry.get("llm_available") else "rules",
-                "pattern_count": pattern_telemetry.get("pattern_count", len(graph.get("patterns", []))),
-                "bridge_count": pattern_telemetry.get("bridge_count", len(graph.get("bridges", []))),
-                "model": classification.get("model"),
-                "provider": classification.get("provider"),
-                "tokens_in": classification.get("tokens_in"),
-                "tokens_out": classification.get("tokens_out"),
-            },
-            {
-                "name": "resolution",
-                "method": f"{lens} lens document generation",
-                "duration_ms": timings.get("resolution_ms") or timings.get("stage3_synthesis_ms"),
-            },
-        ],
-        "pattern_matching": {
-            "method": "0.7 LLM classification + 0.3 keyword/theme/type/knowledge scoring",
-            "llm_available": pattern_telemetry.get("llm_available"),
-            "classification_source": classification.get("source"),
-            "classification_error": classification.get("error"),
-            "top_patterns": [
-                {
-                    "id": p.get("id"),
-                    "name": p.get("name"),
-                    "probability": p.get("probability"),
-                    "supporting_entities": p.get("supporting_entities"),
-                    "sub_patterns": p.get("sub_patterns", [])[:3],
-                }
-                for p in graph.get("patterns", [])[:8]
-            ],
-            "bridges": graph.get("bridges", [])[:5],
-            "entity_scores": graph.get("entity_scores", [])[:8],
-            "analysis_notes": graph.get("analysis_notes", [])[:6],
-            "emergent_topic": graph.get("emergent_topic"),
-            "emergent_theme": graph.get("emergent_theme"),
-            "consensus_score": graph.get("consensus_score"),
-        },
-        "entities": entities,
-        "timings_ms": timings,
-    }
-
-
 def run_pipeline(brain_dump):
     """Run the full pipeline on a brain dump string using the GameEngine."""
     if not brain_dump or len(brain_dump.strip()) < 3:
@@ -233,7 +131,8 @@ def run_pipeline(brain_dump):
     save_run(brain_dump,
              [b.to_dict() for b in state.beads],
              graph, output,
-             stage_timings=state.timings)
+             stage_timings=state.timings,
+             lens="identity")
 
     return {
         "stage1_entities": [b.to_dict() for b in state.beads],
@@ -261,10 +160,16 @@ def run_game_pipeline(brain_dump, lens="identity"):
         return {"error": str(e)}
 
     state = engine.state
+    graph = state.metadata.get("pattern_graph", {})
+    save_run(brain_dump,
+             [b.to_dict() for b in state.beads],
+             graph, output,
+             stage_timings=state.timings,
+             lens=lens)
     return {
         "lens": lens,
         "stage1_entities": [b.to_dict() for b in state.beads],
-        "stage2_graph": state.metadata.get("pattern_graph", {}),
+        "stage2_graph": graph,
         "output": output,
         "stage3_output": output,
         "stage3_soulmd": output if lens == "identity" else None,
@@ -816,6 +721,8 @@ class Handler(BaseHTTPRequestHandler):
 
             engine = GameEngine()
             timings = {}
+            output_parts = []
+            telemetry = None
 
             def _send(event):
                 if isinstance(event, dict):
@@ -849,8 +756,24 @@ class Handler(BaseHTTPRequestHandler):
                 for event in engine.resolve_stream(lens=lens, stage_timings=timings):
                     if time.time() > deadline:
                         break
+                    if isinstance(event, dict) and event.get("type") == "soulmd_token":
+                        output_parts.append(event.get("content", ""))
+                    elif isinstance(event, dict) and event.get("type") == "telemetry":
+                        telemetry = event.get("data")
                     _send(event)
                     deadline = time.time() + SSE_WRITE_TIMEOUT
+
+                output_text = "".join(output_parts)
+                if state and output_text:
+                    save_run(
+                        brain_dump,
+                        [b.to_dict() for b in state.beads],
+                        state.metadata.get("pattern_graph", {}),
+                        output_text,
+                        stage_timings=state.timings or timings,
+                        telemetry=telemetry,
+                        lens=lens,
+                    )
 
             except (BrokenPipeError, ConnectionResetError):
                 logger.warning(f"[{rid}] Client disconnected during game stream")
@@ -880,6 +803,8 @@ class Handler(BaseHTTPRequestHandler):
         deadline = time.time() + SSE_WRITE_TIMEOUT
         state = None
         graph = {}
+        output_parts = []
+        telemetry = None
 
         try:
             engine = GameEngine()
@@ -910,13 +835,20 @@ class Handler(BaseHTTPRequestHandler):
                 if time.time() > deadline:
                     logger.warning(f"[{rid}] SSE write timeout exceeded")
                     break
+                if isinstance(event, dict) and event.get("type") == "soulmd_token":
+                    output_parts.append(event.get("content", ""))
+                elif isinstance(event, dict) and event.get("type") == "telemetry":
+                    telemetry = event.get("data")
                 _send(event)
                 deadline = time.time() + SSE_WRITE_TIMEOUT
 
+            output_text = "".join(output_parts)
             save_run(brain_dump,
                      [b.to_dict() for b in state.beads],
-                     graph, "",
-                     stage_timings=timings)
+                     graph, output_text,
+                     stage_timings=state.timings or timings,
+                     telemetry=telemetry,
+                     lens="identity")
 
         except (BrokenPipeError, ConnectionResetError):
             logger.warning(f"[{rid}] Client disconnected during SSE stream")

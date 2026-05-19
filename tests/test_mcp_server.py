@@ -27,6 +27,7 @@ class _FakeGameEngine:
                     "consensus_score": 0.82,
                 }
             },
+            timings={"declaration_ms": 1, "connection_ms": 2, "resolution_ms": 3},
         )
 
     def run_full(self, brain_dump, lens="identity"):
@@ -62,7 +63,21 @@ class TestMcpServer(unittest.TestCase):
         self.assertEqual(payload["entity_count"], 1)
         self.assertEqual(payload["thread_count"], 2)
         self.assertEqual(payload["top_patterns"], ["Wisdom", "Power"])
+        self.assertEqual(payload["process_trace"]["lens"], "brand")
+        self.assertIn("pattern_matching", payload["process_trace"])
         self.assertIn("# Brand Output", payload["output"])
+
+    @patch("elixis.mcp_server._tool_extract_entities", side_effect=RuntimeError("boom"))
+    def test_tool_call_errors_do_not_return_tracebacks(self, _mock_tool):
+        result = mcp_server._handle_tools_call({
+            "name": "extract_entities",
+            "arguments": {"text": "Athena and Batman as references"},
+        })
+
+        self.assertTrue(result["isError"])
+        text = result["content"][0]["text"]
+        self.assertIn("Error: boom", text)
+        self.assertNotIn("Traceback", text)
 
     @patch("elixis.mcp_server.extract_entities", return_value=[])
     def test_extract_entities_uses_sanitized_text(self, mock_extract):

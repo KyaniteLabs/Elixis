@@ -89,6 +89,7 @@ def _run_server(port: int) -> Any:
 
 def _cmd_run(args: argparse.Namespace) -> int:
     from .engine import GameEngine
+    from .process_trace import process_trace_from_state
     from .validation import validate_brain_dump
 
     text = _read_text(args)
@@ -111,6 +112,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
             "emergent_topic": graph.get("emergent_topic"),
             "emergent_theme": graph.get("emergent_theme"),
             "consensus_score": graph.get("consensus_score"),
+            "process_trace": process_trace_from_state(state, lens=args.lens),
             "output": output,
         })
     else:
