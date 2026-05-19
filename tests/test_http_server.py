@@ -524,7 +524,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-4.5",
+                            "model": "glm-5.1",
                         },
                     },
                 }
@@ -535,9 +535,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-4.5",
+            "model": "glm-5.1",
             "base_host": "api.z.ai",
-            "classify_model": "glm-4.5",
+            "classify_model": "glm-5.1",
         }
         with (
             patch("app.GameEngine", FakeEngine),
@@ -549,7 +549,7 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(result["output"], result["stage3_output"])
         self.assertEqual(result["stage3_output"], result["stage3_soulmd"])
         self.assertEqual(result["process_trace"]["lens"], "identity")
-        self.assertEqual(result["process_trace"]["model"]["model"], "glm-4.5")
+        self.assertEqual(result["process_trace"]["model"]["model"], "glm-5.1")
         self.assertEqual(
             result["process_trace"]["pattern_matching"]["method"],
             "0.7 LLM classification + 0.3 keyword/theme/type/knowledge scoring",
@@ -610,7 +610,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-4.5",
+                            "model": "glm-5.1",
                             "tokens_in": 100,
                             "tokens_out": 40,
                         },
@@ -623,9 +623,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-4.5",
+            "model": "glm-5.1",
             "base_host": "api.z.ai",
-            "classify_model": "glm-4.5",
+            "classify_model": "glm-5.1",
         }
         with (
             patch("app.GameEngine", FakeEngine),
@@ -638,9 +638,9 @@ class TestGamePayloads(unittest.TestCase):
         self.assertIsNone(result["stage3_soulmd"])
         trace = result["process_trace"]
         self.assertEqual(trace["lens"], "brand")
-        self.assertEqual(trace["model"]["model"], "glm-4.5")
+        self.assertEqual(trace["model"]["model"], "glm-5.1")
         self.assertEqual(trace["phases"][2]["name"], "connection")
-        self.assertEqual(trace["phases"][2]["model"], "glm-4.5")
+        self.assertEqual(trace["phases"][2]["model"], "glm-5.1")
         self.assertEqual(trace["phases"][2]["tokens_in"], 100)
         self.assertEqual(trace["pattern_matching"]["top_patterns"][0]["probability"], 0.88)
         self.assertEqual(trace["pattern_matching"]["bridges"][0]["entity"], "Athena")
@@ -681,7 +681,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-4.5",
+                            "model": "glm-5.1",
                         },
                     },
                 }
@@ -705,9 +705,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-4.5",
+            "model": "glm-5.1",
             "base_host": "api.z.ai",
-            "classify_model": "glm-4.5",
+            "classify_model": "glm-5.1",
         }
         handler = _make_handler("POST", "/api/game/stream", body={"text": "Batman and Athena", "lens": "brand"})
 
@@ -726,7 +726,7 @@ class TestGamePayloads(unittest.TestCase):
         self.assertIn("process_trace", event_types)
         trace_event = next(event for event in events if event["type"] == "process_trace")
         self.assertEqual(trace_event["data"]["lens"], "brand")
-        self.assertEqual(trace_event["data"]["model"]["model"], "glm-4.5")
+        self.assertEqual(trace_event["data"]["model"]["model"], "glm-5.1")
         self.assertEqual(
             trace_event["data"]["pattern_matching"]["top_patterns"][0]["name"],
             "Wisdom & Knowledge",
