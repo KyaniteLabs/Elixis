@@ -117,7 +117,7 @@ python -m unittest discover tests/ -v
 - Mapping a constellation of cultural references into beads, threads, patterns, and tensions.
 - Resolving the same pattern graph into identity, brand voice, design direction, or naming options.
 - Creating AI agent personas for OpenClaw, SoulClaw, or any SOUL.md-compatible system.
-- Preserving creative reasoning instead of losing it in a chat transcript.
+- Inspecting process evidence: model, phases, pattern scores, entity support, bridges, timings, and fallbacks.
 
 ## Works With
 
