@@ -105,12 +105,12 @@ jobs:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
           GHCR_TOKEN: ${{ github.token }}
-          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         run: |
           if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ] || [ -z "${ADMIN_API_KEY}" ]; then
             echo "VPS deploy secrets are not configured; skipping deploy."
             exit 0
           fi
+          IMAGE_REF="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
           deploy_env="$(mktemp)"
@@ -139,7 +139,21 @@ jobs:
             trap 'rm -f /tmp/elixis-deploy-env' EXIT
             cd /docker/elixis
             source /tmp/elixis-deploy-env
+            touch .env
+            if grep -q '^ELIXIS_IMAGE=' .env; then
+              tmp_env="$(mktemp)"
+              sed "s|^ELIXIS_IMAGE=.*|ELIXIS_IMAGE=${ELIXIS_IMAGE}|" .env > "${tmp_env}"
+              cat "${tmp_env}" > .env
+              rm -f "${tmp_env}"
+            else
+              printf '\nELIXIS_IMAGE=%s\n' "${ELIXIS_IMAGE}" >> .env
+            fi
             docker compose pull elixis
             docker compose up -d --no-build --remove-orphans
+            actual_image="$(docker inspect elixis --format '{{.Config.Image}}')"
+            if [ "${actual_image}" != "${ELIXIS_IMAGE}" ]; then
+              echo "::error::elixis is running ${actual_image}, expected ${ELIXIS_IMAGE}"
+              exit 1
+            fi
             docker system prune -f
           EOF
