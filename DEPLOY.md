@@ -47,7 +47,7 @@ ADMIN_API_KEY="<long-random-token>" docker compose up -d --build
 
 ## CI/CD
 
-Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, copies `docker-compose.yml` to the VPS, logs the VPS into GHCR, and starts Compose with `ELIXIS_IMAGE` set to the pushed image.
+Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, copies `docker-compose.yml` to the VPS, logs the VPS into GHCR, persists `ELIXIS_IMAGE` in `/docker/elixis/.env` to the pushed SHA image, starts Compose, and fails the deploy if the running `elixis` container does not report that exact image.
 
 Required secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `ADMIN_API_KEY`.
 
