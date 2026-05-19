@@ -6,6 +6,7 @@ from elixis.entities import (
     _infer_type,
     _parse_line_entity,
     _heuristic_extract,
+    _salient_phrase_entities,
     extract_entities,
     _llm_extract_entities,
 )
@@ -188,6 +189,25 @@ class TestHeuristicExtract:
         assert "The" not in names
 
 
+class TestSalientPhraseEntities:
+    def test_extracts_aesthetic_and_value_phrases(self):
+        result = _salient_phrase_entities(
+            "Athena, Batman, kyanite blue, operator clarity, ritual tools, calm exact systems",
+            existing={"athena", "batman"},
+        )
+        names = {e["canonical"] for e in result}
+        assert "kyanite blue" in names
+        assert "operator clarity" in names
+        assert "ritual tools" in names
+        assert "calm exact systems" in names
+
+    def test_skips_existing_phrases(self):
+        result = _salient_phrase_entities("operator clarity, ritual tools", existing={"operator clarity"})
+        names = {e["canonical"] for e in result}
+        assert "operator clarity" not in names
+        assert "ritual tools" in names
+
+
 # ---------------------------------------------------------------------------
 # _llm_extract_entities (mocked LLM)
 # ---------------------------------------------------------------------------
@@ -343,6 +363,20 @@ class TestExtractEntities:
         result = extract_entities("I like Mozart")
         assert len(result) == 1
         assert result[0]["canonical"] == "Mozart"
+
+    @patch("elixis.entities._llm_extract_entities")
+    def test_augments_llm_with_salient_concepts(self, mock_llm):
+        mock_llm.return_value = [
+            {"canonical": "Athena", "original": "Athena", "type": "mythological",
+             "source": "", "themes": ["wisdom"], "traits": [], "confidence": 0.95,
+             "description": "", "related": []},
+        ]
+        result = extract_entities("Athena, kyanite blue, operator clarity, ritual tools")
+        names = {e["canonical"] for e in result}
+        assert "Athena" in names
+        assert "kyanite blue" in names
+        assert "operator clarity" in names
+        assert "ritual tools" in names
 
     @patch("elixis.entities._llm_extract_entities")
     def test_llm_telemetry_propagated(self, mock_llm):

@@ -36,7 +36,8 @@ def _llm_extract_entities(text, telemetry=None):
     suffix = "\n... [text truncated for analysis]" if len(raw) > _MAX_EXTRACT_CHARS else ""
 
     system = (
-        "You are a cultural reference analyzer. Extract entities from text. "
+        "You are a cultural reference analyzer. Extract named references, "
+        "aesthetic cues, values, motifs, constraints, and salient concepts from text. "
         "Respond with ONLY a JSON array. No markdown, no explanation."
     )
 
@@ -46,7 +47,12 @@ def _llm_extract_entities(text, telemetry=None):
     from .bead import VALID_THEMES
     themes_list = ", ".join(sorted(VALID_THEMES))
 
-    user = f"""Extract all named references from this text. Fix any typos in names.
+    user = f"""Extract all meaningful references and cues from this text. Include:
+- named people, characters, works, places, movements, and mythological figures
+- aesthetic phrases, values, rituals, tools, constraints, colors, and design motifs
+- short concept phrases that materially shape the identity/brand/design direction
+
+Fix any typos in names.
 
 For each entity, return:
 - name: canonical name (corrected if misspelled)
@@ -432,6 +438,101 @@ def _heuristic_extract(text):
     return entities
 
 
+_SALIENT_STOPWORDS = {
+    "and", "or", "the", "a", "an", "with", "for", "from", "into", "onto",
+    "after", "before", "this", "that", "these", "those", "things", "stuff",
+}
+
+_SALIENT_THEME_HINTS = {
+    "wisdom": {
+        "clarity", "system", "systems", "exact", "logic", "reason", "structure",
+        "framework", "operator", "analysis", "knowledge", "calm",
+    },
+    "creation": {
+        "design", "grid", "grids", "craft", "tool", "tools", "color", "blue",
+        "lantern", "letter", "letters", "kitchen", "aesthetic", "studio",
+    },
+    "connection": {
+        "community", "neighbor", "neighborly", "trust", "tea", "shared",
+        "garden", "gardens", "home", "warm", "repair",
+    },
+    "spiritual": {"ritual", "sacred", "ceremony", "meaning", "faith", "prayer"},
+    "power": {
+        "power", "market", "markets", "deal", "deals", "chrome", "granite",
+        "ambition", "authority", "command",
+    },
+    "outsider": {"exile", "forbidden", "midnight", "wolf", "wolf-pack", "edge"},
+    "shadow": {"black", "dark", "midnight", "forbidden", "shadow", "neon"},
+    "reformer": {"clarity", "exact", "system", "systems", "standard", "order"},
+}
+
+
+def _infer_salient_themes(phrase):
+    words = set(re.findall(r"[a-z0-9-]+", phrase.lower()))
+    themes = []
+    for theme, hints in _SALIENT_THEME_HINTS.items():
+        if words & hints:
+            themes.append(theme)
+    return themes[:4]
+
+
+def _clean_salient_phrase(raw):
+    phrase = raw.strip()
+    phrase = re.sub(r"^[\s*\-•]*(?:\d+[.\):]\s*)?", "", phrase)
+    phrase = re.sub(r"\s+", " ", phrase)
+    phrase = phrase.strip(" .,:;!?\"'()[]{}")
+    phrase = re.sub(r"^(?:and|or|plus|also)\s+", "", phrase, flags=re.IGNORECASE)
+    return phrase.strip()
+
+
+def _phrase_seen(phrase, seen):
+    key = phrase.lower()
+    if key in seen:
+        return True
+    return any(key in existing or existing in key for existing in seen if len(existing) > 4)
+
+
+def _salient_phrase_entities(text, existing=None, limit=8):
+    """Extract non-named concepts/aesthetic cues the LLM may omit."""
+    existing = set(existing or set())
+    additions = []
+
+    for raw in re.split(r"[,;\n\r]+", text):
+        phrase = _clean_salient_phrase(raw)
+        if not phrase:
+            continue
+        key = phrase.lower()
+        words = [w for w in re.findall(r"[A-Za-z0-9-]+", phrase) if w]
+        lowered = [w.lower() for w in words]
+        if len(words) < 2 or len(words) > 6:
+            continue
+        if len(key) < 5 or len(key) > 80:
+            continue
+        if all(w in _SALIENT_STOPWORDS for w in lowered):
+            continue
+        if _phrase_seen(phrase, existing):
+            continue
+
+        themes = _infer_salient_themes(phrase)
+        additions.append({
+            "original": phrase,
+            "canonical": phrase,
+            "source": "",
+            "type": "concept",
+            "description": "Salient concept, value, constraint, or aesthetic cue from the input.",
+            "themes": themes,
+            "traits": [phrase.lower()],
+            "related": [],
+            "confidence": 0.72 if themes else 0.62,
+            "provenance": "first-hand",
+        })
+        existing.add(key)
+        if len(additions) >= limit:
+            break
+
+    return additions
+
+
 def extract_entities(text, telemetry=None):
     """Main extraction pipeline. Uses LLM with heuristic fallback.
 
@@ -459,12 +560,17 @@ def extract_entities(text, telemetry=None):
 
     if needs_heuristic:
         entities = _heuristic_extract(text)
+        seen = {e.get("canonical", "").lower() for e in entities}
+        additions = _salient_phrase_entities(text, seen)
+        if additions:
+            entities.extend(additions)
         duration_ms = int((time.time() - t0) * 1000)
         if telemetry is not None:
             telemetry.update({
                 "source": "heuristic",
                 "duration_ms": duration_ms,
                 "entity_count": len(entities),
+                "salient_phrase_count": len(additions),
                 "input_length": len(text),
                 "llm_attempted": True,
                 "llm_source": llm_tele.get("source", "unknown"),
@@ -473,6 +579,12 @@ def extract_entities(text, telemetry=None):
         logger.info("Fell back to heuristic extraction: %d entities in %dms (LLM source: %s)",
                     len(entities), duration_ms, llm_tele.get("source", "unknown"))
     else:
+        seen = {e.get("canonical", "").lower() for e in entities}
+        additions = _salient_phrase_entities(text, seen)
+        if additions:
+            entities.extend(additions)
+            llm_tele["salient_phrase_count"] = len(additions)
+            llm_tele["entity_count"] = len(entities)
         duration_ms = int((time.time() - t0) * 1000)
         if telemetry is not None:
             telemetry.update(llm_tele)

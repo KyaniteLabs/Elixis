@@ -16,12 +16,16 @@ _REQUIRED_SECTIONS = {
         "Pet Peeves",
     ],
     "brand": [
+        "Source Anchors",
+        "Pattern Rationale",
         "Core Identity",
         "Voice Attributes",
         "Tone Spectrum",
         "Vocabulary",
     ],
     "design": [
+        "Source Anchors",
+        "Pattern Rationale",
         "Color Palette",
         "Typography",
         "Spacing",
