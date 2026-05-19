@@ -162,6 +162,19 @@ class TestDocsLanding(unittest.TestCase):
         self.assertIn("<h1", html)
         self.assertIn("Elixis AI identity, brand voice, design system, and naming generator", html)
 
+    def test_live_landing_uses_readable_operator_surface_scale(self):
+        html = (ROOT / "elixis" / "templates" / "landing.html").read_text()
+
+        self.assertIn("--font-size-base: 1rem", html)
+        self.assertIn("--sidebar-width: clamp(360px, 30vw, 430px)", html)
+        self.assertIn("--header-height: 64px", html)
+        self.assertIn("Signals <span", html)
+        self.assertIn("No extracted signals yet.", html)
+        self.assertIn("width: min(760px, 100%)", html)
+        self.assertNotIn("--font-size-base: 0.8125rem", html)
+        self.assertNotIn("--sidebar-width: 300px", html)
+        self.assertNotIn("min(520px, calc(100dvh - 180px))", html)
+
 
 if __name__ == "__main__":
     unittest.main()
