@@ -1284,9 +1284,9 @@ body {
 }
 
 .trace-section {
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--bg-glass);
+  background: rgba(10, 14, 26, 0.82);
   padding: var(--space-lg);
 }
 
@@ -1309,9 +1309,9 @@ body {
 .trace-meta-item,
 .trace-phase-item,
 .trace-evidence-item {
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(18, 24, 42, 0.72);
   padding: var(--space-sm);
   min-width: 0;
 }
@@ -1320,7 +1320,7 @@ body {
   display: block;
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  color: var(--text-dim);
+  color: var(--text-secondary);
   font-weight: 800;
   letter-spacing: 0.45px;
   margin-bottom: 4px;
@@ -1342,7 +1342,7 @@ body {
 
 .trace-phase-method {
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -1366,8 +1366,9 @@ body {
 .trace-tag {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-secondary);
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.18);
   border-radius: var(--radius-sm);
   padding: 2px 6px;
 }
@@ -2001,6 +2002,10 @@ function renderProcessTrace() {
   const entities = (trace.entities || []).slice(0, 8);
   const bridges = (trace.pattern_matching?.bridges || []).slice(0, 5);
   const notes = trace.pattern_matching?.analysis_notes || [];
+  const connectionPhase = (trace.phases || []).find((phase) => phase.name === 'connection') || {};
+  const classificationSource = trace.pattern_matching?.classification_source || connectionPhase.source || 'unknown';
+  const classificationError = trace.pattern_matching?.classification_error;
+  const classificationBudget = trace.pattern_matching?.classification_max_tokens || connectionPhase.max_tokens;
 
   dom.traceContent.innerHTML = `
     <section class="trace-section" aria-label="Model">
@@ -2052,6 +2057,18 @@ function renderProcessTrace() {
         <div class="trace-meta-item">
           <span class="trace-label">Consensus</span>
           <span class="trace-value">${fmtPct(trace.pattern_matching?.consensus_score)}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Classifier</span>
+          <span class="trace-value">${esc(classificationSource)}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Budget</span>
+          <span class="trace-value">${classificationBudget ? esc(String(classificationBudget)) : '—'}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Error</span>
+          <span class="trace-value">${classificationError ? esc(classificationError) : 'none'}</span>
         </div>
       </div>
     </section>

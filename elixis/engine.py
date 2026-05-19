@@ -290,7 +290,7 @@ class GameEngine:
             state.tensions.append({
                 "type": "essential_tension",
                 "description": f"Low consensus ({graph['consensus_score']:.0%}) — "
-                               f"identity draws from diverse, equally weighted influences",
+                               f"synthesis draws from diverse, equally weighted influences",
                 "patterns": [p["name"] for p in graph.get("patterns", [])[:3]],
             })
 

@@ -613,6 +613,7 @@ class TestGamePayloads(unittest.TestCase):
                             "model": "glm-5.1",
                             "tokens_in": 100,
                             "tokens_out": 40,
+                            "max_tokens": 2492,
                         },
                     },
                 }
@@ -643,6 +644,8 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(trace["phases"][2]["name"], "connection")
         self.assertEqual(trace["phases"][2]["model"], "glm-5.1")
         self.assertEqual(trace["phases"][2]["tokens_in"], 100)
+        self.assertEqual(trace["phases"][2]["max_tokens"], 2492)
+        self.assertEqual(trace["pattern_matching"]["classification_max_tokens"], 2492)
         self.assertEqual(trace["pattern_matching"]["top_patterns"][0]["probability"], 0.88)
         self.assertEqual(trace["pattern_matching"]["bridges"][0]["entity"], "Athena")
         self.assertEqual(trace["pattern_matching"]["consensus_score"], 0.75)

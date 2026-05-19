@@ -77,6 +77,7 @@ def process_trace_from_state(state, lens="identity"):
                 "provider": classification.get("provider"),
                 "tokens_in": classification.get("tokens_in"),
                 "tokens_out": classification.get("tokens_out"),
+                "max_tokens": classification.get("max_tokens"),
             },
             {
                 "name": "resolution",
@@ -89,6 +90,7 @@ def process_trace_from_state(state, lens="identity"):
             "llm_available": pattern_telemetry.get("llm_available"),
             "classification_source": classification.get("source"),
             "classification_error": classification.get("error"),
+            "classification_max_tokens": classification.get("max_tokens"),
             "top_patterns": [
                 {
                     "id": p.get("id"),
