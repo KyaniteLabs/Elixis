@@ -100,6 +100,25 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
         self.assertEqual(result["Batman"]["guardian"], 0.82)
         self.assertEqual(result["Batman"]["shadow"], 0.41)
 
+    @patch("elixis.llm.chat")
+    def test_expands_classification_token_budget_for_many_entities(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"Entity 0": {"wisdom": 0.7}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 12,
+        }
+        entities = [
+            {"canonical": f"Entity {i}", "type": "concept", "themes": [], "traits": []}
+            for i in range(11)
+        ]
+
+        llm_classify_patterns(entities)
+
+        self.assertGreaterEqual(mock_chat.call_args.kwargs["max_tokens"], 2900)
+        self.assertIn("compact minified JSON", mock_chat.call_args.args[0][0]["content"])
+
 
 if __name__ == "__main__":
     unittest.main()

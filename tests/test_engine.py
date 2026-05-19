@@ -408,6 +408,8 @@ class TestConnectDomains:
         engine.elaborate()
         state = engine.connect_domains()
         assert len(state.tensions) == 1
+        assert "synthesis draws from diverse" in state.tensions[0]["description"]
+        assert "identity draws" not in state.tensions[0]["description"]
         assert state.tensions[0]["type"] == "essential_tension"
 
     def test_no_tension_when_consensus_high(self):

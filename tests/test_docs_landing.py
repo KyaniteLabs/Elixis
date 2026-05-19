@@ -159,6 +159,10 @@ class TestDocsLanding(unittest.TestCase):
         self.assertIn("process_trace", html)
         self.assertIn("Pattern Matching", html)
         self.assertIn("trace.pattern_matching?.method", html)
+        self.assertIn("classification_source", html)
+        self.assertIn("classification_max_tokens", html)
+        self.assertIn("rgba(10, 14, 26, 0.82)", html)
+        self.assertIn("rgba(18, 24, 42, 0.72)", html)
         self.assertIn("<h1", html)
         self.assertIn("Elixis AI identity, brand voice, design system, and naming generator", html)
 

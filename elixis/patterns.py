@@ -423,14 +423,18 @@ def llm_classify_patterns(entities, telemetry=None):
 
     system = (
         "Score entities against archetypal patterns 0.0-1.0. "
-        "Only include scores > 0.15. Output JSON only, no explanation."
+        "Return compact minified JSON only, no markdown and no explanation. "
+        "Use this shape: {\"Entity Name\":{\"pattern_id\":0.8}}. "
+        "Only include the strongest 2-5 scores above 0.15 per entity."
     )
 
     user = f"""Patterns: {', '.join(p['id'] for p in PATTERNS)}
 
 {entity_list}
 
-[{{"entity":"name","scores":{{"pattern":0.8}}}}]"""
+{{"entity name":{{"pattern":0.8}}}}"""
+
+    classification_max_tokens = min(4096, max(1024, 512 + (len(entities[:15]) * 220)))
 
     result = chat(
         [
@@ -438,7 +442,7 @@ def llm_classify_patterns(entities, telemetry=None):
             {"role": "user", "content": user},
         ],
         model=CLASSIFY_MODEL,
-        max_tokens=512,
+        max_tokens=classification_max_tokens,
         think=False,
     )
 
@@ -477,7 +481,9 @@ def llm_classify_patterns(entities, telemetry=None):
         if telemetry is not None:
             telemetry.update({
                 "source": "parse_failure", "duration_ms": duration_ms,
-                "response_length": len(response), **llm_meta,
+                "response_length": len(response),
+                "max_tokens": classification_max_tokens,
+                **llm_meta,
             })
         raise RuntimeError("LLM pattern classification returned invalid JSON")
 
@@ -487,7 +493,9 @@ def llm_classify_patterns(entities, telemetry=None):
         if telemetry is not None:
             telemetry.update({
                 "source": "schema_failure", "duration_ms": duration_ms,
-                "response_length": len(response), **llm_meta,
+                "response_length": len(response),
+                "max_tokens": classification_max_tokens,
+                **llm_meta,
             })
         raise RuntimeError("LLM pattern classification returned unsupported JSON schema")
 
@@ -497,6 +505,7 @@ def llm_classify_patterns(entities, telemetry=None):
             "duration_ms": duration_ms,
             "entity_count": len(classifications),
             "items_in_raw_response": len(data) if hasattr(data, "__len__") else 0,
+            "max_tokens": classification_max_tokens,
             **llm_meta,
         })
     logger.info("LLM classified %d entities in %dms (tokens: %d→%d)",
@@ -737,12 +746,12 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
     if len(result_patterns) > 3:
         notes.append(
             f"Wide pattern distribution ({len(result_patterns)} patterns) "
-            f"suggests a multifaceted identity"
+            f"suggests a multifaceted synthesis"
         )
     if consensus > 0.6:
-        notes.append("High consensus - identity has a clear core theme")
+        notes.append("High consensus - synthesis has a clear core theme")
     elif consensus < 0.3:
-        notes.append("Low consensus - identity draws from diverse, equally weighted influences")
+        notes.append("Low consensus - synthesis draws from diverse, equally weighted influences")
     if llm_scores:
         notes.append("Classification: LLM-assisted (0.7) + keyword analysis (0.3)")
     else:
