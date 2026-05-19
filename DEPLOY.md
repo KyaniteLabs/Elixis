@@ -49,7 +49,8 @@ ADMIN_API_KEY="<long-random-token>" docker compose up -d --build
 
 Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes the container image, copies `docker-compose.yml` to the VPS, logs the VPS into GHCR, persists `ELIXIS_IMAGE` in `/docker/elixis/.env` to the pushed SHA image, starts Compose, and fails the deploy if the running `elixis` container does not report that exact image.
 
-Required secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `ADMIN_API_KEY`.
+Required production environment secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `ADMIN_API_KEY`.
+The deploy job intentionally fails when any of these are missing. A green deploy means the workflow reached the VPS and verified the running container image; it is not allowed to silently skip production deployment.
 
 ## Monitoring
 

@@ -107,8 +107,9 @@ jobs:
           GHCR_TOKEN: ${{ github.token }}
         run: |
           if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ] || [ -z "${ADMIN_API_KEY}" ]; then
-            echo "VPS deploy secrets are not configured; skipping deploy."
-            exit 0
+            echo "::error::VPS deploy secrets are not configured; refusing to report a successful deploy."
+            echo "::error::Set VPS_HOST, VPS_USER, VPS_SSH_KEY, and ADMIN_API_KEY in the production environment secrets."
+            exit 1
           fi
           IMAGE_REF="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
