@@ -20,6 +20,8 @@ services:
       - ANTHROPIC_DEFAULT_HAIKU_MODEL=${ANTHROPIC_DEFAULT_HAIKU_MODEL:-}
       - ANTHROPIC_DEFAULT_SONNET_MODEL=${ANTHROPIC_DEFAULT_SONNET_MODEL:-}
       - ADMIN_API_KEY=${ADMIN_API_KEY:?set ADMIN_API_KEY before starting Elixis}
+      - ELIXIS_DATA_DIR=/app/.elixis
+      - ELIXIS_BACKUP_DIR=/app/.elixis/backups
       - CORS_ORIGIN=https://elixis.kyanitelabs.tech
       - HTTPS=1
       - PYTHONUNBUFFERED=1

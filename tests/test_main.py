@@ -92,10 +92,14 @@ class TestMain:
     def test_run_command_outputs_json_summary(self, mock_engine_cls, capsys):
         from elixis.__main__ import main
 
+        class FakeBead:
+            def to_dict(self):
+                return {"canonical": "Athena", "type": "mythological", "themes": ["wisdom"]}
+
         engine = mock_engine_cls.return_value
         engine.run_full.return_value = "# Brand Output"
         engine.state = types.SimpleNamespace(
-            beads=[object()],
+            beads=[FakeBead()],
             threads=[object(), object()],
             tensions=[],
             metadata={
@@ -106,6 +110,7 @@ class TestMain:
                     "consensus_score": 0.9,
                 }
             },
+            timings={"declaration_ms": 1, "connection_ms": 2, "resolution_ms": 3},
         )
 
         result = main(["run", "--text", "Athena and design systems", "--lens", "brand", "--json"])
@@ -115,6 +120,7 @@ class TestMain:
         payload = json.loads(capsys.readouterr().out)
         assert payload["lens"] == "brand"
         assert payload["entity_count"] == 1
+        assert payload["process_trace"]["lens"] == "brand"
         assert payload["output"] == "# Brand Output"
 
     @patch("elixis.entities.extract_entities", return_value=[{"canonical": "Athena"}])

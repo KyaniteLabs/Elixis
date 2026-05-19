@@ -107,12 +107,21 @@ def save_trace(prompt, response, latency_ms, model="", extra=None):
         logger.warning("Failed to save LLM trace: %s", exc)
 
 
-def save_run(brain_dump, entities, graph, soulmd, stage_timings=None, telemetry=None):
+def save_run(
+    brain_dump,
+    entities,
+    graph,
+    soulmd,
+    stage_timings=None,
+    telemetry=None,
+    lens="identity",
+):
     """Save a full pipeline run."""
     _ensure_dirs()
     ts = datetime.now(timezone.utc)
     entry = {
         "timestamp": ts.isoformat(),
+        "lens": lens,
         "brain_dump_length": len(brain_dump),
         "brain_dump_preview": brain_dump[:300],
         "entity_count": len(entities),
@@ -122,6 +131,8 @@ def save_run(brain_dump, entities, graph, soulmd, stage_timings=None, telemetry=
         "emergent_theme": graph.get("emergent_theme"),
         "consensus_score": graph.get("consensus_score"),
         "bridge_count": len(graph.get("bridges", [])),
+        "output_length": len(soulmd),
+        "output_preview": soulmd[:300],
         "soulmd_length": len(soulmd),
         "soulmd_preview": soulmd[:300],
         "top_patterns": [

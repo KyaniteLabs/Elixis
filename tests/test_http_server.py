@@ -542,7 +542,7 @@ class TestGamePayloads(unittest.TestCase):
         with (
             patch("app.GameEngine", FakeEngine),
             patch("app.save_run"),
-            patch("app._llm_public_config", return_value=model_config),
+            patch("elixis.process_trace.llm_public_config", return_value=model_config),
         ):
             result = run_pipeline("Batman and Athena")
 
@@ -629,7 +629,8 @@ class TestGamePayloads(unittest.TestCase):
         }
         with (
             patch("app.GameEngine", FakeEngine),
-            patch("app._llm_public_config", return_value=model_config),
+            patch("app.save_run"),
+            patch("elixis.process_trace.llm_public_config", return_value=model_config),
         ):
             result = run_game_pipeline("Batman and Athena", lens="brand")
 
@@ -713,7 +714,8 @@ class TestGamePayloads(unittest.TestCase):
 
         with (
             patch("app.GameEngine", FakeEngine),
-            patch("app._llm_public_config", return_value=model_config),
+            patch("app.save_run") as mock_save_run,
+            patch("elixis.process_trace.llm_public_config", return_value=model_config),
         ):
             handler._handle_game_stream(start=0)
 
@@ -732,6 +734,63 @@ class TestGamePayloads(unittest.TestCase):
             "Wisdom & Knowledge",
         )
         self.assertLess(event_types.index("process_trace"), event_types.index("soulmd_done"))
+        mock_save_run.assert_called_once()
+        self.assertEqual(mock_save_run.call_args.args[0], "Batman and Athena")
+        self.assertEqual(mock_save_run.call_args.args[3], "# Output")
+        self.assertEqual(mock_save_run.call_args.kwargs["lens"], "brand")
+
+    @patch.object(Handler, '_begin_sse_response')
+    @patch.object(Handler, '_log')
+    def test_extract_stream_saves_single_complete_observable_run(self, mock_log, mock_begin_sse):
+        class FakeBead:
+            def to_dict(self):
+                return {
+                    "canonical": "Athena",
+                    "type": "mythological",
+                    "themes": ["wisdom"],
+                    "traits": ["strategic clarity"],
+                }
+
+        class FakeState:
+            def __init__(self):
+                self.beads = [FakeBead()]
+                self.threads = []
+                self.tensions = []
+                self.timings = {"declaration_ms": 1, "elaboration_ms": 2, "connection_ms": 3}
+                self.metadata = {"pattern_graph": {"patterns": [{"name": "Wisdom"}], "bridges": []}}
+
+        class FakeEngine:
+            def __init__(self):
+                self.state = FakeState()
+
+            def declare_themes(self, brain_dump):
+                return self.state
+
+            def elaborate(self):
+                return self.state
+
+            def connect_domains(self):
+                return self.state
+
+            def resolve_stream(self, lens="identity", stage_timings=None):
+                yield {"type": "soulmd_token", "content": "# "}
+                yield {"type": "soulmd_token", "content": "Output"}
+                yield {"type": "telemetry", "data": {"model": "glm-5.1"}}
+                yield {"type": "soulmd_done", "data": {"length": 8}}
+
+        handler = _make_handler("POST", "/api/extract/stream", body={"brain_dump": "Batman and Athena"})
+
+        with (
+            patch("app.GameEngine", FakeEngine),
+            patch("app.save_run") as mock_save_run,
+        ):
+            handler._handle_stream("Batman and Athena", start=0)
+
+        mock_save_run.assert_called_once()
+        self.assertEqual(mock_save_run.call_args.args[0], "Batman and Athena")
+        self.assertEqual(mock_save_run.call_args.args[3], "# Output")
+        self.assertEqual(mock_save_run.call_args.kwargs["lens"], "identity")
+        self.assertEqual(mock_save_run.call_args.kwargs["telemetry"]["model"], "glm-5.1")
 
 
 if __name__ == "__main__":
