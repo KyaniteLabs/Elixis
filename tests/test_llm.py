@@ -17,7 +17,7 @@ class TestLLMConfiguration(unittest.TestCase):
     def test_default_provider(self):
         """Default provider should be ollama."""
         # Check module-level defaults
-        self.assertIn(llm.PROVIDER, ["ollama", "openai"])
+        self.assertIn(llm.PROVIDER, ["ollama", "openai", "anthropic"])
 
     def test_default_model_set(self):
         """Default model should be set."""
@@ -96,6 +96,54 @@ class TestOpenAICompatibleFallback(unittest.TestCase):
         self.assertIn("fallback_error", result)
         self.assertIn("primary down", result["error"])
         self.assertIn("fallback down", result["error"])
+
+
+class TestAnthropicProvider(unittest.TestCase):
+    """Test Anthropic Messages API adapter behavior without network calls."""
+
+    @patch.dict(os.environ, {
+        "LLM_PROVIDER": "anthropic",
+        "LLM_MODEL": "claude-test",
+    })
+    def test_anthropic_payload_extracts_system_and_merges_user_turns(self):
+        payload = llm._anthropic_payload([
+            {"role": "system", "content": "Use concise markdown."},
+            {"role": "user", "content": "Athena"},
+            {"role": "user", "content": "Batman"},
+            {"role": "assistant", "content": "Noted."},
+        ], max_tokens=99)
+
+        self.assertEqual(payload["model"], "claude-test")
+        self.assertEqual(payload["max_tokens"], 99)
+        self.assertEqual(payload["system"], "Use concise markdown.")
+        self.assertEqual(payload["messages"][0]["role"], "user")
+        self.assertEqual(payload["messages"][0]["content"], "Athena\n\nBatman")
+
+    @patch.dict(os.environ, {
+        "LLM_PROVIDER": "anthropic",
+        "ANTHROPIC_AUTH_TOKEN": "token-value",
+        "ANTHROPIC_API_KEY": "api-key-value",
+    })
+    def test_anthropic_headers_prefer_auth_token_without_exposing_key(self):
+        headers = llm._anthropic_headers()
+
+        self.assertEqual(headers["Authorization"], "Bearer token-value")
+        self.assertNotIn("x-api-key", headers)
+        self.assertEqual(headers["anthropic-version"], "2023-06-01")
+
+    @patch.dict(os.environ, {
+        "LLM_PROVIDER": "anthropic",
+        "LLM_BASE_URL": "https://api.anthropic.com",
+    })
+    def test_anthropic_endpoint_adds_v1_once(self):
+        self.assertEqual(llm._anthropic_endpoint("messages"), "https://api.anthropic.com/v1/messages")
+
+    @patch.dict(os.environ, {
+        "LLM_PROVIDER": "anthropic",
+        "LLM_BASE_URL": "https://api.anthropic.com/v1",
+    })
+    def test_anthropic_endpoint_accepts_v1_base(self):
+        self.assertEqual(llm._anthropic_endpoint("messages"), "https://api.anthropic.com/v1/messages")
 
 
 if __name__ == "__main__":

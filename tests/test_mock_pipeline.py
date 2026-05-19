@@ -172,6 +172,39 @@ class TestPatternGraphMocked(unittest.TestCase):
         if len(patterns) > 1:
             self.assertGreaterEqual(patterns[0]["probability"], patterns[1]["probability"])
 
+    @patch('elixis.patterns.llm_classify_patterns')
+    def test_retries_transient_llm_classification_failure(self, mock_classify):
+        mock_classify.side_effect = [
+            RuntimeError("invalid JSON"),
+            {"Athena": {"wisdom": 0.9}},
+        ]
+        entities = [
+            {"canonical": "Athena", "type": "mythological", "themes": [], "traits": []},
+        ]
+
+        graph = build_pattern_graph(entities, "Athena")
+
+        self.assertEqual(mock_classify.call_count, 2)
+        self.assertTrue(any("LLM-assisted" in note for note in graph["analysis_notes"]))
+
+    @patch('elixis.patterns.llm_classify_patterns')
+    def test_records_llm_classification_failure_reason(self, mock_classify):
+        mock_classify.side_effect = [
+            RuntimeError("invalid JSON"),
+            RuntimeError("empty response"),
+        ]
+        entities = [
+            {"canonical": "Athena", "type": "mythological", "themes": [], "traits": []},
+        ]
+        telemetry = {}
+
+        graph = build_pattern_graph(entities, "Athena", telemetry=telemetry)
+
+        self.assertEqual(mock_classify.call_count, 2)
+        self.assertFalse(telemetry["llm_available"])
+        self.assertEqual(telemetry["llm_classification"]["error"], "empty response")
+        self.assertTrue(any("empty response" in note for note in graph["analysis_notes"]))
+
 
 class TestSynthesisMocked(unittest.TestCase):
     """Test SOUL.md synthesis with mocked LLM."""

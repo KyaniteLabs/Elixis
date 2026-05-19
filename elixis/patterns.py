@@ -472,14 +472,25 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
     # --- LLM classification (primary signal, weight 0.7) ---
     llm_scores = {}
     llm_tele = {}
-    try:
-        llm_scores = llm_classify_patterns(entities, telemetry=llm_tele)
-    except RuntimeError:
-        # If LLM classification fails after entity extraction succeeded,
-        # fall back to keyword-only scoring (the LLM was working moments ago,
-        # this is a transient failure)
-        llm_scores = {}
-        logger.warning("LLM pattern classification failed, using keyword-only scoring")
+    classification_error = ""
+    for attempt in range(2):
+        try:
+            llm_scores = llm_classify_patterns(entities, telemetry=llm_tele)
+            classification_error = ""
+            break
+        except RuntimeError as exc:
+            classification_error = str(exc)
+            if attempt == 0:
+                logger.info("Retrying LLM pattern classification after failure: %s", classification_error)
+                continue
+            # If LLM classification fails after entity extraction succeeded,
+            # fall back to keyword-only scoring but keep the failure visible.
+            llm_scores = {}
+            llm_tele["error"] = classification_error
+            logger.warning(
+                "LLM pattern classification failed after retry, using keyword-only scoring: %s",
+                classification_error,
+            )
 
     # --- Keyword scoring (secondary signal, weight 0.3) ---
     kw_scores = defaultdict(lambda: defaultdict(float))
@@ -620,7 +631,10 @@ def build_pattern_graph(entities, full_text="", telemetry=None):
     if llm_scores:
         notes.append("Classification: LLM-assisted (0.7) + keyword analysis (0.3)")
     else:
-        notes.append("Classification: keyword-only (LLM classification unavailable)")
+        note = "Classification: keyword-only (LLM classification unavailable)"
+        if classification_error:
+            note = f"{note}: {classification_error}"
+        notes.append(note)
 
     if telemetry is not None:
         telemetry.update({

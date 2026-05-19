@@ -23,7 +23,7 @@ Supporting modules:
 - `elixis/validation.py` — Input sanitization and prompt injection detection
 - `elixis/traces.py` — Run trace capture with automatic rotation
 - `elixis/backup.py` — Backup and restore with path traversal protection
-- `elixis/llm.py` — LLM interface supporting Ollama and OpenAI-compatible APIs
+- `elixis/llm.py` — LLM interface supporting Ollama, OpenAI-compatible APIs, and Anthropic Messages API
 - `elixis/__main__.py` — Operator CLI for serve, run, extract, patterns, name, and mcp commands
 - `elixis/mcp_server.py` — Optional MCP stdio adapter over the same engine
 
@@ -162,7 +162,7 @@ Admin-protected cache deletion.
 Environment variables:
 - `LLM_BASE_URL` — API base URL (default: `http://localhost:11434`)
 - `LLM_MODEL` — Model name (default: `gemma-4b`)
-- `LLM_PROVIDER` — `ollama` (default) or `openai`
+- `LLM_PROVIDER` — `ollama` (default), `openai`, or `anthropic`
 - `LLM_API_KEY` — API key for cloud providers
 - `CORS_ORIGIN` — CORS allow-origin (default: `http://localhost:3110`)
 - `ADMIN_API_KEY` — Required bearer token for diagnostics, run history, backups, and destructive cache routes

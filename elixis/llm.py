@@ -4,7 +4,8 @@ Uses the Ollama API (localhost:11434) by default.
 Configurable via environment variables:
   LLM_BASE_URL  — API base URL (default: http://localhost:11434)
   LLM_MODEL     — Model name (default: gemma-4b)
-  LLM_PROVIDER  — "ollama" (default) or "openai" for OpenAI-compatible APIs
+  LLM_PROVIDER  — "ollama" (default), "openai" for OpenAI-compatible APIs,
+                  or "anthropic" for Claude Messages API
   LLM_API_KEY   — API key (not needed for Ollama, required for cloud providers)
 """
 
@@ -28,7 +29,15 @@ class _Config:
 
     @property
     def default_model(self):
-        return os.environ.get("LLM_MODEL", "gemma-4b")
+        if os.environ.get("LLM_MODEL"):
+            return os.environ["LLM_MODEL"]
+        if self.provider == "anthropic":
+            return (
+                os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
+                or os.environ.get("ANTHROPIC_DEFAULT_HAIKU_MODEL")
+                or "claude-sonnet-4-5"
+            )
+        return "gemma-4b"
 
     @property
     def classify_model(self):
@@ -41,6 +50,14 @@ class _Config:
     @property
     def api_key(self):
         return os.environ.get("LLM_API_KEY", "")
+
+    @property
+    def anthropic_api_key(self):
+        return os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("LLM_API_KEY", "")
+
+    @property
+    def anthropic_auth_token(self):
+        return os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
 
 
 cfg = _Config()
@@ -199,6 +216,115 @@ def _call_openai_compat(messages, model=None, max_tokens=2048):
         return {"content": "", "error": str(e), "tokens_in": 0, "tokens_out": 0, "latency_ms": 0, "tokens_per_sec": 0, "model": used_model, "provider": "openai"}
 
 
+def _anthropic_endpoint(path):
+    """Build an Anthropic endpoint from either a root URL or a /v1 base URL."""
+    base_url = cfg.base_url.rstrip("/") if cfg.base_url else "https://api.anthropic.com"
+    if base_url.endswith("/v1"):
+        return f"{base_url}/{path.lstrip('/')}"
+    return f"{base_url}/v1/{path.lstrip('/')}"
+
+
+def _anthropic_headers():
+    """Return Anthropic request headers without leaking credentials into callers."""
+    headers = {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+    }
+    if cfg.anthropic_auth_token:
+        headers["Authorization"] = f"Bearer {cfg.anthropic_auth_token}"
+    elif cfg.anthropic_api_key:
+        headers["x-api-key"] = cfg.anthropic_api_key
+    return headers
+
+
+def _anthropic_payload(messages, model=None, max_tokens=2048, stream=False):
+    """Convert chat-style messages into Anthropic Messages API payload."""
+    system_parts = []
+    converted = []
+    for message in messages:
+        role = message.get("role", "user")
+        content = str(message.get("content", ""))
+        if not content:
+            continue
+        if role == "system":
+            system_parts.append(content)
+            continue
+        role = "assistant" if role == "assistant" else "user"
+        if converted and converted[-1]["role"] == role:
+            converted[-1]["content"] = f"{converted[-1]['content']}\n\n{content}"
+        else:
+            converted.append({"role": role, "content": content})
+
+    if not converted or converted[0]["role"] != "user":
+        converted.insert(0, {"role": "user", "content": "Continue."})
+
+    payload = {
+        "model": model or cfg.default_model,
+        "messages": converted,
+        "max_tokens": max_tokens,
+    }
+    if system_parts:
+        payload["system"] = "\n\n".join(system_parts)
+    if stream:
+        payload["stream"] = True
+    return payload
+
+
+def _call_anthropic(messages, model=None, max_tokens=2048):
+    """Call Anthropic's Messages API. Returns a result dict with content + telemetry."""
+    url = _anthropic_endpoint("messages")
+    used_model = model or cfg.default_model
+    payload = json.dumps(_anthropic_payload(messages, used_model, max_tokens)).encode()
+    req = urllib.request.Request(url, data=payload, headers=_anthropic_headers())
+    start = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            data = json.loads(resp.read())
+        parts = [
+            block.get("text", "")
+            for block in data.get("content", [])
+            if block.get("type") == "text"
+        ]
+        content = "".join(parts).strip()
+        latency_ms = int((time.time() - start) * 1000)
+        usage = data.get("usage", {})
+        tokens_in = usage.get("input_tokens", 0) or 0
+        tokens_out = usage.get("output_tokens", 0) or 0
+        tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
+        prompt_text = messages[-1].get("content", "") if messages else ""
+
+        from .traces import save_trace
+        save_trace(
+            prompt=prompt_text,
+            response=content,
+            latency_ms=latency_ms,
+            model=used_model,
+            extra={"tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
+        )
+        return {
+            "content": content,
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "latency_ms": latency_ms,
+            "tokens_per_sec": tps,
+            "model": used_model,
+            "provider": "anthropic",
+        }
+    except (urllib.error.URLError, OSError, TimeoutError, KeyError, json.JSONDecodeError) as e:
+        import logging
+        logging.getLogger("elixis.llm").warning(f"Anthropic call failed: {e}")
+        return {
+            "content": "",
+            "error": str(e),
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "latency_ms": 0,
+            "tokens_per_sec": 0,
+            "model": used_model,
+            "provider": "anthropic",
+        }
+
+
 def chat(messages, model=None, max_tokens=None, think=True):
     """Send a chat completion request. Returns a result dict.
 
@@ -212,6 +338,9 @@ def chat(messages, model=None, max_tokens=None, think=True):
         Dict with keys: content, tokens_in, tokens_out, latency_ms,
         tokens_per_sec, model, provider.
     """
+    if cfg.provider == "anthropic":
+        kw = {"max_tokens": max_tokens} if max_tokens else {}
+        return _call_anthropic(messages, model, **kw)
     if cfg.provider == "openai":
         kw = {"max_tokens": max_tokens} if max_tokens else {}
         return _call_openai_compat(messages, model, **kw)
@@ -232,6 +361,10 @@ def is_available():
         if cfg.provider == "ollama":
             url = f"{cfg.base_url}/api/tags"
             req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                result = resp.status == 200
+        elif cfg.provider == "anthropic":
+            req = urllib.request.Request(_anthropic_endpoint("models"), headers=_anthropic_headers())
             with urllib.request.urlopen(req, timeout=3) as resp:
                 result = resp.status == 200
         else:
@@ -260,7 +393,9 @@ def chat_stream(messages, model=None):
 
     If unavailable, yields nothing.
     """
-    if cfg.provider == "openai":
+    if cfg.provider == "anthropic":
+        yield from _chat_stream_anthropic(messages, model)
+    elif cfg.provider == "openai":
         yield from _chat_stream_openai(messages, model)
     else:
         yield from _chat_stream_ollama(messages, model)
@@ -342,6 +477,77 @@ def _chat_stream_openai(messages, model=None):
             "tokens_per_sec": 0,
             "model": used_model,
             "provider": "openai",
+        }
+
+
+def _chat_stream_anthropic(messages, model=None):
+    """Stream from Anthropic's Messages API."""
+    url = _anthropic_endpoint("messages")
+    used_model = model or cfg.default_model
+    payload = json.dumps(_anthropic_payload(messages, used_model, 2048, stream=True)).encode()
+    req = urllib.request.Request(url, data=payload, headers=_anthropic_headers())
+    start = time.time()
+    full_response = []
+    usage = {"input_tokens": 0, "output_tokens": 0}
+
+    try:
+        with urllib.request.urlopen(req, timeout=180) as resp:
+            for raw_line in resp:
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line or not line.startswith("data: "):
+                    continue
+                try:
+                    chunk = json.loads(line[6:])
+                except json.JSONDecodeError:
+                    continue
+
+                if chunk.get("type") == "content_block_delta":
+                    delta = chunk.get("delta", {})
+                    if delta.get("type") == "text_delta" and delta.get("text"):
+                        content = delta["text"]
+                        full_response.append(content)
+                        yield {"type": "token", "content": content}
+                elif chunk.get("type") == "message_delta":
+                    usage.update(chunk.get("usage", {}))
+
+        latency_ms = int((time.time() - start) * 1000)
+        full_text = "".join(full_response)
+        prompt_text = messages[-1].get("content", "") if messages else ""
+        tokens_in = usage.get("input_tokens", 0) or 0
+        tokens_out = usage.get("output_tokens", 0) or len(full_response)
+        tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
+
+        from .traces import save_trace
+        save_trace(
+            prompt=prompt_text,
+            response=full_text,
+            latency_ms=latency_ms,
+            model=used_model,
+            extra={"provider": "anthropic-stream", "tokens_in": tokens_in, "tokens_out": tokens_out},
+        )
+        yield {
+            "type": "done",
+            "latency_ms": latency_ms,
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "tokens_per_sec": tps,
+            "model": used_model,
+            "provider": "anthropic",
+        }
+    except (urllib.error.URLError, OSError, TimeoutError) as e:
+        import logging
+        logging.getLogger("elixis.llm").warning(f"Anthropic stream failed: {e}")
+        yield {"type": "error", "error": str(e), "provider": "anthropic", "model": used_model}
+        yield {
+            "type": "done",
+            "success": False,
+            "error": str(e),
+            "latency_ms": int((time.time() - start) * 1000),
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "tokens_per_sec": 0,
+            "model": used_model,
+            "provider": "anthropic",
         }
 
 

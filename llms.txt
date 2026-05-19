@@ -2,7 +2,7 @@
 
 > Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
 
-Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore. Works with any local or remote LLM via Ollama or OpenAI-compatible APIs. Zero external Python dependencies.
+Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore. Works with local and cloud LLMs through Ollama, OpenAI-compatible APIs, or Anthropic's Messages API. Zero external Python dependencies.
 
 ## Use cases
 
