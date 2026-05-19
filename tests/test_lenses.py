@@ -152,6 +152,13 @@ class TestGenerateBrandToneVariants(unittest.TestCase):
         self.assertIn("operator clarity", result)
         self.assertIn("Pattern Rationale", result)
 
+    def test_expanded_archetype_uses_alias_for_tone_controls(self):
+        p = {"id": "reformer", "name": "The Reformer", "color": "#2dd4bf", "probability": 0.4, "supporting_entities": 2}
+        result = generate_brand(_sample_entities(), _make_graph(p))
+        self.assertIn("principled improvement", result)
+        self.assertIn("Cautious and measured", result)
+        self.assertIn("Technical and precise", result)
+
 
 # ---------------------------------------------------------------------------
 # Design lens tests

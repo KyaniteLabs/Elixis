@@ -318,6 +318,10 @@ def _style_key(pattern_id):
     return pattern_id if pattern_id in _IDENTITY_TEMPLATES else _STYLE_ALIASES.get(pattern_id, "wisdom")
 
 
+def _tone_style_key(pattern_id):
+    return _STYLE_ALIASES.get(pattern_id, pattern_id if pattern_id in _TONE_MAP else "wisdom")
+
+
 def _format_anchor(entity):
     name = entity.get("canonical") or entity.get("name") or entity.get("original") or "Unknown"
     themes = entity.get("themes") or []
@@ -354,8 +358,9 @@ def generate_brand(entities: list, graph: dict) -> str:
     primary = top[0]
     pid = primary.get("id", primary.get("name", "unknown"))
     style = _style_key(pid)
+    tone_style = _tone_style_key(pid)
     topic = graph.get("emergent_topic", primary.get("name", "Unknown"))
-    tones = _TONE_MAP.get(style, ("formal", "bold", "accessible", "direct"))
+    tones = _TONE_MAP.get(tone_style, ("formal", "bold", "accessible", "direct"))
 
     # Core Identity
     identity = _IDENTITY_TEMPLATES.get(style, _IDENTITY_TEMPLATES["wisdom"])
@@ -373,7 +378,7 @@ def generate_brand(entities: list, graph: dict) -> str:
     tone_rows = []
     for situation in tone_situations:
         mapping = _TONE_TABLE.get(situation, {})
-        entry = mapping.get(style, mapping.get("wisdom", ("Measured", "\"...\"")))
+        entry = mapping.get(tone_style, mapping.get("wisdom", ("Measured", "\"...\"")))
         tone_rows.append(f"| {situation.title()} | {entry[0]} | {entry[1]} |")
     tone_table = "| Situation | Tone | Example |\n|---|---|---|\n" + "\n".join(tone_rows)
 

@@ -119,6 +119,64 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
         self.assertGreaterEqual(mock_chat.call_args.kwargs["max_tokens"], 2900)
         self.assertIn("compact minified JSON", mock_chat.call_args.args[0][0]["content"])
 
+    @patch("elixis.llm.chat")
+    def test_accepts_empty_but_valid_classification_response(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"classifications": {}}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 4,
+        }
+        telemetry = {}
+
+        result = llm_classify_patterns([
+            {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
+        ], telemetry=telemetry)
+
+        self.assertEqual(result, {})
+        self.assertEqual(telemetry["source"], "llm")
+        self.assertEqual(telemetry["entity_count"], 0)
+
+    @patch("elixis.llm.chat")
+    def test_empty_classification_does_not_retry_or_record_llm_unavailable(self, mock_chat):
+        mock_chat.return_value = {
+            "content": "{}",
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 2,
+        }
+        telemetry = {}
+
+        graph = build_pattern_graph([
+            {"canonical": "Quiet Signal", "type": "concept", "themes": ["calm"], "traits": []},
+        ], "calm quiet signal", telemetry=telemetry)
+
+        mock_chat.assert_called_once()
+        self.assertEqual(telemetry["llm_classification"]["source"], "llm")
+        self.assertTrue(telemetry["llm_available"])
+        self.assertIn(
+            "Classification: LLM returned no scores above threshold; keyword analysis carried scoring",
+            graph["analysis_notes"],
+        )
+        self.assertNotIn("LLM classification unavailable", " ".join(graph["analysis_notes"]))
+
+    @patch("elixis.llm.chat")
+    def test_rejects_non_empty_unsupported_classification_schema(self, mock_chat):
+        mock_chat.return_value = {
+            "content": '{"not_scores": "not a classification"}',
+            "model": "glm-5.1",
+            "provider": "zai",
+            "tokens_in": 40,
+            "tokens_out": 8,
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "unsupported JSON schema"):
+            llm_classify_patterns([
+                {"canonical": "Quiet Signal", "type": "concept", "themes": [], "traits": []},
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()

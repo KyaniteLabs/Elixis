@@ -763,6 +763,8 @@ class Handler(BaseHTTPRequestHandler):
                     _send(event)
                     deadline = time.time() + SSE_WRITE_TIMEOUT
 
+                state.timings.update(timings)
+                _send({"type": "process_trace", "data": _process_trace_from_state(state, lens=lens)})
                 output_text = "".join(output_parts)
                 if state and output_text:
                     save_run(
@@ -842,6 +844,8 @@ class Handler(BaseHTTPRequestHandler):
                 _send(event)
                 deadline = time.time() + SSE_WRITE_TIMEOUT
 
+            state.timings.update(timings)
+            _send({"type": "process_trace", "data": _process_trace_from_state(state, lens="identity")})
             output_text = "".join(output_parts)
             save_run(brain_dump,
                      [b.to_dict() for b in state.beads],

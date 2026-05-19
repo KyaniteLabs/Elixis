@@ -17,6 +17,7 @@ VPS_HOST="${VPS_HOST:-}"
 VPS_USER="${VPS_USER:-root}"
 ADMIN_API_KEY="${ADMIN_API_KEY:-}"
 REMOTE_DIR="/docker/elixis"
+LOCAL_DEPLOY_IMAGE="elixis:latest"
 
 if [ -z "${VPS_HOST}" ]; then
     echo -e "${RED}VPS_HOST must be set before deploying.${NC}"
@@ -32,11 +33,11 @@ echo "Deploying Elixis to ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}..."
 
 # Build image locally
 echo -e "${YELLOW}Building image...${NC}"
-docker build -t elixis:latest --target production "${PROJECT_DIR}"
+docker build -t "${LOCAL_DEPLOY_IMAGE}" --target production "${PROJECT_DIR}"
 
 # Save and transfer image
 echo -e "${YELLOW}Transferring image to VPS...${NC}"
-docker save elixis:latest | gzip | ssh "${VPS_USER}@${VPS_HOST}" "gunzip | docker load"
+docker save "${LOCAL_DEPLOY_IMAGE}" | gzip | ssh "${VPS_USER}@${VPS_HOST}" "gunzip | docker load"
 
 # Transfer compose file
 echo -e "${YELLOW}Uploading compose file...${NC}"
@@ -46,7 +47,12 @@ scp "${PROJECT_DIR}/docker-compose.yml" "${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/d
 echo -e "${YELLOW}Starting deployment...${NC}"
 ssh "${VPS_USER}@${VPS_HOST}" << EOF
   cd ${REMOTE_DIR}
-  ADMIN_API_KEY='${ADMIN_API_KEY}' docker compose up -d --no-build --remove-orphans
+  ADMIN_API_KEY='${ADMIN_API_KEY}' ELIXIS_IMAGE='${LOCAL_DEPLOY_IMAGE}' docker compose up -d --no-build --remove-orphans
+  actual_image="\$(docker inspect elixis --format '{{.Config.Image}}')"
+  if [ "\${actual_image}" != "${LOCAL_DEPLOY_IMAGE}" ]; then
+    echo "elixis is running \${actual_image}, expected ${LOCAL_DEPLOY_IMAGE}"
+    exit 1
+  fi
 EOF
 
 # Wait for health check
