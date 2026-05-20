@@ -1189,7 +1189,7 @@ body {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   OUTPUT — Tab 4: Rendered markdown
+   OUTPUT — Tab 4: Visual document renderer
    ════════════════════════════════════════════════════════════════════════════ */
 .output-header {
   display: flex;
@@ -1235,10 +1235,230 @@ body {
   color: var(--accent);
 }
 
-.output-content {
-  background: var(--bg-glass);
+.output-visual {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.visual-spec-hero {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  min-height: 220px;
+  padding: clamp(1.5rem, 3vw, 2.75rem);
+  background:
+    linear-gradient(135deg, var(--visual-bg, rgba(255, 255, 255, 0.06)), rgba(6, 8, 18, 0.92)),
+    radial-gradient(circle at 85% 15%, var(--visual-accent, rgba(45, 212, 191, 0.28)), transparent 34%);
+  box-shadow: 0 18px 60px rgba(2, 6, 23, 0.26);
+}
+
+.visual-spec-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 7px;
+  background: linear-gradient(90deg, var(--visual-primary), var(--visual-secondary), var(--visual-accent));
+  opacity: 0.95;
+}
+
+.visual-spec-kicker,
+.visual-section-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.visual-spec-title {
+  margin-top: var(--space-lg);
+  max-width: 760px;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 0.96;
+  color: var(--visual-text, var(--text-primary));
+  text-wrap: balance;
+}
+
+.visual-spec-copy {
+  max-width: 62ch;
+  margin-top: var(--space-lg);
+  color: color-mix(in srgb, var(--visual-text, var(--text-primary)) 72%, transparent);
+  font-size: var(--font-size-lg);
+  line-height: 1.7;
+}
+
+.visual-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: var(--space-lg);
+}
+
+.visual-main,
+.visual-aside {
+  display: grid;
+  gap: var(--space-lg);
+  align-content: start;
+}
+
+.visual-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(10, 14, 26, 0.54);
+  padding: var(--space-xl);
+  min-width: 0;
+}
+
+.visual-section-title {
+  margin-top: var(--space-xs);
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  line-height: 1.2;
+}
+
+.color-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.color-swatch {
+  min-height: 148px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.color-swatch-meta {
+  padding: var(--space-sm);
+  background: rgba(3, 6, 15, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.color-swatch-label,
+.token-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.color-swatch-value,
+.token-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.type-specimen-list,
+.token-list,
+.shadow-list {
+  display: grid;
+  gap: var(--space-base);
+  margin-top: var(--space-lg);
+}
+
+.type-specimen {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-base);
+}
+
+.type-sample {
+  color: var(--text-primary);
+  font-size: clamp(1.4rem, 3vw, 2.75rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.type-role {
+  margin-top: var(--space-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.token-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 82px;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.token-track {
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.token-fill {
+  height: 100%;
+  min-width: 10px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+.radius-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.radius-demo {
+  min-height: 86px;
+  border: 1px solid var(--border-default);
+  background: rgba(255, 255, 255, 0.055);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-sm);
+}
+
+.shadow-demo {
+  min-height: 96px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-base);
+}
+
+.word-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.word-chip {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.output-source {
+  margin-top: var(--space-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(10, 14, 26, 0.38);
+}
+
+.output-source summary {
+  cursor: pointer;
+  padding: var(--space-base) var(--space-xl);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.output-content {
+  margin: 0;
+  border-top: 1px solid var(--border-subtle);
   padding: var(--space-xl);
   font-family: var(--font-mono);
   font-size: var(--font-size-base);
@@ -1248,6 +1468,20 @@ body {
   word-break: break-word;
   max-height: calc(100dvh - 220px);
   overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .visual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .token-row {
+    grid-template-columns: 78px 1fr;
+  }
+
+  .token-value {
+    grid-column: 2;
+  }
 }
 
 .streaming-cursor {
@@ -1624,7 +1858,11 @@ Fleabag"
               <span class="copied-toast" id="copiedToast">Copied</span>
             </div>
           </div>
-          <pre class="output-content" id="outputContentPre"><span class="streaming-cursor" id="streamingCursor"></span></pre>
+          <div class="output-visual" id="outputVisual" style="display:none;"></div>
+          <details class="output-source" id="outputSource" open>
+            <summary>Source markdown</summary>
+            <pre class="output-content" id="outputContentPre"><span class="streaming-cursor" id="streamingCursor"></span></pre>
+          </details>
         </div>
       </div>
 
@@ -1725,6 +1963,8 @@ const dom = {
   outputContent: $('#outputContent'),
   outputPlaceholder: $('#outputPlaceholder'),
   outputContentPre: $('#outputContentPre'),
+  outputVisual: $('#outputVisual'),
+  outputSource: $('#outputSource'),
   outputTitle: $('#outputTitle'),
   outputActions: $('#outputActions'),
   traceContent: $('#traceContent'),
@@ -1769,6 +2009,302 @@ function getOutputMeta() {
 
 function updateOutputMeta() {
   dom.outputTitle.textContent = getOutputMeta().title;
+}
+
+const GOOGLE_OUTPUT_FONTS = new Set([
+  'Architects Daughter', 'Baloo 2', 'Bangers', 'Bitter', 'Cormorant',
+  'Cormorant Garamond', 'Cinzel', 'DM Sans', 'Exo 2', 'Fraunces',
+  'IBM Plex Mono', 'IBM Plex Sans', 'IBM Plex Serif', 'Inter',
+  'Inter Tight', 'JetBrains Mono', 'Karla', 'Libre Baskerville',
+  'Lora', 'Nunito', 'Oswald', 'Playfair Display', 'Rajdhani',
+  'Roboto Condensed', 'Source Sans 3', 'Source Serif 4',
+  'Source Serif Pro', 'Space Grotesk', 'Space Mono'
+]);
+
+function cleanFontName(font) {
+  const cleaned = String(font || '')
+    .replace(/[`*_]/g, '')
+    .replace(/["']/g, '')
+    .split(',')[0]
+    .trim()
+    .replace(/\s+/g, ' ');
+  return /^[A-Za-z0-9 -]+$/.test(cleaned) ? cleaned : '';
+}
+
+function cssFontFamily(font) {
+  const cleaned = cleanFontName(font);
+  return cleaned ? `"${escAttr(cleaned)}", var(--font-sans)` : 'var(--font-sans)';
+}
+
+function loadOutputFonts(fonts) {
+  const families = [...new Set(fonts.map(cleanFontName).filter((f) => GOOGLE_OUTPUT_FONTS.has(f)))];
+  let link = document.getElementById('outputFontLink');
+  if (!families.length) {
+    if (link) link.remove();
+    return;
+  }
+  if (!link) {
+    link = document.createElement('link');
+    link.id = 'outputFontLink';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  const familyQuery = families
+    .map((family) => `family=${encodeURIComponent(family).replace(/%20/g, '+')}`)
+    .join('&');
+  link.href = `https://fonts.googleapis.com/css2?${familyQuery}&display=swap`;
+}
+
+function friendlyTokenName(token) {
+  return String(token || '')
+    .replace(/^color-/, '')
+    .replace(/^font-/, '')
+    .replace(/-family$/, '')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function safeCssValue(value, fallback = '') {
+  const v = String(value || '').trim();
+  if (!v || /[;{}<>]/.test(v)) return fallback;
+  return /^[#\w\s.,()/%-]+$/.test(v) ? v : fallback;
+}
+
+function parseOutputSections(text) {
+  const sections = {};
+  let current = 'intro';
+  for (const line of String(text || '').split('\n')) {
+    const match = line.match(/^##\s+(.+)$/);
+    if (match) {
+      current = match[1].trim().toLowerCase();
+      sections[current] = [];
+    } else {
+      if (!sections[current]) sections[current] = [];
+      sections[current].push(line);
+    }
+  }
+  return sections;
+}
+
+function parseOutputSpec(text, lens) {
+  const source = String(text || '');
+  const sections = parseOutputSections(source);
+  const title = (source.match(/^#\s+(.+)$/m) || [null, getOutputMeta().title])[1];
+  const colors = [];
+  const fonts = [];
+  const typeScale = [];
+  const spacing = [];
+  const radii = [];
+  const shadows = [];
+  const seenColors = new Set();
+
+  function addColor(label, value) {
+    const hex = String(value || '').trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex) || seenColors.has(hex.toLowerCase())) return;
+    seenColors.add(hex.toLowerCase());
+    colors.push({ label: friendlyTokenName(label || `color ${colors.length + 1}`), value: hex });
+  }
+
+  function addFont(role, value) {
+    const font = cleanFontName(value);
+    if (!font || /^(\d|[\d.]+rem|[\d.]+px)/i.test(font)) return;
+    if (fonts.some((f) => f.font === font && f.role === role)) return;
+    fonts.push({ role: friendlyTokenName(role || 'font'), font });
+  }
+
+  const tokenRe = /^--([a-z0-9-]+):\s*([^;]+);/gim;
+  let tokenMatch;
+  while ((tokenMatch = tokenRe.exec(source)) !== null) {
+    const token = tokenMatch[1];
+    const value = tokenMatch[2].trim();
+    if (token.startsWith('color-')) addColor(token, value);
+    if (token.startsWith('font-') && !/(rem|px|em)$/i.test(value)) addFont(token, value);
+    if (token.startsWith('font-') && /(rem|px|em)$/i.test(value)) typeScale.push({ label: friendlyTokenName(token), value });
+    if (token.startsWith('spacing-')) spacing.push({ label: friendlyTokenName(token), value });
+    if (token.startsWith('radius-')) radii.push({ label: friendlyTokenName(token), value });
+    if (token.startsWith('shadow-')) shadows.push({ label: friendlyTokenName(token), value });
+  }
+
+  const colorBulletRe = /-\s+\*\*([^*]+)\*\*:\s+`?(#[0-9a-fA-F]{6})`?/g;
+  let colorBullet;
+  while ((colorBullet = colorBulletRe.exec(source)) !== null) addColor(colorBullet[1], colorBullet[2]);
+  const allHexes = source.match(/#[0-9a-fA-F]{6}\b/g) || [];
+  allHexes.forEach((hex) => addColor(`Color ${colors.length + 1}`, hex));
+
+  const fontBulletRe = /-\s+\*\*(Headings|Body|Display|Mono)\*\*:\s+([^\n]+)/gi;
+  let fontBullet;
+  while ((fontBullet = fontBulletRe.exec(source)) !== null) addFont(fontBullet[1], fontBullet[2]);
+
+  const vocabulary = (sections.vocabulary || [])
+    .map((line) => line.match(/^-\s+(.+)$/))
+    .filter(Boolean)
+    .map((match) => match[1].replace(/[`*_]/g, '').trim())
+    .filter(Boolean)
+    .slice(0, 14);
+
+  return {
+    lens,
+    title,
+    colors: colors.slice(0, 8),
+    fonts: fonts.slice(0, 4),
+    typeScale: typeScale.slice(0, 8),
+    spacing: spacing.slice(0, 8),
+    radii: radii.slice(0, 6),
+    shadows: shadows.slice(0, 4),
+    vocabulary,
+  };
+}
+
+function tokenPixels(value) {
+  const v = String(value || '').trim();
+  const n = parseFloat(v);
+  if (!Number.isFinite(n)) return 16;
+  if (v.endsWith('rem')) return n * 16;
+  if (v.endsWith('em')) return n * 16;
+  return n;
+}
+
+function renderTokenRows(tokens, scale = 5) {
+  return tokens.map((token) => {
+    const px = Math.max(10, Math.min(320, tokenPixels(token.value) * scale));
+    return `
+      <div class="token-row">
+        <span class="token-label">${esc(token.label)}</span>
+        <div class="token-track" aria-hidden="true">
+          <div class="token-fill" style="width:${px}px;"></div>
+        </div>
+        <span class="token-value">${esc(token.value)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderOutputArtifacts() {
+  updateOutputMeta();
+  if (!['brand', 'design'].includes(state.lens)) {
+    dom.outputVisual.style.display = 'none';
+    dom.outputVisual.innerHTML = '';
+    dom.outputSource.open = true;
+    return;
+  }
+
+  const spec = parseOutputSpec(state.outputText, state.lens);
+  loadOutputFonts(spec.fonts.map((font) => font.font));
+
+  const primary = spec.colors[0]?.value || '#2dd4bf';
+  const secondary = spec.colors[1]?.value || primary;
+  const accent = spec.colors[2]?.value || secondary;
+  const background = spec.colors.find((c) => /background/i.test(c.label))?.value || 'rgba(10, 14, 26, 0.92)';
+  const textColor = spec.colors.find((c) => /text/i.test(c.label))?.value || '#f7f5fa';
+
+  const colorHtml = spec.colors.length ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Palette</div>
+      <h3 class="visual-section-title">Actual color chips</h3>
+      <div class="color-swatch-grid">
+        ${spec.colors.map((color) => `
+          <div class="color-swatch" style="background:${escAttr(color.value)};">
+            <div class="color-swatch-meta">
+              <div class="color-swatch-label">${esc(color.label)}</div>
+              <div class="color-swatch-value">${esc(color.value.toUpperCase())}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  const typeHtml = (spec.fonts.length || spec.typeScale.length) ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Typography</div>
+      <h3 class="visual-section-title">Font specimens and scale</h3>
+      ${spec.fonts.length ? `
+        <div class="type-specimen-list">
+          ${spec.fonts.map((font) => `
+            <div class="type-specimen">
+              <div class="type-sample" style="font-family:${cssFontFamily(font.font)};">
+                Pattern made visible
+              </div>
+              <div class="type-role">${esc(font.role)} · ${esc(font.font)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${spec.typeScale.length ? `<div class="token-list">${renderTokenRows(spec.typeScale, 2)}</div>` : ''}
+    </section>
+  ` : '';
+
+  const spacingHtml = spec.spacing.length ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Space</div>
+      <h3 class="visual-section-title">Spacing scale</h3>
+      <div class="token-list">${renderTokenRows(spec.spacing, 10)}</div>
+    </section>
+  ` : '';
+
+  const radiusHtml = spec.radii.length ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Borders</div>
+      <h3 class="visual-section-title">Radius samples</h3>
+      <div class="radius-demo-grid">
+        ${spec.radii.map((radius) => `
+          <div>
+            <div class="radius-demo" style="border-radius:${escAttr(safeCssValue(radius.value, '8px'))};">
+              <span class="token-label">${esc(radius.label)}</span>
+            </div>
+            <div class="token-value">${esc(radius.value)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  const shadowHtml = spec.shadows.length ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Depth</div>
+      <h3 class="visual-section-title">Shadow samples</h3>
+      <div class="shadow-list">
+        ${spec.shadows.map((shadow) => `
+          <div class="shadow-demo" style="box-shadow:${escAttr(safeCssValue(shadow.value, 'none'))};">
+            <div class="token-label">${esc(shadow.label)}</div>
+            <div class="token-value">${esc(shadow.value)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  const vocabHtml = spec.vocabulary.length ? `
+    <section class="visual-section">
+      <div class="visual-section-kicker">Voice</div>
+      <h3 class="visual-section-title">Vocabulary texture</h3>
+      <div class="word-chip-list">
+        ${spec.vocabulary.map((word) => `<span class="word-chip">${esc(word)}</span>`).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  dom.outputVisual.innerHTML = `
+    <section class="visual-spec-hero" style="--visual-primary:${escAttr(primary)}; --visual-secondary:${escAttr(secondary)}; --visual-accent:${escAttr(accent)}; --visual-bg:${escAttr(background)}; --visual-text:${escAttr(textColor)};">
+      <div class="visual-spec-kicker">${state.lens === 'brand' ? 'Brand system' : 'Design system'}</div>
+      <h2 class="visual-spec-title">${esc(spec.title.replace(/^Brand Voice:\s*|^Design System:\s*/i, ''))}</h2>
+      <p class="visual-spec-copy">Color, type, spacing, borders, and depth are rendered as visual decisions instead of buried in markdown tokens.</p>
+    </section>
+    <div class="visual-grid">
+      <div class="visual-main">
+        ${colorHtml}
+        ${typeHtml}
+        ${spacingHtml}
+      </div>
+      <div class="visual-aside">
+        ${radiusHtml}
+        ${shadowHtml}
+        ${vocabHtml}
+      </div>
+    </div>
+  `;
+  dom.outputVisual.style.display = 'grid';
+  dom.outputSource.open = false;
 }
 
 function showBadge(id, text) {
@@ -2164,6 +2700,9 @@ function handleSSEEvent(event, outputEl) {
       if (dom.outputContent.style.display === 'none') {
         dom.outputPlaceholder.style.display = 'none';
         dom.outputContent.style.display = 'block';
+        dom.outputVisual.style.display = 'none';
+        dom.outputVisual.innerHTML = '';
+        dom.outputSource.open = true;
         setPipelineStage(3);
         dom.pipelineLabel.textContent = 'Resolution: Pattern resolved';
         showBadge('badge-output', '!');
@@ -2182,6 +2721,7 @@ function handleSSEEvent(event, outputEl) {
     case 'soulmd_done':
       const c = document.getElementById('streamingCursor');
       if (c) c.remove();
+      renderOutputArtifacts();
       dom.outputActions.style.display = 'flex';
       dom.pipelineLabel.textContent = 'Complete';
       setPipelineStage(3);
@@ -2335,6 +2875,9 @@ function resetPanels() {
   dom.outputPlaceholder.style.display = 'flex';
   dom.outputContent.style.display = 'none';
   dom.outputActions.style.display = 'none';
+  dom.outputVisual.style.display = 'none';
+  dom.outputVisual.innerHTML = '';
+  dom.outputSource.open = true;
   dom.outputContentPre.innerHTML = '<span class="streaming-cursor" id="streamingCursor"></span>';
   const outputBadge = document.getElementById('badge-output');
   outputBadge.style.display = 'none';
