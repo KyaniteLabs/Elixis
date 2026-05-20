@@ -118,7 +118,7 @@ jobs:
             exit 1
           fi
           case "${VPS_HOST}" in
-            100.*|fd7a:*|*.ts.net|*.ts.net.)
+            100.6[4-9].*|100.[7-9][0-9].*|100.1[01][0-9].*|100.12[0-7].*|fd7a:*|*.ts.net|*.ts.net.)
               ;;
             *)
               echo "::error::VPS_HOST must be a Tailscale address or MagicDNS name. Public SSH deploy is not allowed."
@@ -162,7 +162,7 @@ jobs:
 
       - name: Verify tailnet VPS reachability
         run: |
-          tailscale ping --timeout=10s --c 3 "${VPS_HOST}"
+          tailscale ping --timeout=10s --c 3 --until-direct=false "${VPS_HOST}"
 
       - name: Deploy to VPS
         run: |
