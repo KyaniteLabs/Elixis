@@ -1901,7 +1901,10 @@ function renderThreads(threads) {
 
   dom.threadList.innerHTML = threads.map((t) => {
     const strengthPct = Math.round((t.strength || 0) * 100);
-    const isCrossDomain = t.domains_bridged && t.domains_bridged.length > 0;
+    const bridgedDomains = (t.domains_bridged || []).filter(Boolean);
+    const isCrossDomain = Boolean(
+      t.isomorphic || (bridgedDomains.length >= 2 && bridgedDomains[0] !== bridgedDomains[1])
+    );
     const isomorphic = t.isomorphic ? '<span class="thread-marker">ISO</span>' : '';
     const crossMarker = isCrossDomain ? `<span class="thread-marker">CROSS</span>` : '';
 

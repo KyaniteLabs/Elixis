@@ -351,6 +351,16 @@ class TestConnectDomains:
         assert state.phase == "connection"
         assert len(state.threads) >= 1
 
+    def test_exposes_threads_on_pattern_graph_for_streaming_ui(self):
+        engine = _make_engine()
+        engine.declare_themes("input")
+        engine.elaborate()
+        state = engine.connect_domains()
+        graph = state.metadata["pattern_graph"]
+        assert graph["threads"] == [t.to_dict() for t in state.threads]
+        assert graph["thread_count"] == len(state.threads)
+        assert graph["cross_domain_thread_count"] == 1
+
     def test_allows_declaration_phase(self):
         engine = _make_engine()
         engine.declare_themes("input")
@@ -388,6 +398,30 @@ class TestConnectDomains:
         assert bridge_threads[0].bead_a == "Alpha"
         assert bridge_threads[0].bead_b == "Power"
         assert abs(bridge_threads[0].strength - 0.7) < 0.01
+
+    def test_bridge_threads_do_not_count_as_cross_domain_without_domains(self):
+        bridge = {
+            "entity": "Alpha",
+            "pattern_a": "Power",
+            "pattern_b": "Shadow",
+            "score_a": 0.8,
+            "score_b": 0.6,
+        }
+        engine = _make_engine(
+            build_pattern_graph=lambda e, t, telemetry=None: {
+                "patterns": [{"name": "Power", "probability": 0.8, "sub_patterns": []}],
+                "bridges": [bridge],
+                "consensus_score": 0.75,
+                "emergent_topic": "Power",
+            },
+            build_relationship_graph=lambda beads: {"edges": []},
+        )
+        engine.declare_themes("input")
+        engine.elaborate()
+        state = engine.connect_domains()
+        graph = state.metadata["pattern_graph"]
+        assert graph["thread_count"] == 1
+        assert graph["cross_domain_thread_count"] == 0
 
     def test_essential_tension_on_low_consensus(self):
         engine = _make_engine(

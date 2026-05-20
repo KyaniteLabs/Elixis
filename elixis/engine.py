@@ -283,6 +283,12 @@ class GameEngine:
             ))
 
         state.threads = threads
+        thread_dicts = [t.to_dict() for t in threads]
+        graph["threads"] = thread_dicts
+        graph["thread_count"] = len(thread_dicts)
+        graph["cross_domain_thread_count"] = sum(
+            1 for thread in threads if _is_cross_domain_thread(thread)
+        )
         state.phase = "connection"
         state.timings["connection_ms"] = int((time.time() - start) * 1000)
 
@@ -429,6 +435,12 @@ def _infer_domains(entity):
 
     valid = set(domain_ids())
     return [d for d in domains if d in valid][:3]
+
+
+def _is_cross_domain_thread(thread):
+    """Return True when a thread connects two non-empty, distinct domains."""
+    domains = [d for d in thread.domains_bridged if d]
+    return bool(thread.isomorphic or (len(domains) >= 2 and domains[0] != domains[1]))
 
 
 def _check_isomorphism(bead_a, bead_b):
