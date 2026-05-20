@@ -38,6 +38,7 @@ from elixis.process_trace import (
 )
 from elixis.quality import validate_output
 from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
+from elixis.thread import serialize_threads
 from elixis.translate import (
     translate_text,
     translate_soulmd,
@@ -137,6 +138,7 @@ def run_pipeline(brain_dump):
     return {
         "stage1_entities": [b.to_dict() for b in state.beads],
         "stage2_graph": graph,
+        "threads": graph.get("threads") or serialize_threads(state.threads),
         "output": output,
         "stage3_output": output,
         "stage3_soulmd": output,
@@ -173,7 +175,9 @@ def run_game_pipeline(brain_dump, lens="identity"):
         "output": output,
         "stage3_output": output,
         "stage3_soulmd": output if lens == "identity" else None,
-        "threads": [t.to_dict() for t in state.threads],
+        "threads": graph.get("threads") or serialize_threads(state.threads),
+        "thread_count": graph.get("thread_count", len(state.threads)),
+        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
         "tensions": state.tensions,
         "timings": state.timings,
         "quality": validate_output(output, lens=lens),
@@ -287,6 +291,13 @@ class Handler(BaseHTTPRequestHandler):
                 "phases": ["declaration", "elaboration", "connection", "resolution"],
                 "lenses": sorted(VALID_LENSES),
                 "entity_types": sorted(VALID_TYPES),
+                "connection_outputs": [
+                    "patterns",
+                    "bridges",
+                    "threads",
+                    "thread_count",
+                    "cross_domain_thread_count",
+                ],
             })
             self._log("GET", path, 200, start)
         elif path == "/robots.txt":
@@ -723,6 +734,8 @@ class Handler(BaseHTTPRequestHandler):
             timings = {}
             output_parts = []
             telemetry = None
+            state = None
+            graph = {}
 
             def _send(event):
                 if isinstance(event, dict):
@@ -747,7 +760,8 @@ class Handler(BaseHTTPRequestHandler):
                 t0 = time.time()
                 engine.connect_domains()
                 timings["connection_ms"] = int((time.time() - t0) * 1000)
-                _send({"type": "graph", "data": state.metadata.get("pattern_graph", {})})
+                graph = state.metadata.get("pattern_graph", {})
+                _send({"type": "graph", "data": graph})
                 if state.tensions:
                     _send({"type": "tensions", "data": state.tensions})
                 _send({"type": "process_trace", "data": _process_trace_from_state(state, lens=lens)})
@@ -770,7 +784,7 @@ class Handler(BaseHTTPRequestHandler):
                     save_run(
                         brain_dump,
                         [b.to_dict() for b in state.beads],
-                        state.metadata.get("pattern_graph", {}),
+                        graph,
                         output_text,
                         stage_timings=state.timings or timings,
                         telemetry=telemetry,
@@ -781,7 +795,11 @@ class Handler(BaseHTTPRequestHandler):
                 logger.warning(f"[{rid}] Client disconnected during game stream")
 
             self._log("POST", self.path, 200, start, extra={
-                "streamed": True, "lens": lens, "timings": timings,
+                "streamed": True,
+                "lens": lens,
+                "thread_count": graph.get("thread_count", 0),
+                "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
+                "timings": timings,
             })
         finally:
             _pipeline_semaphore.release()
@@ -861,6 +879,8 @@ class Handler(BaseHTTPRequestHandler):
             "streamed": True,
             "entity_count": len(state.beads) if state else 0,
             "emergent": graph.get("emergent_topic") if graph else None,
+            "thread_count": graph.get("thread_count", 0) if graph else 0,
+            "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0) if graph else 0,
             "timings": timings,
         })
 

@@ -17,6 +17,26 @@ RELATIONSHIPS = (
 )
 
 
+def is_cross_domain_thread_data(thread: dict) -> bool:
+    """Return True when serialized thread data bridges distinct domains."""
+    domains = [d for d in thread.get("domains_bridged", []) if d]
+    return bool(thread.get("isomorphic") or (len(domains) >= 2 and domains[0] != domains[1]))
+
+
+def serialize_thread(thread) -> dict:
+    """Return public thread data for Thread instances or dict-like fixtures."""
+    if isinstance(thread, dict):
+        return thread
+    if hasattr(thread, "to_dict"):
+        return thread.to_dict()
+    return {}
+
+
+def serialize_threads(threads) -> list[dict]:
+    """Serialize thread collections while ignoring non-public placeholders."""
+    return [data for data in (serialize_thread(thread) for thread in threads or []) if data]
+
+
 class Thread:
     """A connection between two Beads across domains."""
 
@@ -63,6 +83,9 @@ class Thread:
             "domains_bridged": list(self.domains_bridged),
             "evidence": list(self.evidence),
         }
+
+    def is_cross_domain(self) -> bool:
+        return is_cross_domain_thread_data(self.to_dict())
 
     @classmethod
     def from_dict(cls, data: dict) -> Thread:

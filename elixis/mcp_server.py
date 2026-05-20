@@ -21,8 +21,7 @@ from .entities import extract_entities
 from .naming import research_name
 from .patterns import build_pattern_graph
 from .process_trace import process_trace_from_state
-from .research import enrich_entities
-from .synthesis import synthesize_soulmd
+from .thread import serialize_threads
 from .translate import translate_text
 from .validation import validate_brain_dump
 
@@ -220,17 +219,22 @@ def _tool_create_soul(args):
         return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
     brain_dump = meta.get("sanitized_text", brain_dump)
 
-    entities = extract_entities(brain_dump)
-    enrich_entities(entities)
-    graph = build_pattern_graph(entities, brain_dump)
-    soulmd = synthesize_soulmd(entities, graph)
-
+    from .engine import GameEngine
+    engine = GameEngine()
+    soulmd = engine.run_full(brain_dump, lens="identity")
+    state = engine.state
+    graph = state.metadata.get("pattern_graph", {})
+    threads = graph.get("threads") or serialize_threads(state.threads)
     result = {
-        "entity_count": len(entities),
-        "top_patterns": [p["name"] for p in graph.get("patterns", [])[:3]],
+        "entity_count": len(state.beads),
+        "thread_count": graph.get("thread_count", len(state.threads)),
+        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
+        "threads": threads[:8],
+        "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
         "emergent_topic": graph.get("emergent_topic"),
         "emergent_theme": graph.get("emergent_theme"),
         "consensus_score": graph.get("consensus_score"),
+        "process_trace": process_trace_from_state(state, lens="identity"),
         "soulmd": soulmd,
     }
     return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
@@ -255,10 +259,13 @@ def _tool_run_game(args):
     output = engine.run_full(brain_dump, lens=lens)
     state = engine.state
     graph = state.metadata.get("pattern_graph", {})
+    threads = graph.get("threads") or serialize_threads(state.threads)
     result = {
         "lens": lens,
         "entity_count": len(state.beads),
-        "thread_count": len(state.threads),
+        "thread_count": graph.get("thread_count", len(state.threads)),
+        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
+        "threads": threads[:8],
         "tension_count": len(state.tensions),
         "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
         "emergent_topic": graph.get("emergent_topic"),

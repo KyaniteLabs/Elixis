@@ -17,6 +17,8 @@ import tempfile
 import threading
 from datetime import datetime, timezone
 
+from .thread import is_cross_domain_thread_data
+
 logger = logging.getLogger(__name__)
 
 _BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".elixis")
@@ -119,6 +121,7 @@ def save_run(
     """Save a full pipeline run."""
     _ensure_dirs()
     ts = datetime.now(timezone.utc)
+    threads = graph.get("threads", [])
     entry = {
         "timestamp": ts.isoformat(),
         "lens": lens,
@@ -131,6 +134,12 @@ def save_run(
         "emergent_theme": graph.get("emergent_theme"),
         "consensus_score": graph.get("consensus_score"),
         "bridge_count": len(graph.get("bridges", [])),
+        "thread_count": graph.get("thread_count", len(threads)),
+        "cross_domain_thread_count": graph.get(
+            "cross_domain_thread_count",
+            _count_cross_domain_threads(threads),
+        ),
+        "thread_preview": [_thread_preview(t) for t in threads[:5]],
         "output_length": len(soulmd),
         "output_preview": soulmd[:300],
         "soulmd_length": len(soulmd),
@@ -159,6 +168,22 @@ def save_run(
             json.dump(entry, f, indent=2)
     except OSError as exc:
         logger.warning("Failed to save pipeline run: %s", exc)
+
+
+def _count_cross_domain_threads(threads):
+    return sum(1 for thread in threads if is_cross_domain_thread_data(thread))
+
+
+def _thread_preview(thread):
+    return {
+        "bead_a": thread.get("bead_a"),
+        "bead_b": thread.get("bead_b"),
+        "relationship": thread.get("relationship"),
+        "strength": thread.get("strength"),
+        "isomorphic": thread.get("isomorphic"),
+        "domains_bridged": thread.get("domains_bridged", []),
+        "evidence": thread.get("evidence", [])[:2],
+    }
 
 
 def log_request(method, path, status, duration_ms, extra=None):

@@ -1,7 +1,7 @@
 """Tests for elixis.thread — Thread class and RELATIONSHIPS constant."""
 
 
-from elixis.thread import RELATIONSHIPS, Thread
+from elixis.thread import RELATIONSHIPS, Thread, is_cross_domain_thread_data, serialize_threads
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +104,32 @@ class TestThreadValidate:
         t = Thread()
         result = t.validate()
         assert result is t
+
+
+# ---------------------------------------------------------------------------
+# cross-domain classification
+# ---------------------------------------------------------------------------
+
+class TestThreadCrossDomain:
+    def test_isomorphic_thread_counts_as_cross_domain(self):
+        t = Thread(isomorphic=True, domains_bridged=("philosophy", "literature"))
+
+        assert t.is_cross_domain() is True
+
+    def test_distinct_non_empty_domains_count_as_cross_domain(self):
+        data = {"isomorphic": False, "domains_bridged": ["philosophy", "literature"]}
+
+        assert is_cross_domain_thread_data(data) is True
+
+    def test_empty_bridge_domains_do_not_count_as_cross_domain(self):
+        t = Thread(relationship="bridges", domains_bridged=("", ""))
+
+        assert t.is_cross_domain() is False
+
+    def test_serialize_threads_ignores_non_public_placeholders(self):
+        t = Thread(bead_a="A", bead_b="B", relationship="complements")
+
+        assert serialize_threads([object(), t]) == [t.to_dict()]
 
 
 # ---------------------------------------------------------------------------

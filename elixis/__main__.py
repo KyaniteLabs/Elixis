@@ -90,6 +90,7 @@ def _run_server(port: int) -> Any:
 def _cmd_run(args: argparse.Namespace) -> int:
     from .engine import GameEngine
     from .process_trace import process_trace_from_state
+    from .thread import serialize_threads
     from .validation import validate_brain_dump
 
     text = _read_text(args)
@@ -103,10 +104,13 @@ def _cmd_run(args: argparse.Namespace) -> int:
     if args.json:
         state = engine.state
         graph = state.metadata.get("pattern_graph", {})
+        threads = graph.get("threads") or serialize_threads(state.threads)
         _print_json({
             "lens": args.lens,
             "entity_count": len(state.beads),
-            "thread_count": len(state.threads),
+            "thread_count": graph.get("thread_count", len(state.threads)),
+            "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
+            "threads": threads[:8],
             "tension_count": len(state.tensions),
             "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
             "emergent_topic": graph.get("emergent_topic"),
