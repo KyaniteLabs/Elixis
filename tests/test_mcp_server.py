@@ -25,6 +25,19 @@ class _FakeGameEngine:
                     "emergent_topic": "strategic clarity",
                     "emergent_theme": "wise authority",
                     "consensus_score": 0.82,
+                    "threads": [
+                        {
+                            "bead_a": "Athena",
+                            "bead_b": "Batman",
+                            "relationship": "complements",
+                            "strength": 0.8,
+                            "isomorphic": True,
+                            "domains_bridged": ["spirituality", "literature"],
+                            "evidence": ["Shared themes: strategy"],
+                        }
+                    ],
+                    "thread_count": 1,
+                    "cross_domain_thread_count": 1,
                 }
             },
             timings={"declaration_ms": 1, "connection_ms": 2, "resolution_ms": 3},
@@ -61,11 +74,28 @@ class TestMcpServer(unittest.TestCase):
 
         self.assertEqual(payload["lens"], "brand")
         self.assertEqual(payload["entity_count"], 1)
-        self.assertEqual(payload["thread_count"], 2)
+        self.assertEqual(payload["thread_count"], 1)
+        self.assertEqual(payload["cross_domain_thread_count"], 1)
+        self.assertEqual(payload["threads"][0]["relationship"], "complements")
         self.assertEqual(payload["top_patterns"], ["Wisdom", "Power"])
         self.assertEqual(payload["process_trace"]["lens"], "brand")
+        self.assertEqual(payload["process_trace"]["pattern_matching"]["thread_count"], 1)
         self.assertIn("pattern_matching", payload["process_trace"])
         self.assertIn("# Brand Output", payload["output"])
+
+    @patch("elixis.engine.GameEngine", _FakeGameEngine)
+    def test_create_soul_uses_full_engine_connection_output(self):
+        result = mcp_server._tool_create_soul({
+            "brain_dump": "Athena and Batman as identity references",
+        })
+        payload = json.loads(result["content"][0]["text"])
+
+        self.assertEqual(payload["entity_count"], 1)
+        self.assertEqual(payload["thread_count"], 1)
+        self.assertEqual(payload["cross_domain_thread_count"], 1)
+        self.assertEqual(payload["threads"][0]["relationship"], "complements")
+        self.assertEqual(payload["process_trace"]["pattern_matching"]["thread_count"], 1)
+        self.assertIn("# Identity Output", payload["soulmd"])
 
     @patch("elixis.mcp_server._tool_extract_entities", side_effect=RuntimeError("boom"))
     def test_tool_call_errors_do_not_return_tracebacks(self, _mock_tool):

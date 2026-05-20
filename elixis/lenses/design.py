@@ -139,6 +139,22 @@ _DESIGN_ALIASES = {
 }
 
 
+_FONT_PAIRS = {
+    "transformation": ("Space Grotesk", "IBM Plex Sans", "JetBrains Mono"),
+    "power": ("IBM Plex Sans", "Source Sans 3", "JetBrains Mono"),
+    "outsider": ("Space Grotesk", "IBM Plex Mono", "JetBrains Mono"),
+    "creation": ("Fraunces", "Nunito", "JetBrains Mono"),
+    "shadow": ("Bitter", "IBM Plex Sans", "JetBrains Mono"),
+    "wisdom": ("Source Serif 4", "IBM Plex Sans", "JetBrains Mono"),
+    "connection": ("Lora", "Karla", "JetBrains Mono"),
+    "struggle": ("Oswald", "Roboto Condensed", "JetBrains Mono"),
+    "freedom": ("Space Mono", "Space Grotesk", "JetBrains Mono"),
+    "spiritual": ("Cormorant Garamond", "IBM Plex Sans", "JetBrains Mono"),
+    "trickster": ("Baloo 2", "Nunito", "JetBrains Mono"),
+    "explorer": ("Exo 2", "Rajdhani", "JetBrains Mono"),
+}
+
+
 def _design_key(pattern_id):
     return pattern_id if pattern_id in _DESIGN_PRINCIPLES else _DESIGN_ALIASES.get(pattern_id, "wisdom")
 
@@ -258,6 +274,7 @@ def generate_design(entities: list, graph: dict) -> str:
 
     palette = _derive_palette(top)
     principles = _DESIGN_PRINCIPLES.get(design_key, _DESIGN_PRINCIPLES["wisdom"])
+    fonts = _FONT_PAIRS.get(design_key, _FONT_PAIRS["wisdom"])
 
     sections = [
         f"# Design System: {topic}",
@@ -285,6 +302,9 @@ def generate_design(entities: list, graph: dict) -> str:
         "",
         "## Typography Scale",
         "",
+        f"--font-display: {fonts[0]};",
+        f"--font-body-family: {fonts[1]};",
+        f"--font-mono-family: {fonts[2]};",
         "--font-hero: 3.5rem;",
         "--font-h1: 2.5rem;",
         "--font-h2: 2rem;",

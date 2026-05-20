@@ -108,6 +108,19 @@ class TestMain:
                     "emergent_topic": "clarity",
                     "emergent_theme": "wise systems",
                     "consensus_score": 0.9,
+                    "threads": [
+                        {
+                            "bead_a": "Athena",
+                            "bead_b": "Batman",
+                            "relationship": "complements",
+                            "strength": 0.8,
+                            "isomorphic": True,
+                            "domains_bridged": ["spirituality", "literature"],
+                            "evidence": ["Shared themes: strategy"],
+                        }
+                    ],
+                    "thread_count": 1,
+                    "cross_domain_thread_count": 1,
                 }
             },
             timings={"declaration_ms": 1, "connection_ms": 2, "resolution_ms": 3},
@@ -120,7 +133,10 @@ class TestMain:
         payload = json.loads(capsys.readouterr().out)
         assert payload["lens"] == "brand"
         assert payload["entity_count"] == 1
+        assert payload["cross_domain_thread_count"] == 1
+        assert payload["threads"][0]["relationship"] == "complements"
         assert payload["process_trace"]["lens"] == "brand"
+        assert payload["process_trace"]["pattern_matching"]["thread_count"] == 1
         assert payload["output"] == "# Brand Output"
 
     @patch("elixis.entities.extract_entities", return_value=[{"canonical": "Athena"}])

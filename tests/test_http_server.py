@@ -112,6 +112,18 @@ class TestGetRoutes(unittest.TestCase):
 
     @patch.object(Handler, '_json_response')
     @patch.object(Handler, '_log')
+    def test_game_schema_documents_connection_thread_outputs(self, mock_log, mock_json):
+        handler = _make_handler("GET", "/api/game/schema")
+
+        with patch.object(Handler, 'do_GET', Handler.do_GET):
+            handler.do_GET()
+
+        data = mock_json.call_args[0][0]
+        self.assertIn("threads", data["connection_outputs"])
+        self.assertIn("cross_domain_thread_count", data["connection_outputs"])
+
+    @patch.object(Handler, '_json_response')
+    @patch.object(Handler, '_log')
     @patch('app.get_supported_languages')
     def test_route_matching_ignores_query_string(self, mock_langs, mock_log, mock_json):
         mock_langs.return_value = {"en": "English"}
@@ -502,10 +514,23 @@ class TestGamePayloads(unittest.TestCase):
                     "confidence": 0.92,
                 }
 
+        class FakeThread:
+            def to_dict(self):
+                return {
+                    "bead_a": "Athena",
+                    "bead_b": "Batman",
+                    "relationship": "complements",
+                    "strength": 0.8,
+                    "isomorphic": True,
+                    "domains_bridged": ["spirituality", "literature"],
+                    "evidence": ["Shared themes: strategy"],
+                }
+
         class FakeEngine:
             def __init__(self):
                 self.state = MagicMock()
                 self.state.beads = [FakeBead()]
+                self.state.threads = [FakeThread()]
                 self.state.metadata = {
                     "pattern_graph": {
                         "patterns": [
@@ -518,6 +543,9 @@ class TestGamePayloads(unittest.TestCase):
                             }
                         ],
                         "bridges": [],
+                        "threads": [FakeThread().to_dict()],
+                        "thread_count": 1,
+                        "cross_domain_thread_count": 1,
                     },
                     "pattern_telemetry": {
                         "llm_available": True,
@@ -559,6 +587,8 @@ class TestGamePayloads(unittest.TestCase):
             "Wisdom & Knowledge",
         )
         self.assertEqual(result["process_trace"]["entities"][0]["name"], "Athena")
+        self.assertEqual(result["threads"][0]["relationship"], "complements")
+        self.assertEqual(result["process_trace"]["pattern_matching"]["thread_count"], 1)
 
     def test_game_pipeline_includes_normalized_output_alias(self):
         class FakeBead:
@@ -573,7 +603,15 @@ class TestGamePayloads(unittest.TestCase):
 
         class FakeThread:
             def to_dict(self):
-                return {"bead_a": "Athena", "bead_b": "Wisdom"}
+                return {
+                    "bead_a": "Athena",
+                    "bead_b": "Batman",
+                    "relationship": "complements",
+                    "strength": 0.8,
+                    "isomorphic": True,
+                    "domains_bridged": ["spirituality", "literature"],
+                    "evidence": ["Shared themes: strategy"],
+                }
 
         class FakeEngine:
             def __init__(self):
@@ -601,6 +639,9 @@ class TestGamePayloads(unittest.TestCase):
                                 "score_b": 0.62,
                             }
                         ],
+                        "threads": [FakeThread().to_dict()],
+                        "thread_count": 1,
+                        "cross_domain_thread_count": 1,
                         "analysis_notes": ["Athena supports strategic clarity."],
                         "emergent_topic": "Wisdom & Knowledge",
                         "consensus_score": 0.75,
@@ -649,6 +690,10 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(trace["pattern_matching"]["top_patterns"][0]["probability"], 0.88)
         self.assertEqual(trace["pattern_matching"]["bridges"][0]["entity"], "Athena")
         self.assertEqual(trace["pattern_matching"]["consensus_score"], 0.75)
+        self.assertEqual(result["thread_count"], 1)
+        self.assertEqual(result["cross_domain_thread_count"], 1)
+        self.assertEqual(result["threads"][0]["relationship"], "complements")
+        self.assertEqual(trace["phases"][2]["thread_count"], 1)
 
     @patch.object(Handler, '_begin_sse_response')
     @patch.object(Handler, '_log')
@@ -679,6 +724,19 @@ class TestGamePayloads(unittest.TestCase):
                             }
                         ],
                         "bridges": [],
+                        "threads": [
+                            {
+                                "bead_a": "Athena",
+                                "bead_b": "Batman",
+                                "relationship": "complements",
+                                "strength": 0.8,
+                                "isomorphic": True,
+                                "domains_bridged": ["spirituality", "literature"],
+                                "evidence": ["Shared themes: strategy"],
+                            }
+                        ],
+                        "thread_count": 1,
+                        "cross_domain_thread_count": 1,
                     },
                     "pattern_telemetry": {
                         "llm_available": True,
@@ -730,6 +788,9 @@ class TestGamePayloads(unittest.TestCase):
         ]
         event_types = [event["type"] for event in events]
         self.assertIn("process_trace", event_types)
+        graph_event = [event for event in events if event["type"] == "graph"][0]
+        self.assertEqual(graph_event["data"]["thread_count"], 1)
+        self.assertEqual(graph_event["data"]["threads"][0]["relationship"], "complements")
         trace_events = [event for event in events if event["type"] == "process_trace"]
         self.assertEqual(len(trace_events), 2)
         trace_event = trace_events[0]
@@ -767,7 +828,25 @@ class TestGamePayloads(unittest.TestCase):
                 self.threads = []
                 self.tensions = []
                 self.timings = {"declaration_ms": 1, "elaboration_ms": 2, "connection_ms": 3}
-                self.metadata = {"pattern_graph": {"patterns": [{"name": "Wisdom"}], "bridges": []}}
+                self.metadata = {
+                    "pattern_graph": {
+                        "patterns": [{"name": "Wisdom"}],
+                        "bridges": [],
+                        "threads": [
+                            {
+                                "bead_a": "Athena",
+                                "bead_b": "Batman",
+                                "relationship": "complements",
+                                "strength": 0.8,
+                                "isomorphic": True,
+                                "domains_bridged": ["spirituality", "literature"],
+                                "evidence": ["Shared themes: strategy"],
+                            }
+                        ],
+                        "thread_count": 1,
+                        "cross_domain_thread_count": 1,
+                    }
+                }
 
         class FakeEngine:
             def __init__(self):
@@ -808,7 +887,10 @@ class TestGamePayloads(unittest.TestCase):
             for line in handler.wfile.getvalue().decode().splitlines()
             if line.startswith("data: ")
         ]
+        graph_event = [event for event in events if event["type"] == "graph"][0]
+        self.assertEqual(graph_event["data"]["thread_count"], 1)
         final_trace_event = [event for event in events if event["type"] == "process_trace"][-1]
+        self.assertEqual(final_trace_event["data"]["pattern_matching"]["thread_count"], 1)
         self.assertEqual(final_trace_event["data"]["phases"][3]["duration_ms"], 17)
 
 

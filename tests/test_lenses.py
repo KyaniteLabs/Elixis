@@ -184,6 +184,8 @@ class TestGenerateDesignValid(unittest.TestCase):
         p = _make_good_pattern()
         result = generate_design([], _make_graph(p))
         self.assertIn("--color-primary:", result)
+        self.assertIn("--font-display:", result)
+        self.assertIn("--font-body-family:", result)
         self.assertIn("--font-hero:", result)
         self.assertIn("--spacing-xs:", result)
         self.assertIn("--radius-sm:", result)
