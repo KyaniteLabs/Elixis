@@ -1567,6 +1567,13 @@ body {
   word-break: break-word;
 }
 
+.trace-value-strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  font-weight: 800;
+}
+
 .trace-phase-name {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
@@ -1588,6 +1595,22 @@ body {
 .trace-probability {
   color: var(--accent);
   font-family: var(--font-mono);
+}
+
+.trace-thread-title {
+  color: var(--text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.trace-thread-evidence {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  margin-top: var(--space-xs);
 }
 
 .trace-tags {
@@ -2540,11 +2563,14 @@ function renderProcessTrace() {
   const topPatterns = (trace.pattern_matching?.top_patterns || []).slice(0, 6);
   const entities = (trace.entities || []).slice(0, 8);
   const bridges = (trace.pattern_matching?.bridges || []).slice(0, 5);
+  const threads = (trace.pattern_matching?.threads || []).slice(0, 6);
   const notes = trace.pattern_matching?.analysis_notes || [];
   const connectionPhase = (trace.phases || []).find((phase) => phase.name === 'connection') || {};
   const classificationSource = trace.pattern_matching?.classification_source || connectionPhase.source || 'unknown';
   const classificationError = trace.pattern_matching?.classification_error;
   const classificationBudget = trace.pattern_matching?.classification_max_tokens || connectionPhase.max_tokens;
+  const threadCount = trace.pattern_matching?.thread_count ?? connectionPhase.thread_count ?? state.graph?.thread_count;
+  const crossDomainThreadCount = trace.pattern_matching?.cross_domain_thread_count ?? connectionPhase.cross_domain_thread_count ?? state.graph?.cross_domain_thread_count;
 
   dom.traceContent.innerHTML = `
     <section class="trace-section" aria-label="Model">
@@ -2609,6 +2635,14 @@ function renderProcessTrace() {
           <span class="trace-label">Error</span>
           <span class="trace-value">${classificationError ? esc(classificationError) : 'none'}</span>
         </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Threads</span>
+          <span class="trace-value trace-value-strong">${threadCount ?? '—'}</span>
+        </div>
+        <div class="trace-meta-item">
+          <span class="trace-label">Cross-domain</span>
+          <span class="trace-value trace-value-strong">${crossDomainThreadCount ?? '—'}</span>
+        </div>
       </div>
     </section>
 
@@ -2650,6 +2684,31 @@ function renderProcessTrace() {
             ${bridge.pattern_a ? `<div class="trace-tags"><span class="trace-tag">${esc(bridge.pattern_a)} ${bridge.score_a ? fmtPct(bridge.score_a) : ''}</span><span class="trace-tag">${esc(bridge.pattern_b)} ${bridge.score_b ? fmtPct(bridge.score_b) : ''}</span></div>` : ''}
           </div>
         `).join('')}
+      </div>
+    </section>
+
+    <section class="trace-section" aria-label="Thread evidence">
+      <div class="trace-section-title">Synthesized Threads</div>
+      <div class="trace-evidence-list">
+        ${(threads.length ? threads : [{ bead_a: 'No synthesized threads', bead_b: '', relationship: '', strength: null, evidence: [] }]).map((thread) => {
+          const domains = (thread.domains_bridged || []).filter(Boolean);
+          const evidence = (thread.evidence || []).slice(0, 2);
+          return `
+            <div class="trace-evidence-item">
+              <div class="trace-thread-title">
+                <span>${esc(thread.bead_a || '')}</span>
+                ${thread.relationship ? `<span class="trace-probability">${esc(thread.relationship)}</span>` : ''}
+                ${thread.bead_b ? `<span>${esc(thread.bead_b)}</span>` : ''}
+              </div>
+              <div class="trace-tags">
+                ${thread.strength !== null && thread.strength !== undefined ? `<span class="trace-tag">strength ${fmtPct(thread.strength)}</span>` : ''}
+                ${thread.isomorphic ? '<span class="trace-tag">isomorphic</span>' : ''}
+                ${domains.map((domain) => `<span class="trace-tag">${esc(domain)}</span>`).join('')}
+              </div>
+              ${evidence.length ? `<div class="trace-thread-evidence">${evidence.map(esc).join('<br>')}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
       </div>
     </section>
 
