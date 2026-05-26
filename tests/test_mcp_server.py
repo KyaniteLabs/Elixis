@@ -54,6 +54,8 @@ class TestMcpServer(unittest.TestCase):
         tools = mcp_server._handle_tools_list({})["tools"]
         names = {tool["name"] for tool in tools}
         self.assertIn("run_game", names)
+        self.assertIn("ingest_source", names)
+        self.assertIn("create_market_kit", names)
 
     def test_run_game_rejects_invalid_lens(self):
         result = mcp_server._tool_run_game({
@@ -119,6 +121,22 @@ class TestMcpServer(unittest.TestCase):
         called_text = mock_extract.call_args[0][0]
         self.assertIn("[filtered]", called_text)
         self.assertNotIn("Ignore all previous instructions", called_text)
+
+    @patch("elixis.ingest.ingest_source", return_value={"run_id": "abc", "source_corpus": {"signal_count": 1}})
+    def test_ingest_source_tool_returns_ingestion_result(self, mock_ingest):
+        result = mcp_server._tool_ingest_source({"path": ".", "include_code": True})
+        payload = json.loads(result["content"][0]["text"])
+
+        mock_ingest.assert_called_once()
+        self.assertEqual(payload["run_id"], "abc")
+
+    @patch("elixis.market.create_market_kit", return_value={"run_id": "kit", "market_kit": {"title": "Kit"}})
+    def test_create_market_kit_tool_returns_market_result(self, mock_market):
+        result = mcp_server._tool_create_market_kit({"github": "https://github.com/KyaniteLabs/Elixis"})
+        payload = json.loads(result["content"][0]["text"])
+
+        mock_market.assert_called_once()
+        self.assertEqual(payload["market_kit"]["title"], "Kit")
 
 
 if __name__ == "__main__":

@@ -176,3 +176,26 @@ class TestMain:
 
         assert result == 0
         mock_mcp_main.assert_called_once()
+
+    @patch("elixis.ingest.ingest_source", return_value={"run_id": "abc", "source_corpus": {"signal_count": 1}})
+    def test_ingest_command_outputs_source_corpus_result(self, mock_ingest, capsys):
+        from elixis.__main__ import main
+
+        result = main(["ingest", "--path", ".", "--include-code", "--artifact", "markdown"])
+
+        assert result == 0
+        mock_ingest.assert_called_once()
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["run_id"] == "abc"
+        assert payload["source_corpus"]["signal_count"] == 1
+
+    @patch("elixis.market.create_market_kit", return_value={"run_id": "kit", "market_kit": {"title": "Kit"}})
+    def test_ingest_kit_command_uses_market_orchestration(self, mock_market, capsys):
+        from elixis.__main__ import main
+
+        result = main(["ingest", "--github", "https://github.com/KyaniteLabs/Elixis", "--kit", "--artifact", "html"])
+
+        assert result == 0
+        mock_market.assert_called_once()
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["market_kit"]["title"] == "Kit"

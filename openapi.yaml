@@ -2,10 +2,11 @@ openapi: "3.1.0"
 info:
   title: Elixis API
   description: |
-    Local-first AI pattern synthesis engine for identity, brand voice, design systems,
-    naming research, and lens-specific outputs. Elixis turns raw
-    references into beads, threads, pattern graphs, tensions, and lens-specific
-    markdown documents.
+    Local-first AI pattern synthesis engine for Source Corpus ingestion,
+    Market Kit orchestration, identity, brand voice, design systems, naming
+    research, and lens-specific outputs. Elixis turns raw references,
+    repositories, and folders into curated Corpus Signals, pattern graphs,
+    naming directions, market positioning, messaging, and design-system guidance.
   version: "1.0.0"
   license:
     name: MIT
@@ -22,6 +23,8 @@ tags:
     description: Identity-compatible synthesis routes
   - name: Synthesis
     description: Pattern synthesis phases and lens-based output generation
+  - name: Ingestion
+    description: Source Corpus ingestion and Market Kit orchestration
   - name: Translation
     description: Translation, language detection, and cache routes
   - name: Naming
@@ -326,6 +329,91 @@ paths:
         "200":
           description: Name research report
 
+  /api/ingest:
+    post:
+      summary: Build a Source Corpus from a GitHub repository or local folder
+      description: |
+        Read-only ingestion route that discovers, filters, scores, and persists
+        quality-improving Corpus Signals. Sensitive Candidates are rejected
+        before scoring, and only rejection categories or paths are reported.
+      operationId: ingestSource
+      tags: [Ingestion]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestRequest"
+      responses:
+        "200":
+          description: Shared Ingestion Result contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestionResult"
+        "400":
+          description: Invalid source target or ingestion option
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Server busy or shutting down
+
+  /api/market-kit:
+    post:
+      summary: Build a Source Corpus and generate a structured Market Kit
+      description: |
+        Orchestrates Source Corpus ingestion through the pattern workflow to
+        produce naming, positioning, brand voice, messaging, and visual design
+        direction. HTML and CSS artifacts are explicit artifact tiers for cases
+        where human-readable visual review is worth the extra token cost.
+      operationId: createMarketKit
+      tags: [Ingestion]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestRequest"
+      responses:
+        "200":
+          description: Ingestion Result with market_kit and optional artifacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestionResult"
+        "400":
+          description: Invalid source target or ingestion option
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Server busy or shutting down
+
+  /api/ingest/{run_id}:
+    get:
+      summary: Inspect a persisted Ingestion Result
+      operationId: getIngestionRun
+      tags: [Ingestion]
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{12}$"
+      responses:
+        "200":
+          description: Persisted Ingestion Result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestionResult"
+        "404":
+          description: Ingestion run was not found
+
   /api/health:
     get:
       summary: Health check with LLM and disk status
@@ -535,6 +623,196 @@ components:
       scheme: bearer
       description: ADMIN_API_KEY bearer token. X-Admin-API-Key is also accepted by the server.
   schemas:
+    IngestRequest:
+      type: object
+      oneOf:
+        - required: [github]
+        - required: [path]
+      properties:
+        github:
+          type: string
+          description: GitHub repository URL, such as https://github.com/KyaniteLabs/Elixis
+        path:
+          type: string
+          description: Local folder path on the Elixis host
+        kit:
+          type: boolean
+          default: false
+          description: Include Market Kit orchestration when posted to /api/ingest
+        artifacts:
+          type: array
+          description: Explicit artifact tiers to render
+          items:
+            type: string
+            enum: [markdown, html, css, market-page]
+        include_code:
+          type: boolean
+          default: false
+          description: Include supporting code evidence
+        include_issues:
+          type: boolean
+          default: false
+          description: Include GitHub issue evidence
+        include_prs:
+          type: boolean
+          default: false
+          description: Include GitHub pull request evidence
+        include_commits:
+          type: boolean
+          default: false
+          description: Include GitHub commit trajectory evidence
+        include_hidden:
+          type: boolean
+          default: false
+          description: Include safe hidden local files
+        include_large_files:
+          type: boolean
+          default: false
+          description: Allow large text files into scoring
+        include_visual_analysis:
+          type: boolean
+          default: false
+          description: Include visual asset metadata for downstream visual review
+        max_signals:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 80
+
+    IngestionResult:
+      type: object
+      properties:
+        run_id:
+          type: string
+          pattern: "^[a-f0-9]{12}$"
+        source_target:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [github, local]
+            name:
+              type: string
+            path:
+              type: string
+            url:
+              type: string
+            metadata:
+              type: object
+              additionalProperties: true
+        source_corpus:
+          type: object
+          properties:
+            signals:
+              type: array
+              items:
+                $ref: "#/components/schemas/CorpusSignal"
+            signal_count:
+              type: integer
+            corpus_text:
+              type: string
+        rejected_signals:
+          type: object
+          description: Aggregated rejection counts and paths. Secret values are never exposed.
+          additionalProperties: true
+        signal_value_summary:
+          type: object
+          additionalProperties: true
+        artifact_tiers:
+          type: array
+          items:
+            type: string
+        pattern_graph:
+          $ref: "#/components/schemas/PatternGraph"
+        market_kit:
+          $ref: "#/components/schemas/MarketKit"
+        artifacts:
+          type: object
+          description: Optional rendered artifact files keyed by filename
+          additionalProperties:
+            type: string
+        process_trace:
+          type: object
+          additionalProperties: true
+
+    CorpusSignal:
+      type: object
+      properties:
+        kind:
+          type: string
+          description: Evidence class, such as documentation, metadata, visual_asset, or code_evidence
+        title:
+          type: string
+        text:
+          type: string
+        path:
+          type:
+            - string
+            - "null"
+        url:
+          type:
+            - string
+            - "null"
+        score:
+          type: number
+        score_reasons:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    MarketKit:
+      type: object
+      properties:
+        title:
+          type: string
+        positioning:
+          type: object
+          additionalProperties: true
+        naming:
+          type: object
+          additionalProperties: true
+        brand_voice:
+          type: object
+          additionalProperties: true
+        messaging:
+          type: object
+          additionalProperties: true
+        design_system:
+          type: object
+          properties:
+            markdown:
+              type: string
+            color_palette:
+              type: object
+              additionalProperties:
+                type: string
+            typography:
+              type: object
+              additionalProperties:
+                type: string
+            spacing:
+              type: object
+              additionalProperties:
+                type: string
+            borders:
+              type: object
+              additionalProperties:
+                type: string
+            shadows:
+              type: object
+              additionalProperties:
+                type: string
+            visual_motifs:
+              type: array
+              items:
+                type: string
+        evidence_map:
+          type: object
+          additionalProperties: true
+
     Lens:
       type: string
       enum: [brand, design, identity]

@@ -310,6 +310,45 @@ class TestPostValidation(unittest.TestCase):
 
     @patch.object(Handler, '_json_response')
     @patch.object(Handler, '_log')
+    def test_ingest_requires_exactly_one_source_target(self, mock_log, mock_json):
+        handler = _make_handler("POST", "/api/ingest", body={})
+
+        with patch.object(Handler, 'do_POST', Handler.do_POST):
+            handler.do_POST()
+
+        data, status = mock_json.call_args[0]
+        self.assertEqual(status, 400)
+        self.assertIn("Source Target", data["error"])
+
+    @patch.object(Handler, '_json_response')
+    @patch.object(Handler, '_log')
+    @patch("elixis.ingest.ingest_source", return_value={"run_id": "abc", "source_corpus": {"signal_count": 2}})
+    def test_ingest_endpoint_returns_shared_ingestion_result(self, mock_ingest, mock_log, mock_json):
+        handler = _make_handler("POST", "/api/ingest", body={"path": ".", "include_code": True})
+
+        with patch.object(Handler, 'do_POST', Handler.do_POST):
+            handler.do_POST()
+
+        mock_ingest.assert_called_once()
+        data = mock_json.call_args[0][0]
+        self.assertEqual(data["run_id"], "abc")
+        self.assertEqual(data["source_corpus"]["signal_count"], 2)
+
+    @patch.object(Handler, '_json_response')
+    @patch.object(Handler, '_log')
+    @patch("elixis.market.create_market_kit", return_value={"run_id": "kit", "market_kit": {"title": "Kit"}})
+    def test_market_kit_endpoint_uses_orchestration(self, mock_market, mock_log, mock_json):
+        handler = _make_handler("POST", "/api/market-kit", body={"github": "https://github.com/KyaniteLabs/Elixis"})
+
+        with patch.object(Handler, 'do_POST', Handler.do_POST):
+            handler.do_POST()
+
+        mock_market.assert_called_once()
+        data = mock_json.call_args[0][0]
+        self.assertEqual(data["market_kit"]["title"], "Kit")
+
+    @patch.object(Handler, '_json_response')
+    @patch.object(Handler, '_log')
     @patch('app.MAX_BODY_SIZE', 16)
     def test_rejects_oversized_json_body(self, mock_log, mock_json):
         handler = _make_handler("POST", "/api/extract", body={"brain_dump": "x" * 100})

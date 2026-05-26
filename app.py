@@ -264,6 +264,16 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json_response({"runs": get_recent_runs(50)})
             self._log("GET", path, 200, start)
+        elif path.startswith("/api/ingest/"):
+            run_id = path[len("/api/ingest/"):]
+            try:
+                from elixis.ingest import load_ingestion_result
+                self._json_response(load_ingestion_result(run_id))
+                status = 200
+            except ValueError as exc:
+                self._json_response({"error": str(exc)}, 404)
+                status = 404
+            self._log("GET", path, status, start)
         elif path == "/api/languages":
             self._json_response({"languages": get_supported_languages()})
             self._log("GET", path, 200, start)
@@ -339,6 +349,8 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_translate_stream(start)
         elif path == "/api/naming":
             self._handle_naming(start)
+        elif path in ("/api/ingest", "/api/market-kit"):
+            self._handle_ingest(start, force_kit=(path == "/api/market-kit"))
         elif path == "/api/backups":
             if not self._require_admin():
                 self._log("POST", path, self._admin_response_status_for_log(), start)
@@ -627,6 +639,66 @@ class Handler(BaseHTTPRequestHandler):
             "name": name,
             "context": context,
             "variant_count": len(report.get("variants", [])),
+        })
+
+    def _handle_ingest(self, start, force_kit=False):
+        data, err = self._read_json_body()
+        if err:
+            self._json_body_error(err)
+            return
+
+        github = data.get("github") or data.get("github_url")
+        path = data.get("path") or data.get("local_path")
+        if bool(github) == bool(path):
+            self._json_response({"error": "Provide exactly one Source Target: github or path"}, 400)
+            return
+
+        if not _request_enter():
+            self._json_response({"error": "Server is shutting down"}, 503)
+            return
+        if not _pipeline_semaphore.acquire(blocking=False):
+            _request_leave()
+            self._json_response({"error": "Server busy"}, 503)
+            return
+        try:
+            kit = bool(data.get("kit", False)) or force_kit
+            kwargs = {
+                "github": github,
+                "path": path,
+                "artifacts": data.get("artifacts", []),
+                "include_code": bool(data.get("include_code", kit)),
+                "include_issues": bool(data.get("include_issues", False)),
+                "include_prs": bool(data.get("include_prs", False)),
+                "include_commits": bool(data.get("include_commits", False)),
+                "include_hidden": bool(data.get("include_hidden", False)),
+                "include_large_files": bool(data.get("include_large_files", False)),
+                "include_visual_analysis": bool(data.get("include_visual_analysis", False)),
+                "max_signals": int(data.get("max_signals", 80)),
+            }
+            if kit:
+                from elixis.market import create_market_kit
+                result = create_market_kit(**kwargs)
+            else:
+                from elixis.ingest import ingest_source
+                result = ingest_source(**kwargs)
+        except (ValueError, OSError) as exc:
+            self._json_response({"error": str(exc)}, 400)
+            status = 400
+        except Exception as exc:
+            logger.exception("Ingestion failed")
+            self._json_response({"error": f"Ingestion failed: {exc}"}, 500)
+            status = 500
+        else:
+            self._json_response(result)
+            status = 200
+        finally:
+            _pipeline_semaphore.release()
+            _request_leave()
+
+        self._log("POST", self.path, status, start, extra={
+            "github": bool(github),
+            "path": bool(path),
+            "kit": bool(data.get("kit", False)) or force_kit,
         })
 
     def _handle_backup_create(self, start):

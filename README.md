@@ -5,13 +5,13 @@
 [![CI](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/Elixis.svg)](https://github.com/KyaniteLabs/Elixis/stargazers)
 
-> A local-first AI pattern synthesis engine for turning raw references into structured outputs: identity, brand voice, design systems, naming direction, and SOUL.md documents.
+> A local-first AI pattern synthesis engine for turning raw references, repositories, and folders into Source Corpora, Market Kits, identity, brand voice, design systems, and naming direction.
 
-Elixis is a cross-domain synthesis engine. It transforms raw brain dump text — references, influences, values, works, people, places, aesthetics, constraints — into a pattern graph, then resolves that graph through output lenses. The identity lens generates **SOUL.md** documents for OpenClaw and Soul Spec, but SOUL.md is one output mode, not the whole scope. Current lenses also produce brand voice guidance and design-system direction, with naming research built on the same graph.
+Elixis is a cross-domain synthesis engine. It transforms raw brain dump text, GitHub repositories, and local folders — references, influences, values, works, people, places, aesthetics, constraints, documentation, metadata, and public interfaces — into a curated Source Corpus and pattern graph, then resolves that graph into usable market, brand, design, naming, and identity outputs. The identity lens generates **SOUL.md** documents for OpenClaw and Soul Spec, but SOUL.md is one output mode, not the whole scope.
 
 ## TL;DR
 
-Elixis takes a messy constellation of references and turns it into usable structure: beads, threads, archetypal patterns, tensions, and a resolved output. Choose the identity lens for SOUL.md, the brand lens for voice guidelines, the design lens for design tokens and principles, or the naming tools for semantically aligned names. It is bigger than identity-file generation: SOUL.md is a compatibility surface, while the core product is a reusable synthesis engine.
+Elixis takes a messy constellation of references or a real product repository and turns it into usable structure: Corpus Signals, beads, threads, archetypal patterns, tensions, and resolved outputs. Use Source Corpus ingestion to gather quality-ranked evidence, Market Kit orchestration for naming/positioning/messaging/design direction, the brand lens for voice guidelines, the design lens for design tokens and principles, the naming tools for semantically aligned names, or the identity lens for SOUL.md. It is bigger than identity-file generation: SOUL.md is a compatibility surface, while the core product is a reusable synthesis engine.
 
 **AI discovery:** [`llms.txt`](llms.txt) provides a compact project summary for AI assistants and search crawlers.
 
@@ -38,6 +38,8 @@ Historical planning notes are preserved under `archive/` for continuity only. Th
 | Connection | Builds threads, cross-domain bridges, tensions, and archetypal patterns |
 | Resolution | Uses lenses to generate identity, brand, design, or future output forms |
 | Naming | Generates and scores names against the same pattern graph |
+| Source Corpus | Ingests GitHub repositories or local folders into quality-scored evidence |
+| Market Kit | Orchestrates naming, positioning, brand, marketing, and design direction |
 | Validation | Input sanitization, prompt-injection filtering, output validation |
 | Traces & Backups | Preserves synthesis runs and enables rollback |
 
@@ -45,7 +47,7 @@ Historical planning notes are preserved under `archive/` for continuity only. Th
 
 ```text
 elixis/              Core Python package
-  __main__.py           Operator CLI: serve, run, extract, patterns, name, mcp
+  __main__.py           Operator CLI: serve, run, extract, patterns, name, ingest, corpus, mcp
   entities.py           Entity extraction and structured terms
   engine.py             Four-phase pattern synthesis orchestrator
   lenses/               Output lenses: identity, brand, design
@@ -56,6 +58,8 @@ elixis/              Core Python package
   naming.py             Name research and variant generation
   llm.py                LLM interface (Ollama / OpenAI-compatible / Anthropic)
   validation.py         Input sanitization and validation
+  ingest.py             Source Corpus ingestion for GitHub repositories and local folders
+  market.py             Market Kit orchestration from Source Corpus evidence
   traces.py             Run trace capture and diagnostics
   backup.py             Backup and restore helpers
   logging_config.py     Structured logging setup
@@ -94,8 +98,19 @@ python -m elixis run --file references.txt --lens design --json
 python -m elixis extract --text "Athena, Batman, Miyamoto Musashi"
 python -m elixis patterns --stdin < references.txt
 python -m elixis name --name Elixis --context "local AI synthesis tool"
+python -m elixis ingest --path . --kit --artifact markdown
+python -m elixis ingest --github https://github.com/KyaniteLabs/Elixis --kit --artifact html
+python -m elixis corpus inspect <run_id>
 python -m elixis mcp
 ```
+
+## Source Corpus and Market Kits
+
+Elixis can point at a GitHub repository or local folder and build a **Source Corpus**: a curated, auditable evidence bundle selected because it improves output quality. The corpus is not a raw dump of every readable file. Each Corpus Signal is scored for relevance, distinctiveness, authority, lens utility, provenance, freshness, and noise risk.
+
+The resulting **Ingestion Result** is the shared structured contract across CLI, HTTP API, and MCP. It contains the Source Target, included and rejected signals, scoring summary, process trace, and, when requested, a **Market Kit** with naming directions, positioning, audience/category notes, brand voice, messaging pillars, landing-page copy angles, color palettes, typography, spacing, borders, shadows, visual motifs, and design-system direction.
+
+HTML/CSS are optional artifact tiers for high-quality human review. They are generated only when explicitly requested or when visual presentation is critical; structured JSON remains the source of truth.
 
 ## Configuration
 
@@ -103,6 +118,15 @@ Copy the example environment file and set provider/runtime values as needed:
 
 ```bash
 cp .env.example .env
+```
+
+For GLM 5.1 cloud inference, use the OpenAI-compatible provider shape:
+
+```bash
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://api.z.ai/api/paas/v4
+LLM_MODEL=glm-5.1
+ZAI_API_KEY=...
 ```
 
 ## Development
@@ -115,6 +139,8 @@ python -m unittest discover tests/ -v
 ## Best for
 
 - Mapping a constellation of cultural references into beads, threads, patterns, and tensions.
+- Turning a GitHub repository or local folder into a quality-scored Source Corpus.
+- Generating a Market Kit with naming, positioning, messaging, brand, and visual design direction.
 - Resolving the same pattern graph into identity, brand voice, design direction, or naming options.
 - Creating AI agent personas for OpenClaw, SoulClaw, or any SOUL.md-compatible system.
 - Inspecting process evidence: model, phases, pattern scores, entity support, bridges, timings, and fallbacks.

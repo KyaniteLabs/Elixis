@@ -1,12 +1,14 @@
 # Elixis
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
+> Local-first AI pattern synthesis engine for Source Corpus ingestion, Market Kit orchestration, identity, brand voice, design systems, naming research, and lens-specific outputs.
 
-Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore. Works with local and cloud LLMs through Ollama, OpenAI-compatible APIs, or Anthropic's Messages API. Zero external Python dependencies.
+Elixis transforms raw references, GitHub repositories, or local folders into a curated Source Corpus, builds a structured pattern graph, and resolves that graph into usable market, brand, design, naming, and identity outputs. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but SOUL.md is one compatibility output, not the product boundary. Current surfaces include Source Corpus ingestion, Market Kit orchestration, brand voice guidance, design-system direction, naming research, run tracing, and backup/restore. Works with local and cloud LLMs through Ollama, OpenAI-compatible APIs, or Anthropic's Messages API. Zero external Python dependencies.
 
 ## Use cases
 
 - Run a four-phase pattern synthesis pipeline: declaration, elaboration, connection, resolution
+- Point Elixis at a GitHub repository or local folder and build a quality-scored Source Corpus
+- Generate a Market Kit with naming, positioning, messaging, brand voice, color palette, typography, spacing, borders, shadows, and visual motifs
 - Resolve the same pattern graph through identity, brand, and design lenses
 - Generate SOUL.md personas for OpenClaw, SoulClaw, and compatible systems
 - Analyze archetypal patterns, tensions, beads, and cross-domain threads in text
@@ -27,7 +29,9 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 - [tests/](https://github.com/KyaniteLabs/Elixis/tree/main/tests/): Verification suite (unittest-compatible, pytest-friendly)
 - [app.py](https://github.com/KyaniteLabs/Elixis/blob/main/app.py): HTTP server entry point (stdlib, port 3110)
 - [openapi.yaml](https://github.com/KyaniteLabs/Elixis/blob/main/openapi.yaml): HTTP API contract
-- [elixis/__main__.py](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/__main__.py): CLI for serve, run, extract, patterns, name, and mcp commands
+- [elixis/ingest.py](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/ingest.py): Source Corpus ingestion for GitHub repositories and local folders
+- [elixis/market.py](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/market.py): Market Kit orchestration and optional artifact rendering
+- [elixis/__main__.py](https://github.com/KyaniteLabs/Elixis/blob/main/elixis/__main__.py): CLI for serve, run, extract, patterns, name, ingest, corpus, and mcp commands
 - [Dockerfile](https://github.com/KyaniteLabs/Elixis/blob/main/Dockerfile): Multi-stage production build
 - [traefik/](https://github.com/KyaniteLabs/Elixis/tree/main/traefik/): Reverse-proxy deployment examples
 
@@ -39,10 +43,11 @@ Elixis transforms brain dump text into a structured pattern graph, then resolves
 
 ## Technical surfaces
 
+- CLI: `python -m elixis ingest --github https://github.com/KyaniteLabs/Elixis --kit --artifact html`
 - CLI: `python -m elixis run --text "..." --lens brand`
 - HTTP API: `python -m elixis serve --port 3110`; contract in `openapi.yaml`
 - MCP stdio adapter: `python -m elixis mcp`
 
 ## Keywords
 
-AI pattern synthesis engine, AI identity generator, brand voice generator, design system generator, naming research tool, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, local-first LLM tool, answer engine optimization.
+AI pattern synthesis engine, Source Corpus ingestion, Market Kit generator, AI identity generator, brand voice generator, design system generator, naming research tool, marketing kit, repository analysis for branding, OpenClaw companion, Soul Spec tool, SOUL.md generator, entity extraction, pattern graph, beads, threads, archetypal pattern analysis, local-first LLM tool, answer engine optimization.

@@ -5,7 +5,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 [project]
 name = "elixis"
 version = "1.0.0"
-description = "Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs."
+description = "Local-first AI pattern synthesis engine for Source Corpus ingestion, Market Kit orchestration, identity, brand voice, design systems, and naming research."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
@@ -14,8 +14,12 @@ authors = [
 ]
 keywords = [
     "ai",
+    "source-corpus",
+    "market-kit",
+    "marketing",
     "naming",
     "branding",
+    "positioning",
     "identity",
     "llm",
     "synthesis",
