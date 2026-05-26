@@ -1,13 +1,15 @@
 # Elixis
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
+> Local-first AI pattern synthesis engine for Source Corpus ingestion, Market Kit orchestration, identity, brand voice, design systems, naming research, and lens-specific outputs.
 
-Elixis turns raw reference material into a pattern graph, then resolves that graph through output lenses. SOUL.md is one compatibility lens, not the whole scope. Use Elixis when you need to transform messy references, influences, aesthetics, values, constraints, people, works, or places into coherent identity, brand, design, or naming artifacts.
+Elixis turns raw reference material, GitHub repositories, or local folders into a curated Source Corpus and pattern graph, then resolves that graph into coherent identity, brand, design, naming, marketing, and market-positioning artifacts. SOUL.md is one compatibility lens, not the whole scope. Use Elixis when you need to transform messy references, influences, aesthetics, values, constraints, people, works, places, documentation, metadata, screenshots, and public interfaces into output-quality evidence.
 
 Canonical repository: https://github.com/KyaniteLabs/Elixis
 Landing page: https://kyanitelabs.github.io/Elixis/
 
 Core surfaces:
+- Source Corpus ingestion for GitHub repositories and local folders
+- Market Kit orchestration for naming, positioning, messaging, brand voice, color palettes, typography, spacing, borders, shadows, and visual motifs
 - Identity and SOUL.md generation for OpenClaw, Soul Spec, and compatible agent systems
 - Brand voice guidance and positioning language
 - Design system direction and style constraints
@@ -15,8 +17,9 @@ Core surfaces:
 - Run tracing, backups, and local-first operation
 
 Technical operator surfaces:
+- CLI: `python -m elixis ingest --path . --kit --artifact html`
 - CLI: `python -m elixis run --text "..." --lens brand`
 - HTTP API: `python -m elixis serve --port 3110`; contract in `openapi.yaml`
 - MCP stdio adapter: `python -m elixis mcp`
 
-Keywords: AI pattern synthesis, AI identity generator, brand voice generator, design system generator, naming research tool, SOUL.md generator, OpenClaw companion, local LLM tool.
+Keywords: AI pattern synthesis, Source Corpus ingestion, Market Kit generator, AI identity generator, brand voice generator, design system generator, naming research tool, repository analysis for branding, marketing kit, SOUL.md generator, OpenClaw companion, local LLM tool.

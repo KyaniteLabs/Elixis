@@ -73,6 +73,20 @@ class TestEnvironmentVariables(unittest.TestCase):
         """API key should be handled (empty or set)."""
         self.assertTrue(hasattr(llm, 'API_KEY'))
 
+    @patch.dict(os.environ, {"LLM_PROVIDER": "zai", "ZAI_API_KEY": "zai-test-key"}, clear=True)
+    def test_openai_compatible_provider_aliases_use_provider_specific_keys(self):
+        """OpenAI-compatible provider aliases should not require duplicating LLM_API_KEY."""
+        self.assertEqual(llm.PROVIDER, "openai")
+        self.assertEqual(llm.API_KEY, "zai-test-key")
+        self.assertEqual(llm.DEFAULT_MODEL, "glm-5.1")
+
+    @patch.dict(os.environ, {"LLM_PROVIDER": "kimi", "KIMI_API_KEY": "kimi-test-key"}, clear=True)
+    def test_kimi_provider_alias_reads_kimi_key(self):
+        """Kimi/Moonshot deployments should work with the common KIMI_API_KEY env name."""
+        self.assertEqual(llm.PROVIDER, "openai")
+        self.assertEqual(llm.API_KEY, "kimi-test-key")
+        self.assertEqual(llm.DEFAULT_MODEL, "kimi-k2.6")
+
 
 class TestOpenAICompatibleFallback(unittest.TestCase):
     """Test OpenAI-compatible fallback diagnostics."""

@@ -154,6 +154,45 @@ _TOOLS = [
             "required": ["brain_dump"],
         },
     },
+    {
+        "name": "ingest_source",
+        "description": (
+            "Build a Source Corpus from a GitHub repository URL or local folder path. "
+            "Use when: gathering product evidence before naming, brand, design, identity, or marketing synthesis."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "github": {"type": "string", "description": "GitHub repository URL to ingest."},
+                "path": {"type": "string", "description": "Local folder path to ingest."},
+                "include_code": {"type": "boolean", "description": "Include supporting code evidence. Default: false."},
+                "include_issues": {"type": "boolean", "description": "Include GitHub issue evidence. Default: false."},
+                "include_prs": {"type": "boolean", "description": "Include GitHub pull request evidence. Default: false."},
+                "include_commits": {"type": "boolean", "description": "Include GitHub commit trajectory evidence. Default: false."},
+                "artifacts": {"type": "array", "items": {"type": "string"}, "description": "Artifact tiers to render."},
+            },
+        },
+    },
+    {
+        "name": "create_market_kit",
+        "description": (
+            "Create a structured Market Kit from a GitHub repository URL or local folder path. "
+            "Returns naming, positioning, brand, messaging, design-system direction, evidence, and optional artifacts."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "github": {"type": "string", "description": "GitHub repository URL to ingest."},
+                "path": {"type": "string", "description": "Local folder path to ingest."},
+                "artifacts": {"type": "array", "items": {"type": "string"}, "description": "Artifact tiers: markdown, html, css, market-page."},
+                "include_code": {"type": "boolean", "description": "Include supporting code evidence. Default: true."},
+                "include_issues": {"type": "boolean", "description": "Include GitHub issue evidence. Default: false."},
+                "include_prs": {"type": "boolean", "description": "Include GitHub pull request evidence. Default: false."},
+                "include_commits": {"type": "boolean", "description": "Include GitHub commit trajectory evidence. Default: false."},
+                "max_signals": {"type": "integer", "description": "Maximum Corpus Signals to include. Default: 80."},
+            },
+        },
+    },
 ]
 
 
@@ -202,6 +241,10 @@ def _handle_tools_call(params):
             return _tool_research_name(arguments)
         elif name == "name_from_identity":
             return _tool_name_from_identity(arguments)
+        elif name == "ingest_source":
+            return _tool_ingest_source(arguments)
+        elif name == "create_market_kit":
+            return _tool_create_market_kit(arguments)
         else:
             return {"content": [{"type": "text", "text": f"Unknown tool: {name}"}], "isError": True}
     except Exception as e:
@@ -375,6 +418,50 @@ def _tool_name_from_identity(args):
         "recommendations": report.get("recommendations", [])[:3],
     }
     return {"content": [{"type": "text", "text": json.dumps(summary, indent=2)}]}
+
+
+def _tool_ingest_source(args):
+    from .ingest import ingest_source
+
+    try:
+        result = ingest_source(
+            github=args.get("github"),
+            path=args.get("path"),
+            artifacts=args.get("artifacts") or [],
+            include_code=bool(args.get("include_code", False)),
+            include_issues=bool(args.get("include_issues", False)),
+            include_prs=bool(args.get("include_prs", False)),
+            include_commits=bool(args.get("include_commits", False)),
+            include_hidden=bool(args.get("include_hidden", False)),
+            include_large_files=bool(args.get("include_large_files", False)),
+            include_visual_analysis=bool(args.get("include_visual_analysis", False)),
+            max_signals=int(args.get("max_signals", 80)),
+        )
+    except ValueError as exc:
+        return {"content": [{"type": "text", "text": f"Validation error: {exc}"}], "isError": True}
+    return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+
+
+def _tool_create_market_kit(args):
+    from .market import create_market_kit
+
+    try:
+        result = create_market_kit(
+            github=args.get("github"),
+            path=args.get("path"),
+            artifacts=args.get("artifacts") or [],
+            include_code=bool(args.get("include_code", True)),
+            include_issues=bool(args.get("include_issues", False)),
+            include_prs=bool(args.get("include_prs", False)),
+            include_commits=bool(args.get("include_commits", False)),
+            include_hidden=bool(args.get("include_hidden", False)),
+            include_large_files=bool(args.get("include_large_files", False)),
+            include_visual_analysis=bool(args.get("include_visual_analysis", False)),
+            max_signals=int(args.get("max_signals", 80)),
+        )
+    except ValueError as exc:
+        return {"content": [{"type": "text", "text": f"Validation error: {exc}"}], "isError": True}
+    return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
 
 
 _HANDLERS = {

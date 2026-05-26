@@ -50,6 +50,27 @@ def _build_parser() -> argparse.ArgumentParser:
     name.add_argument("--source", choices=("general", "taxonomy"), default="taxonomy")
     name.add_argument("--no-variants", action="store_true", help="skip variant generation for --name")
 
+    ingest = subparsers.add_parser("ingest", help="build a Source Corpus and optional Market Kit")
+    ingest_target = ingest.add_mutually_exclusive_group(required=True)
+    ingest_target.add_argument("--github", help="GitHub repository URL to ingest")
+    ingest_target.add_argument("--path", help="local folder path to ingest")
+    ingest.add_argument("--kit", action="store_true", help="include Market Kit orchestration")
+    ingest.add_argument("--json", action="store_true", default=True, help=argparse.SUPPRESS)
+    ingest.add_argument("--artifact", action="append", default=[], help="render artifact tier: markdown, html, css, or market-page")
+    ingest.add_argument("--include-code", action="store_true", help="include supporting code evidence")
+    ingest.add_argument("--include-issues", action="store_true", help="include GitHub issue evidence")
+    ingest.add_argument("--include-prs", action="store_true", help="include GitHub pull request evidence")
+    ingest.add_argument("--include-commits", action="store_true", help="include GitHub commit trajectory evidence")
+    ingest.add_argument("--include-hidden", action="store_true", help="include hidden local files when safe")
+    ingest.add_argument("--include-large-files", action="store_true", help="allow large text files into scoring")
+    ingest.add_argument("--include-visual-analysis", action="store_true", help="mark visual assets for downstream visual analysis")
+    ingest.add_argument("--max-signals", type=int, default=80, help="maximum Corpus Signals to include")
+
+    corpus = subparsers.add_parser("corpus", help="inspect persisted Source Corpus runs")
+    corpus_sub = corpus.add_subparsers(dest="corpus_command", required=True)
+    corpus_inspect = corpus_sub.add_parser("inspect", help="inspect an Ingestion Result by run ID")
+    corpus_inspect.add_argument("run_id")
+
     subparsers.add_parser("mcp", help="run the MCP stdio server")
     return parser
 
@@ -182,6 +203,52 @@ def _cmd_name(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ingest(args: argparse.Namespace) -> int:
+    if args.kit:
+        from .market import create_market_kit
+
+        result = create_market_kit(
+            github=args.github,
+            path=args.path,
+            artifacts=args.artifact,
+            include_code=args.include_code,
+            include_issues=args.include_issues,
+            include_prs=args.include_prs,
+            include_commits=args.include_commits,
+            include_hidden=args.include_hidden,
+            include_large_files=args.include_large_files,
+            include_visual_analysis=args.include_visual_analysis,
+            max_signals=args.max_signals,
+        )
+    else:
+        from .ingest import ingest_source
+
+        result = ingest_source(
+            github=args.github,
+            path=args.path,
+            artifacts=args.artifact,
+            include_code=args.include_code,
+            include_issues=args.include_issues,
+            include_prs=args.include_prs,
+            include_commits=args.include_commits,
+            include_hidden=args.include_hidden,
+            include_large_files=args.include_large_files,
+            include_visual_analysis=args.include_visual_analysis,
+            max_signals=args.max_signals,
+        )
+    _print_json(result)
+    return 0
+
+
+def _cmd_corpus(args: argparse.Namespace) -> int:
+    from .ingest import load_ingestion_result
+
+    if args.corpus_command == "inspect":
+        _print_json(load_ingestion_result(args.run_id))
+        return 0
+    raise AssertionError(f"unhandled corpus command: {args.corpus_command}")
+
+
 def _cmd_mcp(_args: argparse.Namespace) -> int:
     from .mcp_server import main as mcp_main
 
@@ -209,6 +276,10 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_patterns(args)
     if args.command == "name":
         return _cmd_name(args)
+    if args.command == "ingest":
+        return _cmd_ingest(args)
+    if args.command == "corpus":
+        return _cmd_corpus(args)
     if args.command == "mcp":
         return _cmd_mcp(args)
 

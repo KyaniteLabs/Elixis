@@ -1,10 +1,10 @@
 # Elixis — Full Documentation for AI Assistants
 
-> Local-first AI pattern synthesis engine for identity, brand voice, design systems, naming research, and lens-specific outputs.
+> Local-first AI pattern synthesis engine for Source Corpus ingestion, Market Kit orchestration, identity, brand voice, design systems, naming research, and lens-specific outputs.
 
 ## Overview
 
-Elixis transforms brain dump text into a structured pattern graph, then resolves that graph through output lenses. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but Elixis is not limited to identity files: current surfaces include brand voice guidance, design-system direction, naming research, run tracing, and backup/restore.
+Elixis transforms brain dump text, GitHub repositories, or local folders into a curated Source Corpus and structured pattern graph, then resolves that graph into usable market, brand, design, naming, and identity outputs. The identity lens generates SOUL.md documents for OpenClaw and Soul Spec, but SOUL.md is one compatibility output, not the product boundary. Current surfaces include Source Corpus ingestion, Market Kit orchestration, brand voice guidance, design-system direction, naming research, run tracing, and backup/restore.
 
 ## Architecture
 
@@ -16,6 +16,8 @@ Elixis runs a four-phase pattern synthesis pipeline:
 4. **Resolution** (`elixis/lenses/`): Resolves the graph through identity, brand, or design lenses. The identity lens produces SOUL.md; other lenses produce their own markdown documents.
 
 Supporting modules:
+- `elixis/ingest.py` — Source Corpus ingestion for GitHub repositories and local folders with secret-safe rejection, provenance, and Signal Value Score ranking
+- `elixis/market.py` — Market Kit orchestration for naming, positioning, messaging, brand voice, design-system direction, and optional markdown/HTML/CSS artifacts
 - `elixis/lenses/` — Output lenses for identity, brand, and design documents
 - `elixis/research.py` — Wikipedia enrichment (parallelized with ThreadPoolExecutor)
 - `elixis/translate.py` — Translation with file-based caching and streaming
@@ -24,14 +26,15 @@ Supporting modules:
 - `elixis/traces.py` — Run trace capture with automatic rotation
 - `elixis/backup.py` — Backup and restore with path traversal protection
 - `elixis/llm.py` — LLM interface supporting Ollama, OpenAI-compatible APIs, and Anthropic Messages API
-- `elixis/__main__.py` — Operator CLI for serve, run, extract, patterns, name, and mcp commands
-- `elixis/mcp_server.py` — Optional MCP stdio adapter over the same engine
+- `elixis/__main__.py` — Operator CLI for serve, run, extract, patterns, name, ingest, corpus, and mcp commands
+- `elixis/mcp_server.py` — MCP stdio adapter over the same engine, including Source Corpus and Market Kit tools
 
 ## Operator Surfaces
 
 MCP is an adapter, not the product scope. Elixis exposes the same synthesis engine through three technical surfaces:
 
 - CLI: `python -m elixis run --text "Athena, Batman" --lens brand --json`
+- CLI: `python -m elixis ingest --github https://github.com/KyaniteLabs/Elixis --kit --artifact html`
 - HTTP API: `python -m elixis serve --port 3110`; routes are defined in `openapi.yaml`
 - MCP stdio adapter: `python -m elixis mcp`
 
@@ -44,6 +47,8 @@ python -m elixis run --file references.txt --lens design --json
 python -m elixis extract --text "Athena, Batman, Miyamoto Musashi"
 python -m elixis patterns --stdin < references.txt
 python -m elixis name --name Elixis --context "local AI synthesis tool"
+python -m elixis ingest --path . --kit --artifact markdown
+python -m elixis corpus inspect <run_id>
 python -m elixis mcp
 ```
 
@@ -111,6 +116,23 @@ Research a name with semantic analysis and variant generation.
 {"name": "Kyanite", "context": "AI platform", "generate_variants": true}
 ```
 
+### POST /api/ingest
+Build a Source Corpus from either a GitHub repository or a local folder. Ingestion is read-only, rejects secret-like candidates before scoring, preserves provenance, and returns the shared structured Ingestion Result used by CLI, HTTP API, and MCP.
+
+```json
+{"github": "https://github.com/KyaniteLabs/Elixis", "max_signals": 80}
+```
+
+### POST /api/market-kit
+Build a Source Corpus and orchestrate a Market Kit with naming, positioning, audience/category notes, brand voice, messaging pillars, taglines, landing angles, color palette, typography, spacing, borders, shadows, visual motifs, and evidence mapping. HTML/CSS artifacts are explicit tiers for visual review, not automatic output.
+
+```json
+{"path": ".", "artifacts": ["markdown", "html"]}
+```
+
+### GET /api/ingest/:run_id
+Inspect a persisted Ingestion Result from `.elixis/ingestion-runs/`.
+
 ### GET /api/health
 Health check with LLM availability and disk status.
 
@@ -170,6 +192,8 @@ Environment variables:
 - `LLM_MODEL` — Model name (default: `gemma-4b`)
 - `LLM_PROVIDER` — `ollama` (default), `openai`, or `anthropic`
 - `LLM_API_KEY` — API key for cloud providers
+- GLM 5.1 cloud example: `LLM_PROVIDER=openai`, `LLM_BASE_URL=https://api.z.ai/api/paas/v4`, `LLM_MODEL=glm-5.1`, `ZAI_API_KEY=<secret>`
+- Kimi cloud example: `LLM_PROVIDER=openai`, `LLM_BASE_URL=https://api.moonshot.ai/v1`, `LLM_MODEL=kimi-k2.6`, `KIMI_API_KEY=<secret>`
 - `CORS_ORIGIN` — CORS allow-origin (default: `http://localhost:3110`)
 - `ADMIN_API_KEY` — Required bearer token for diagnostics, run history, backups, and destructive cache routes
 - `ELIXIS_CACHE_DIR` — Translation cache directory override

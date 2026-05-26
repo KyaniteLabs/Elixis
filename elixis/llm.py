@@ -5,8 +5,10 @@ Configurable via environment variables:
   LLM_BASE_URL  — API base URL (default: http://localhost:11434)
   LLM_MODEL     — Model name (default: gemma-4b)
   LLM_PROVIDER  — "ollama" (default), "openai" for OpenAI-compatible APIs,
-                  or "anthropic" for Claude Messages API
-  LLM_API_KEY   — API key (not needed for Ollama, required for cloud providers)
+                  "anthropic" for Claude Messages API, or a known alias
+                  such as "zai", "glm", "kimi", or "moonshot"
+  LLM_API_KEY   — API key for cloud providers. Known provider-specific env
+                  names such as ZAI_API_KEY and KIMI_API_KEY are also accepted.
 """
 
 import json
@@ -31,6 +33,11 @@ class _Config:
     def default_model(self):
         if os.environ.get("LLM_MODEL"):
             return os.environ["LLM_MODEL"]
+        raw_provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
+        if raw_provider in {"zai", "glm"}:
+            return "glm-5.1"
+        if raw_provider in {"kimi", "moonshot"}:
+            return "kimi-k2.6"
         if self.provider == "anthropic":
             return (
                 os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
@@ -45,11 +52,23 @@ class _Config:
 
     @property
     def provider(self):
-        return os.environ.get("LLM_PROVIDER", "ollama")
+        raw = os.environ.get("LLM_PROVIDER", "ollama").strip().lower()
+        if raw in {"zai", "glm", "kimi", "moonshot", "openrouter", "openai-compatible"}:
+            return "openai"
+        return raw
 
     @property
     def api_key(self):
-        return os.environ.get("LLM_API_KEY", "")
+        return (
+            os.environ.get("LLM_API_KEY")
+            or os.environ.get("ZAI_API_KEY")
+            or os.environ.get("GLM_API_KEY")
+            or os.environ.get("KIMI_API_KEY")
+            or os.environ.get("MOONSHOT_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or ""
+        )
 
     @property
     def anthropic_api_key(self):
