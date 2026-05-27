@@ -88,28 +88,19 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: [self-hosted, nuc]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: production
     permissions:
       contents: read
       packages: read
     env:
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_USER: ${{ secrets.VPS_USER }}
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-      ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+      VPS_HOST: ${{ secrets.VPS_HOST || '100.92.68.103' }}
+      VPS_USER: root
       GHCR_TOKEN: ${{ github.token }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate deploy prerequisites
-        run: |
-          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ]; then
-            echo "::error::Missing required secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY"
-            exit 1
-          fi
 
       - name: Deploy to VPS
         run: |
@@ -117,31 +108,24 @@ jobs:
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
           deploy_env="$(mktemp)"
-          trap 'rm -f deploy_key "${deploy_env}"' EXIT
-          echo "${VPS_SSH_KEY}" > deploy_key
-          chmod 600 deploy_key
-
-          # Add host key to known_hosts
-          ssh-keyscan -H "${VPS_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
-
+          trap 'rm -f "${deploy_env}"' EXIT
           {
-            printf 'export ADMIN_API_KEY=%q\n' "${ADMIN_API_KEY}"
             printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
           } > "${deploy_env}"
 
-          # Copy compose file to VPS
-          scp -i deploy_key -o StrictHostKeyChecking=no \
-            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/docker/elixis/
-          scp -i deploy_key -o StrictHostKeyChecking=no \
-            "${deploy_env}" ${VPS_USER}@${VPS_HOST}:/tmp/elixis-deploy-env
+          # Copy compose file to VPS using local key (self-hosted runner has ssh config)
+          scp -o StrictHostKeyChecking=no \
+            docker-compose.yml root@${VPS_HOST}:/docker/elixis/
+          scp -o StrictHostKeyChecking=no \
+            "${deploy_env}" root@${VPS_HOST}:/tmp/elixis-deploy-env
 
-          printf '%s' "${GHCR_TOKEN}" | ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} \
+          printf '%s' "${GHCR_TOKEN}" | ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} \
             "docker login ${REGISTRY} -u '${GITHUB_ACTOR}' --password-stdin"
 
           # Deploy via SSH
-          ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} 'bash -se' << 'EOF'
+          ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} 'bash -se' << 'EOF'
             set -euo pipefail
             trap 'rm -f /tmp/elixis-deploy-env' EXIT
             cd /docker/elixis
