@@ -20,8 +20,8 @@ Go to **Access Controls** in the Tailscale admin console and add a tag for CI ru
 
 ```json
 {
-  "tages": {
-    "tag:ci": []
+  "tagOwners": {
+    "tag:ci": [""]
   }
 }
 ```
