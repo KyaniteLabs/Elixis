@@ -1,0 +1,60 @@
+name: Repo Health Monitor
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get CI Status
+        id: ci
+        run: |
+          RUN=$(gh run list --limit 1 --json status,conclusion --jq '.[0]')
+          STATUS=$(echo "$RUN" | jq -r '.status')
+          CONCLUSION=$(echo "$RUN" | jq -r '.conclusion')
+          echo "ci_status=$STATUS" >> $GITHUB_OUTPUT
+          echo "ci_conclusion=$CONCLUSION" >> $GITHUB_OUTPUT
+
+      - name: Count Open Issues
+        id: issues
+        run: |
+          COUNT=$(gh issue list --state open --json number --jq 'length')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Count Open PRs
+        id: prs
+        run: |
+          COUNT=$(gh pr list --state open --json number --jq 'length')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Report
+        run: |
+          CI_STAT=${{ steps.ci.outputs.ci_status }}
+          CI_CONC=${{ steps.ci.outputs.ci_conclusion }}
+          ISSUES=${{ steps.issues.outputs.count }}
+          OPEN_PRS=${{ steps.prs.outputs.count }}
+
+          # Status icon
+          if [ "$CI_CONC" = "success" ]; then
+            ICON="PASS"
+          elif [ "$CI_STAT" = "in_progress" ]; then
+            ICON="RUNNING"
+          else
+            ICON="FAIL"
+          fi
+
+          echo "CI Status: $ICON ($CI_STAT)"
+          echo "Open Issues: $ISSUES"
+          echo "Open PRs: $OPEN_PRS"
+          echo "Generated: $(date -u +'%Y-%m-%d %H:%M UTC')"
