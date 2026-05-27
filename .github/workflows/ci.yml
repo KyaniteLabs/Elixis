@@ -91,6 +91,7 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: production
+    continue-on-error: true  # Deploy failures are non-blocking until OAuth secrets are configured
     permissions:
       contents: read
       packages: read
