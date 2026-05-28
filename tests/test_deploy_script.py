@@ -14,23 +14,30 @@ def test_local_deploy_forces_loaded_local_image_over_persisted_env():
     assert 'actual_image="\\$(docker inspect elixis' in script
 
 
-def test_ci_deploy_uses_tailscale_before_ssh():
+def test_ci_deploy_uses_self_hosted_runner():
+    """Deploy job uses self-hosted runner on NuC with direct SSH."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
 
-    assert "id-token: write" in workflow
-    assert "tailscale/github-action@v4" in workflow
-    assert "VPS_HOST must be a Tailscale address or MagicDNS name" in workflow
-    assert "Public SSH deploy is not allowed" in workflow
-    assert "TS_OAUTH_CLIENT_ID" in workflow
-    assert "TS_AUDIENCE" in workflow
-    assert "TS_OAUTH_SECRET" in workflow
-    assert "TAILSCALE_AUTHKEY" in workflow
-    assert workflow.index("tailscale/github-action@v4") < workflow.index("Deploy to VPS")
+    # Deploy uses self-hosted nuc runner (which has direct SSH access to VPS)
+    assert "runs-on: [self-hosted, nuc]" in workflow
+
+    # No Tailscale action needed - runner is already in tailnet
+    assert "tailscale/github-action@v4" not in workflow
+
+    # Direct SSH to VPS (hardcoded fallback to Tailscale IP)
+    assert "100.92.68.103" in workflow
+    assert "VPS_USER: root" in workflow
+
+    # No id-token permission needed without Tailscale
+    assert "id-token" not in workflow
+
+    # Deploy directly via SSH
+    assert "ssh -o StrictHostKeyChecking=no" in workflow
+    assert "root@${VPS_HOST}" in workflow
 
 
-def test_deploy_docs_require_tailnet_target():
+def test_deploy_docs_describe_vps_target():
     docs = (REPO_ROOT / "DEPLOY.md").read_text(encoding="utf-8")
 
     assert "VPS_HOST=100.92.68.103" in docs
-    assert "must be the Tailscale address or MagicDNS name" in docs
-    assert "not allowed to silently skip production deployment or open public SSH" in docs
+    assert "Tailscale address" in docs
