@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -88,82 +88,19 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: [self-hosted, nuc]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: production
-    continue-on-error: true  # Deploy failures are non-blocking until OAuth secrets are configured
     permissions:
       contents: read
       packages: read
-      id-token: write
     env:
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_USER: ${{ secrets.VPS_USER }}
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-      ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+      VPS_HOST: ${{ secrets.VPS_HOST || '100.92.68.103' }}
+      VPS_USER: root
       GHCR_TOKEN: ${{ github.token }}
-      TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-      TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-      TS_OAUTH_SECRET: ${{ secrets.TS_OAUTH_SECRET }}
-      TS_AUDIENCE: ${{ secrets.TS_AUDIENCE }}
-      TAILSCALE_TAGS: ${{ vars.TAILSCALE_TAGS || 'tag:ci' }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate private deploy prerequisites
-        run: |
-          if [ -z "${VPS_HOST}" ] || [ -z "${VPS_USER}" ] || [ -z "${VPS_SSH_KEY}" ] || [ -z "${ADMIN_API_KEY}" ]; then
-            echo "::error::VPS deploy secrets are not configured; refusing to report a successful deploy."
-            echo "::error::Set VPS_HOST, VPS_USER, VPS_SSH_KEY, and ADMIN_API_KEY in the production environment secrets."
-            exit 1
-          fi
-          case "${VPS_HOST}" in
-            100.6[4-9].*|100.[7-9][0-9].*|100.1[01][0-9].*|100.12[0-7].*|fd7a:*|*.ts.net|*.ts.net.)
-              ;;
-            *)
-              echo "::error::VPS_HOST must be a Tailscale address or MagicDNS name. Public SSH deploy is not allowed."
-              exit 1
-              ;;
-          esac
-          if [ -n "${TAILSCALE_AUTHKEY}" ]; then
-            exit 0
-          fi
-          if [ -n "${TS_OAUTH_CLIENT_ID}" ] && { [ -n "${TS_OAUTH_SECRET}" ] || [ -n "${TS_AUDIENCE}" ]; }; then
-            exit 0
-          fi
-          echo "::error::Tailscale deploy credentials are missing."
-          echo "::error::Set either TAILSCALE_AUTHKEY, TS_OAUTH_CLIENT_ID + TS_OAUTH_SECRET, or TS_OAUTH_CLIENT_ID + TS_AUDIENCE."
-          exit 1
-
-      - name: Connect to tailnet with auth key
-        if: ${{ env.TAILSCALE_AUTHKEY != '' }}
-        uses: tailscale/github-action@v4
-        with:
-          authkey: ${{ env.TAILSCALE_AUTHKEY }}
-          hostname: elixis-deploy-${{ github.run_id }}
-
-      - name: Connect to tailnet with OAuth client
-        if: ${{ env.TAILSCALE_AUTHKEY == '' && env.TS_OAUTH_CLIENT_ID != '' && env.TS_OAUTH_SECRET != '' }}
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ env.TS_OAUTH_SECRET }}
-          tags: ${{ env.TAILSCALE_TAGS }}
-          hostname: elixis-deploy-${{ github.run_id }}
-
-      - name: Connect to tailnet with federated identity
-        if: ${{ env.TAILSCALE_AUTHKEY == '' && env.TS_OAUTH_CLIENT_ID != '' && env.TS_OAUTH_SECRET == '' && env.TS_AUDIENCE != '' }}
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
-          audience: ${{ env.TS_AUDIENCE }}
-          tags: ${{ env.TAILSCALE_TAGS }}
-          hostname: elixis-deploy-${{ github.run_id }}
-
-      - name: Verify tailnet VPS reachability
-        run: |
-          tailscale ping --timeout=10s --c 3 --until-direct=false "${VPS_HOST}"
 
       - name: Deploy to VPS
         run: |
@@ -171,27 +108,24 @@ jobs:
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
           deploy_env="$(mktemp)"
-          trap 'rm -f deploy_key "${deploy_env}"' EXIT
-          echo "${VPS_SSH_KEY}" > deploy_key
-          chmod 600 deploy_key
+          trap 'rm -f "${deploy_env}"' EXIT
           {
-            printf 'export ADMIN_API_KEY=%q\n' "${ADMIN_API_KEY}"
             printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
           } > "${deploy_env}"
 
-          # Copy compose file to VPS
-          scp -i deploy_key -o StrictHostKeyChecking=no \
-            docker-compose.yml ${VPS_USER}@${VPS_HOST}:/docker/elixis/
-          scp -i deploy_key -o StrictHostKeyChecking=no \
-            "${deploy_env}" ${VPS_USER}@${VPS_HOST}:/tmp/elixis-deploy-env
+          # Copy compose file to VPS using local key (self-hosted runner has ssh config)
+          scp -o StrictHostKeyChecking=no \
+            docker-compose.yml root@${VPS_HOST}:/docker/elixis/
+          scp -o StrictHostKeyChecking=no \
+            "${deploy_env}" root@${VPS_HOST}:/tmp/elixis-deploy-env
 
-          printf '%s' "${GHCR_TOKEN}" | ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} \
+          printf '%s' "${GHCR_TOKEN}" | ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} \
             "docker login ${REGISTRY} -u '${GITHUB_ACTOR}' --password-stdin"
 
           # Deploy via SSH
-          ssh -i deploy_key -o StrictHostKeyChecking=no \
-            ${VPS_USER}@${VPS_HOST} 'bash -se' << 'EOF'
+          ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} 'bash -se' << 'EOF'
             set -euo pipefail
             trap 'rm -f /tmp/elixis-deploy-env' EXIT
             cd /docker/elixis
