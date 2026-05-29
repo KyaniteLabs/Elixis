@@ -25,13 +25,16 @@ pip install elixis
 
 ```bash
 # Ingest a GitHub repository
-elixis ingest --source https://github.com/owner/repo
+elixis ingest --github https://github.com/owner/repo
 
 # Ingest a local folder
-elixis ingest --source ./my-project
+elixis ingest --path ./my-project
 
 # Generate a Market Kit
-elixis market-kit --run-id <run-id>
+elixis ingest --github https://github.com/owner/repo --kit
+
+# Inspect a saved ingestion run
+elixis corpus inspect <run-id>
 ```
 
 ### HTTP API
@@ -41,14 +44,14 @@ elixis market-kit --run-id <run-id>
 python -m elixis serve
 
 # Ingest via API
-curl -X POST http://localhost:8000/api/ingest \
+curl -X POST http://localhost:3110/api/ingest \
   -H "Content-Type: application/json" \
-  -d '{"source": "https://github.com/owner/repo"}'
+  -d '{"github": "https://github.com/owner/repo"}'
 ```
 
 ### MCP
 
-Use the MCP tools `ingest_source` and `inspect_ingestion` for AI assistant integration.
+Use the MCP tools `ingest_source` and `create_market_kit` for AI assistant integration.
 
 ## Configuration
 
