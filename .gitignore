@@ -12,6 +12,8 @@ build/
 
 # Environment
 .env
+*.pem
+*.key
 
 # Personal/generated files
 /archive/

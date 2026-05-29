@@ -1,99 +1,62 @@
-# Tailscale OAuth Setup for CI/CD Deploy
+# Tailscale OAuth Setup For CI/CD Deploy
 
-**Status:** Pending — deploys use `continue-on-error: true` until credentials are configured.
+**Status:** pending. The deploy job currently uses `continue-on-error: true` so build/test health stays visible while Tailscale OAuth credentials are configured.
 
 ## Why OAuth?
 
-Tailscale auth keys are deprecated. OAuth clients provide a more secure, self-documenting authentication method. Once configured, no further credential rotation is needed.
-
----
+Tailscale OAuth clients are easier to scope and rotate than long-lived auth keys. Elixis deploys should use an ephemeral CI node tagged for deployment rather than a reused auth key.
 
 ## Prerequisites
 
-- Tailscale admin access to your tailnet at [tailscale.com/admin](https://tailscale.com/admin)
+- Tailscale admin access for the Kyanite Labs tailnet.
+- GitHub repository admin access for `KyaniteLabs/Elixis`.
 
----
+## 1. Create The CI Tag
 
-## Step 1: Create a Tag for CI Nodes
-
-Go to **Access Controls** in the Tailscale admin console and add a tag for CI runners:
+In the Tailscale admin console, open **Access Controls** and define who may assign the CI tag. Replace the owner list with the real tailnet admin group or user.
 
 ```json
 {
   "tagOwners": {
-    "tag:ci": [""]
+    "tag:ci": ["autogroup:admin"]
   }
 }
 ```
 
-Or use the existing `tag:ci` tag if already defined.
+Use the existing `tag:ci` definition if it already exists.
 
----
+## 2. Create The OAuth Client
 
-## Step 2: Create an OAuth Client
+1. Open **Settings > OAuth Clients** in Tailscale.
+2. Create a client named `GitHub Actions - Elixis Deploy`.
+3. Grant the client the `auth_keys` scope.
+4. Assign the client to `tag:ci`.
+5. Copy the client ID and secret immediately; the secret is only shown once.
 
-1. Go to **Settings → OAuth Clients** in the Tailscale admin console
-2. Click **Generate OAuth client**
-3. Set a descriptive name (e.g., `GitHub Actions - Elixis Deploy`)
-4. Select scopes:
-   - `auth_keys` (required for registering ephemeral nodes)
-5. Assign the tag `tag:ci`
-6. Click **Generate client**
-7. Copy the **Client ID** and **Client Secret** immediately — the secret is shown only once
+## 3. Add GitHub Secrets
 
----
+Add these repository secrets under **Settings > Secrets and variables > Actions**:
 
-## Step 3: Add GitHub Secrets
+| Secret | Value |
+| --- | --- |
+| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client ID |
+| `TS_OAUTH_SECRET` | Tailscale OAuth client secret |
 
-In the GitHub repository, go to **Settings → Secrets and variables → Actions** and add:
+Remove any old `TAILSCALE_AUTHKEY` secret after OAuth deploys are confirmed.
 
-| Secret Name | Value |
-|------------|-------|
-| `TS_OAUTH_CLIENT_ID` | The OAuth client ID from Step 2 |
-| `TS_OAUTH_SECRET` | The OAuth client secret from Step 2 |
+## 4. Re-enable Strict Deploys
 
-> **Note:** `TAILSCALE_AUTHKEY` is no longer needed and can be removed.
-
----
-
-## Step 4: Enable Deploy Job
-
-Once the secrets are added, remove `continue-on-error: true` from the deploy job in `.github/workflows/ci.yml`:
-
-```yaml
-  deploy:
-    needs: build
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    environment: production
-    # remove: continue-on-error: true
-```
-
----
+After the OAuth client works, remove `continue-on-error: true` from the deploy job in `.github/workflows/ci.yml`.
 
 ## Verification
 
-After configuration:
-1. Push a test commit to trigger the pipeline
-2. Verify the deploy job completes successfully
-3. Check Tailscale admin console — you should see ephemeral nodes appearing during deploys
-
----
+1. Push a small change to `main`.
+2. Confirm the deploy job completes successfully.
+3. Confirm an ephemeral CI node appears in the Tailscale admin console during the run.
+4. Confirm the `elixis` container on the VPS is running the expected image SHA.
 
 ## Troubleshooting
 
-### "tags are invalid or not permitted"
-- The OAuth client needs the `auth_keys` scope
-- The tag `tag:ci` must be assigned to the OAuth client
-- The tag must exist in your tailnet's access controls
+If Tailscale says the tag is invalid or not permitted, check that `tag:ci` exists, the OAuth client has the `auth_keys` scope, and the client is allowed to assign `tag:ci`.
 
-### Auth key deprecation warning
-Tailscale will eventually stop supporting auth keys entirely. OAuth is the recommended path.
-
----
-
-## Cost & Maintenance
-
-- **Cost:** Free for Tailscale users
-- **Token expiry:** 1 hour (automatically renewed by GitHub Action)
-- **Maintenance:** None after initial setup
+If deploy reaches the VPS but the running image is wrong, inspect the `ELIXIS_IMAGE` line in `/docker/elixis/.env` and rerun the workflow after fixing the environment file.
