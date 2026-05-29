@@ -1,0 +1,10 @@
+version: 1
+suppress:
+  - id: Possible secret-like field without credential shape
+    reason: Elixis intentionally contains placeholder API-key examples, secret-redaction tests, and runtime token retrieval code; these are not committed credentials.
+    files:
+      - .env.example
+      - elixis/ingest.py
+      - tests/test_ingest.py
+    reviewed_by: KyaniteLabs
+    reviewed_at: "2026-05-29"
