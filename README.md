@@ -16,7 +16,7 @@ Elixis ingests source targets (GitHub repositories or local folders) and produce
 ## Installation
 
 ```bash
-pip install elixis
+git clone https://github.com/KyaniteLabs/Elixis.git && cd Elixis && pip install -e .
 ```
 
 ## Quick Start
