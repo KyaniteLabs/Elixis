@@ -1,5 +1,9 @@
 ## Agent skills
 
+### Public Elixis skill
+
+Use `skills/elixis/SKILL.md` as the public repo skill for Source Corpus ingestion, pattern synthesis, identity, brand voice, design direction, naming research, and Market Kit workflows. Invoke `$elixis` in compatible agent hosts and keep the skill aligned with the CLI, MCP tools, HTTP API, and `CONTEXT.md` domain language.
+
 ### Issue tracker
 
 Issues tracked in GitHub (KyaniteLabs/Elixis) via `gh` CLI. See `agent-docs/issue-tracker.md`.

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Elixis"
+  short_description: "Source-corpus pattern synthesis"
+  default_prompt: "Use $elixis to synthesize this source material into identity, brand, design, naming, or Market Kit outputs."
+
+policy:
+  allow_implicit_invocation: true

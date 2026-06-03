@@ -53,6 +53,10 @@ curl -X POST http://localhost:3110/api/ingest \
 
 Use the MCP tools `ingest_source` and `create_market_kit` for AI assistant integration.
 
+## Agent Skill
+
+Elixis includes a public agent skill at [`skills/elixis/SKILL.md`](skills/elixis/SKILL.md). Use `$elixis` in compatible agent hosts when you want an agent to choose the right CLI, HTTP API, or MCP workflow for Source Corpus ingestion, pattern synthesis, identity, brand voice, design direction, naming research, and Market Kit outputs.
+
 ## Configuration
 
 - `ELIXIS_INFERENCE_PROVIDER`: Inference provider (glm, kimi, openai)
@@ -61,6 +65,7 @@ Use the MCP tools `ingest_source` and `create_market_kit` for AI assistant integ
 
 ## Documentation
 
+- [skills/elixis/SKILL.md](skills/elixis/SKILL.md) — Public agent skill for Elixis workflows
 - [CONTEXT.md](CONTEXT.md) — Domain terminology and relationships
 - [docs/DEPLOY_SETUP.md](docs/DEPLOY_SETUP.md) — CI/CD deployment configuration
 - [agent-docs/](agent-docs/) — Agent and operator documentation

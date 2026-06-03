@@ -21,5 +21,6 @@ Technical operator surfaces:
 - CLI: `python -m elixis run --text "..." --lens brand`
 - HTTP API: `python -m elixis serve --port 3110`; contract in `openapi.yaml`
 - MCP stdio adapter: `python -m elixis mcp`
+- Public agent skill: `skills/elixis/SKILL.md`, invoked as `$elixis` in compatible agent hosts
 
 Keywords: AI pattern synthesis, Source Corpus ingestion, Market Kit generator, AI identity generator, brand voice generator, design system generator, naming research tool, repository analysis for branding, marketing kit, SOUL.md generator, OpenClaw companion, local LLM tool.
