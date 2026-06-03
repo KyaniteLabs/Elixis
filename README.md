@@ -68,3 +68,15 @@ Use the MCP tools `ingest_source` and `create_market_kit` for AI assistant integ
 ## License
 
 MIT License — see [LICENSE](LICENSE)
+
+---
+
+## Part of KyaniteLabs
+
+Open-source tools by [KyaniteLabs](https://kyanitelabs.tech). Related projects:
+
+- **[liminal](https://github.com/KyaniteLabs/liminal)** — AI creative-coding studio (p5.js, GLSL, Three.js)
+- **[Innerscape](https://github.com/KyaniteLabs/Innerscape)** — personal-growth OS: journaling & reflection
+- **[dev-learning-archaeologist](https://github.com/KyaniteLabs/dev-learning-archaeologist)** — forensic git-history learning diagnostic
+
+→ More at **[kyanitelabs.tech](https://kyanitelabs.tech)**
