@@ -73,7 +73,7 @@ MIT License — see [LICENSE](LICENSE)
 
 ## Part of KyaniteLabs
 
-Open-source tools by [KyaniteLabs](https://kyanitelabs.tech). Related projects:
+More from [KyaniteLabs](https://kyanitelabs.tech). Related projects:
 
 - **[liminal](https://github.com/KyaniteLabs/liminal)** — AI creative-coding studio (p5.js, GLSL, Three.js)
 - **[Innerscape](https://github.com/KyaniteLabs/Innerscape)** — personal-growth OS: journaling & reflection
