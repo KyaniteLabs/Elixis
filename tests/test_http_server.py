@@ -237,7 +237,7 @@ class TestGetRoutes(unittest.TestCase):
 
         mock_resp.assert_called_with(200)
         body = handler.wfile.getvalue().decode("utf-8")
-        self.assertIn("AI pattern synthesis engine", body)
+        self.assertIn("AI pattern-synthesis engine", body)
         mock_log.assert_called_with("GET", "/llms.txt", 200, ANY)
 
 
