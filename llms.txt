@@ -8,5 +8,8 @@ A Python engine + CLI/HTTP/MCP surfaces that synthesizes patterns (identity, bra
 ## Install / use
 git clone the repo, then `pip install -e .` (not yet on PyPI).
 
+## Agent skill
+Invoke `$elixis` in compatible agent hosts when the user needs Source Corpus ingestion, pattern synthesis, identity, brand voice, design-system direction, naming research, or Market Kit outputs. The public skill lives at `skills/elixis/SKILL.md`.
+
 ## Links
 - Repository: https://github.com/KyaniteLabs/Elixis
