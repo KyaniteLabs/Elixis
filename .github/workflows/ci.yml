@@ -10,6 +10,8 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+timeout-minutes: 30
+
 jobs:
   test:
     runs-on: blacksmith-2vcpu-ubuntu-2404

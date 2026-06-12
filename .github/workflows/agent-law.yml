@@ -8,6 +8,8 @@ on:
 permissions:
   contents: read
 
+timeout-minutes: 30
+
 jobs:
   agent-law:
     name: agent-law

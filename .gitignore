@@ -28,3 +28,5 @@ portfolio-*.md
 .DS_Store
 Thumbs.db
 .gstack/
+*.log
+.venv/
