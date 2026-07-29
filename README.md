@@ -1,21 +1,27 @@
 # Elixis
 
-Elixis turns raw reference material into a pattern graph, then resolves that graph through output lenses for identity, brand voice, design systems, naming, and marketing direction.
+Local-first AI pattern synthesis engine: turn reference material into a pattern graph, then resolve it through lenses for identity, brand voice, design systems, naming, and marketing direction.
+
+**Who it is for:** operators who need consistent brand/identity outputs from messy source material — not one-shot prompt spam.
+
+**What you get:** a local pattern graph + lens pipeline (Python package).
 
 ## Try it
 
 ```bash
-git clone https://github.com/KyaniteLabs/Elixis.git && cd Elixis && pip install -e .
+git clone https://github.com/KyaniteLabs/Elixis.git
+cd Elixis
+pip install -e .
 ```
+
+Docs: [kyanitelabs.github.io/Elixis](https://kyanitelabs.github.io/Elixis/)
 
 ## Docs
 
-- [`skills/elixis/SKILL.md`](skills/elixis/SKILL.md)
-- [skills/elixis/SKILL.md](skills/elixis/SKILL.md)
+- [Skill](skills/elixis/SKILL.md)
 - [CONTEXT.md](CONTEXT.md)
-- [docs/DEPLOY_SETUP.md](docs/DEPLOY_SETUP.md)
-- [KyaniteLabs](https://kyanitelabs.tech)
+- [Deploy setup](docs/DEPLOY_SETUP.md)
 
 ## License
 
-See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](LICENSE).
