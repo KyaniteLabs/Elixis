@@ -1,6 +1,6 @@
 # Elixis
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/Elixis.svg)](https://github.com/KyaniteLabs/Elixis/stargazers)
