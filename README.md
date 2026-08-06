@@ -168,11 +168,12 @@ Start the server with `python app.py`, open `http://localhost:3110`, enter refer
 Elixis works with local LLMs via Ollama, OpenAI-compatible APIs, and Anthropic's Messages API. It falls back to template-based synthesis when no LLM is available.
 
 **Is Elixis free and open source?**
-Yes. Elixis is MIT-licensed and uses zero external Python dependencies (stdlib only).
+Yes. Elixis is Apache-2.0-licensed and uses zero external Python dependencies (stdlib only).
 
 **What is the Soul Spec?**
 Soul Spec is an open standard for AI agent personas. Elixis can generate SOUL.md documents compatible with Soul Spec v0.5, OpenClaw, and any framework that reads markdown-based identity files, but Elixis is not limited to identity files.
 
 ## License
 
-See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](LICENSE).
+
