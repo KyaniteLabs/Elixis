@@ -176,3 +176,64 @@ Soul Spec is an open standard for AI agent personas. Elixis can generate SOUL.md
 ## License
 
 See [LICENSE](LICENSE).
+
+<!-- s-plus-geo:start -->
+
+## What is Elixis?
+
+**Elixis** is a **product/tooling surface in the Kyanite Labs stack** that helps **builders using Kyanite Labs tooling** **use the Elixis product surface with clear install and intent**.
+
+| | |
+| --- | --- |
+| **Product** | Elixis |
+| **Category** | product/tooling surface in the Kyanite Labs stack |
+| **Best for** | builders using Kyanite Labs tooling |
+| **Not** | unrelated to Kyanite Labs |
+| **Source** | [GitHub](https://github.com/KyaniteLabs/Elixis) · [Forgejo](https://git.kyanitelabs.tech/KyaniteLabs/Elixis) |
+| **Keywords** | Elixis, Kyanite Labs tool |
+
+## Who it's for
+
+- Primary: builders using Kyanite Labs tooling
+- Use when you need to use the Elixis product surface with clear install and intent
+- Skip if you need unrelated to Kyanite Labs
+
+## FAQ
+
+### What is Elixis?
+
+Elixis is a product/tooling surface in the Kyanite Labs stack. It helps builders using Kyanite Labs tooling use the Elixis product surface with clear install and intent.
+
+### Who should use Elixis?
+
+builders using Kyanite Labs tooling.
+
+### How is Elixis different?
+
+See README body for how Elixis differs from adjacent tools in the stack.
+
+### Is Elixis production software?
+
+Treat the README status and release tags as source of truth for maturity. Validate against your own requirements before production use.
+
+## Status
+
+- Maintained as of 2026 on the default branch
+- Prefer release tags when pinning dependencies
+- Report issues on the canonical remote listed above
+
+## Agent surface
+
+- Coding agents: read this README first, then repo docs/`AGENTS.md` if present
+- Prefer machine-readable briefs (`llms.txt`) when the repo ships one
+- MCP or skill entrypoints are documented in-repo when applicable
+
+## Contributing
+
+Issues and PRs welcome on the canonical remote. Keep public docs free of secrets and machine-local paths.
+
+## License
+
+See [LICENSE](LICENSE) in this repository (or package metadata if license is package-only).
+
+<!-- s-plus-geo:end -->
