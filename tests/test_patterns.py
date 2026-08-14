@@ -65,7 +65,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_accepts_entity_keyed_object_response(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"Athena": {"Wisdom & Knowledge": 0.91, "Power & Ambition": 0.22}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 20,
             "tokens_out": 10,
@@ -87,7 +87,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
                 '{"pattern_id": "shadow", "probability": 0.41}'
                 ']}}'
             ),
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 20,
             "tokens_out": 10,
@@ -104,7 +104,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_expands_classification_token_budget_for_many_entities(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"Entity 0": {"wisdom": 0.7}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 12,
@@ -123,7 +123,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_accepts_empty_but_valid_classification_response(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"classifications": {}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 4,
@@ -142,7 +142,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_accepts_empty_nested_score_containers(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"classifications":{"Quiet Signal":{"scores":{},"patterns":[]}}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 8,
@@ -161,7 +161,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_empty_classification_does_not_retry_or_record_llm_unavailable(self, mock_chat):
         mock_chat.return_value = {
             "content": "{}",
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 2,
@@ -185,7 +185,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_rejects_non_empty_unsupported_classification_schema(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"not_scores": "not a classification"}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 8,
@@ -200,7 +200,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_rejects_unknown_score_maps_as_invalid_schema(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"classifications":{"Quiet Signal":{"unknown":0.9}}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 8,
@@ -215,7 +215,7 @@ class TestLlmPatternClassificationParsing(unittest.TestCase):
     def test_rejects_metadata_only_nested_classification_maps(self, mock_chat):
         mock_chat.return_value = {
             "content": '{"classifications":{"Quiet Signal":{"reason":"no matching pattern"}}}',
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "provider": "zai",
             "tokens_in": 40,
             "tokens_out": 8,

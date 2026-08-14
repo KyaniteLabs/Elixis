@@ -35,7 +35,7 @@ class _Config:
             return os.environ["LLM_MODEL"]
         raw_provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
         if raw_provider in {"zai", "glm"}:
-            return "glm-5.1"
+            return "glm-5.3"
         if raw_provider in {"kimi", "moonshot"}:
             return "kimi-k2.6"
         if self.provider == "anthropic":

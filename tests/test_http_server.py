@@ -591,7 +591,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-5.1",
+                            "model": "glm-5.3",
                         },
                     },
                 }
@@ -602,9 +602,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "base_host": "api.z.ai",
-            "classify_model": "glm-5.1",
+            "classify_model": "glm-5.3",
         }
         with (
             patch("app.GameEngine", FakeEngine),
@@ -616,7 +616,7 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(result["output"], result["stage3_output"])
         self.assertEqual(result["stage3_output"], result["stage3_soulmd"])
         self.assertEqual(result["process_trace"]["lens"], "identity")
-        self.assertEqual(result["process_trace"]["model"]["model"], "glm-5.1")
+        self.assertEqual(result["process_trace"]["model"]["model"], "glm-5.3")
         self.assertEqual(
             result["process_trace"]["pattern_matching"]["method"],
             "0.7 LLM classification + 0.3 keyword/theme/type/knowledge scoring",
@@ -690,7 +690,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-5.1",
+                            "model": "glm-5.3",
                             "tokens_in": 100,
                             "tokens_out": 40,
                             "max_tokens": 2492,
@@ -704,9 +704,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "base_host": "api.z.ai",
-            "classify_model": "glm-5.1",
+            "classify_model": "glm-5.3",
         }
         with (
             patch("app.GameEngine", FakeEngine),
@@ -720,9 +720,9 @@ class TestGamePayloads(unittest.TestCase):
         self.assertIsNone(result["stage3_soulmd"])
         trace = result["process_trace"]
         self.assertEqual(trace["lens"], "brand")
-        self.assertEqual(trace["model"]["model"], "glm-5.1")
+        self.assertEqual(trace["model"]["model"], "glm-5.3")
         self.assertEqual(trace["phases"][2]["name"], "connection")
-        self.assertEqual(trace["phases"][2]["model"], "glm-5.1")
+        self.assertEqual(trace["phases"][2]["model"], "glm-5.3")
         self.assertEqual(trace["phases"][2]["tokens_in"], 100)
         self.assertEqual(trace["phases"][2]["max_tokens"], 2492)
         self.assertEqual(trace["pattern_matching"]["classification_max_tokens"], 2492)
@@ -782,7 +782,7 @@ class TestGamePayloads(unittest.TestCase):
                         "llm_classification": {
                             "source": "llm",
                             "provider": "anthropic",
-                            "model": "glm-5.1",
+                            "model": "glm-5.3",
                         },
                     },
                 }
@@ -807,9 +807,9 @@ class TestGamePayloads(unittest.TestCase):
 
         model_config = {
             "provider": "anthropic",
-            "model": "glm-5.1",
+            "model": "glm-5.3",
             "base_host": "api.z.ai",
-            "classify_model": "glm-5.1",
+            "classify_model": "glm-5.3",
         }
         handler = _make_handler("POST", "/api/game/stream", body={"text": "Batman and Athena", "lens": "brand"})
 
@@ -835,7 +835,7 @@ class TestGamePayloads(unittest.TestCase):
         trace_event = trace_events[0]
         final_trace_event = trace_events[-1]
         self.assertEqual(trace_event["data"]["lens"], "brand")
-        self.assertEqual(trace_event["data"]["model"]["model"], "glm-5.1")
+        self.assertEqual(trace_event["data"]["model"]["model"], "glm-5.3")
         self.assertEqual(
             trace_event["data"]["pattern_matching"]["top_patterns"][0]["name"],
             "Wisdom & Knowledge",
@@ -903,7 +903,7 @@ class TestGamePayloads(unittest.TestCase):
             def resolve_stream(self, lens="identity", stage_timings=None):
                 yield {"type": "soulmd_token", "content": "# "}
                 yield {"type": "soulmd_token", "content": "Output"}
-                yield {"type": "telemetry", "data": {"model": "glm-5.1"}}
+                yield {"type": "telemetry", "data": {"model": "glm-5.3"}}
                 if stage_timings is not None:
                     stage_timings["stage3_synthesis_ms"] = 17
                 yield {"type": "soulmd_done", "data": {"length": 8}}
@@ -920,7 +920,7 @@ class TestGamePayloads(unittest.TestCase):
         self.assertEqual(mock_save_run.call_args.args[0], "Batman and Athena")
         self.assertEqual(mock_save_run.call_args.args[3], "# Output")
         self.assertEqual(mock_save_run.call_args.kwargs["lens"], "identity")
-        self.assertEqual(mock_save_run.call_args.kwargs["telemetry"]["model"], "glm-5.1")
+        self.assertEqual(mock_save_run.call_args.kwargs["telemetry"]["model"], "glm-5.3")
         events = [
             json.loads(line.removeprefix("data: "))
             for line in handler.wfile.getvalue().decode().splitlines()

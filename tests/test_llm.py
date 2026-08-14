@@ -78,7 +78,7 @@ class TestEnvironmentVariables(unittest.TestCase):
         """OpenAI-compatible provider aliases should not require duplicating LLM_API_KEY."""
         self.assertEqual(llm.PROVIDER, "openai")
         self.assertEqual(llm.API_KEY, "zai-test-key")
-        self.assertEqual(llm.DEFAULT_MODEL, "glm-5.1")
+        self.assertEqual(llm.DEFAULT_MODEL, "glm-5.3")
 
     @patch.dict(os.environ, {"LLM_PROVIDER": "kimi", "KIMI_API_KEY": "kimi-test-key"}, clear=True)
     def test_kimi_provider_alias_reads_kimi_key(self):
