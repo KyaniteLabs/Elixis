@@ -2,6 +2,10 @@
 
 Usage: python3 scripts/golden_run.py [path/to/corpus.md]
 
+Corpus resolution order: CLI argument, then $ELIXIS_CORPUS, then
+<repo root>/corpus.md. Machine-specific paths belong in the gitignored
+.env (ELIXIS_CORPUS=...), never in this script.
+
 Ingests the attention x activity ledger via the receipts feed, runs the
 canonical pipeline (declare -> elaborate -> connect -> resolve) plus Phase 5
 naming with the machine-encoded discipline, and writes a full receipt:
@@ -22,11 +26,19 @@ from elixis import llm
 from elixis.engine import GameEngine
 from elixis.receipts import corpus_to_seed, ingest_file
 
-CORPUS_DEFAULT = "/Users/simongonzalezdecruz/workspaces/takeout-staging-elixis-salvage/elixis_run/corpus.md"
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CORPUS_DEFAULT = os.path.join(_REPO_ROOT, "corpus.md")
 
 
 def main():
-    corpus_path = sys.argv[1] if len(sys.argv) > 1 else CORPUS_DEFAULT
+    corpus_path = (
+        sys.argv[1] if len(sys.argv) > 1
+        else os.environ.get("ELIXIS_CORPUS", CORPUS_DEFAULT)
+    )
+    if not os.path.isfile(corpus_path):
+        print(f"FATAL: corpus not found: {corpus_path}\n"
+              f"Pass a path, or set ELIXIS_CORPUS in .env")
+        sys.exit(1)
     corpus_data = ingest_file(corpus_path)
     seed = corpus_to_seed(open(corpus_path).read())
 

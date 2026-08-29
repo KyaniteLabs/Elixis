@@ -160,5 +160,61 @@ class TestAnthropicProvider(unittest.TestCase):
         self.assertEqual(llm._anthropic_endpoint("messages"), "https://api.anthropic.com/v1/messages")
 
 
+class TestAnthropicFallback(unittest.TestCase):
+    """The anthropic fallback must actually fire when the primary dies."""
+
+    def test_fallback_used_when_primary_raises(self):
+        real_single = llm._call_anthropic_single
+        calls = []
+
+        def fake_single(base_url, messages, model=None, max_tokens=4096, think=True):
+            calls.append(base_url)
+            if "primary" in base_url:
+                raise OSError("primary dead")
+            return {"content": "from-fallback", "tokens_in": 1, "tokens_out": 1,
+                    "latency_ms": 1, "tokens_per_sec": 1.0, "model": "m",
+                    "provider": "anthropic"}
+
+        real_base, real_fallback = llm.cfg.base_url, llm.cfg.fallback_url
+        llm._call_anthropic_single = fake_single
+        # Live config properties read env each access; pin via env.
+        os.environ["LLM_BASE_URL"] = "http://primary.example"
+        os.environ["LLM_FALLBACK_URL"] = "http://fallback.example"
+        try:
+            result = llm._call_anthropic([{"role": "user", "content": "hi"}])
+        finally:
+            llm._call_anthropic_single = real_single
+            os.environ["LLM_BASE_URL"] = real_base
+            os.environ.pop("LLM_FALLBACK_URL", None)
+            if real_fallback:
+                os.environ["LLM_FALLBACK_URL"] = real_fallback
+
+        self.assertEqual(calls, ["http://primary.example", "http://fallback.example"])
+        self.assertEqual(result["content"], "from-fallback")
+        self.assertTrue(result.get("fallback"))
+        self.assertIn("primary dead", result.get("primary_error", ""))
+
+    def test_error_dict_when_no_fallback(self):
+        real_single = llm._call_anthropic_single
+
+        def fake_single(base_url, messages, model=None, max_tokens=4096, think=True):
+            raise OSError("primary dead")
+
+        real_base, had_fallback = llm.cfg.base_url, os.environ.pop("LLM_FALLBACK_URL", None)
+        llm._call_anthropic_single = fake_single
+        os.environ["LLM_BASE_URL"] = "http://primary.example"
+        try:
+            result = llm._call_anthropic([{"role": "user", "content": "hi"}])
+        finally:
+            llm._call_anthropic_single = real_single
+            os.environ["LLM_BASE_URL"] = real_base
+            if had_fallback:
+                os.environ["LLM_FALLBACK_URL"] = had_fallback
+
+        self.assertEqual(result["content"], "")
+        self.assertIn("error", result)
+        self.assertEqual(result["provider"], "anthropic")
+
+
 if __name__ == "__main__":
     unittest.main()

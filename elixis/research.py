@@ -33,8 +33,7 @@ def _wiki_summary(title):
     })
 
     try:
-        # One retry: Wikipedia REST timeouts are frequently transient
-        # (4 of 51 beads lost enrichment in the 2026-08-29 golden run).
+        # One retry for transient timeouts; permanent 404s fail fast.
         for _attempt in range(2):
             try:
                 with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
@@ -43,8 +42,11 @@ def _wiki_summary(title):
                 if extract and len(extract) > 20:
                     return extract
                 return ""
-            except (urllib.error.URLError, urllib.error.HTTPError,
-                    json.JSONDecodeError, OSError):
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    return ""
+                continue
+            except (urllib.error.URLError, json.JSONDecodeError, OSError):
                 continue
         return ""
     except Exception:

@@ -309,9 +309,9 @@ def score_sy(name_a: str, name_b: str) -> int:
 
     "___ and ___" must walk evenly. Equal syllable counts with a shared
     ending cadence (or both perfect trochees) is a 5; equal counts with
-    different endings is a 4; each step of syllable difference costs two;
-    mismatched front-stress or a member that cannot be spelled (SO <= 2)
-    breaks the spoken walk and costs one more.
+    different endings is a 4; each step of syllable difference costs one
+    point; mismatched front-stress or a member that cannot be spelled
+    (SO <= 2) breaks the spoken walk and costs one more.
     """
     sa, sb = name_syllables(name_a), name_syllables(name_b)
     diff = abs(sa - sb)
