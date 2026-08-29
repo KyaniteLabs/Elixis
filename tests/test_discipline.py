@@ -14,10 +14,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from elixis.discipline import (
     apply_discipline,
     count_syllables,
-    deniability_check,
     dangerous_words_found,
+    deniability_check,
     kill_list_violations,
     make_plate,
+    name_syllables,
     prosody_scores,
     score_sy,
     validate_plate,
@@ -118,6 +119,60 @@ class TestKillLists(unittest.TestCase):
     def test_dangerous_words_warn_not_kill(self):
         self.assertEqual(kill_list_violations("Jelly Brick", profile="glass-titles"), [])
         self.assertIn("brick", dangerous_words_found("Jelly Brick", profile="glass-titles"))
+
+
+class TestHyphenCompoundSmuggling(unittest.TestCase):
+    """Banned tokens must not survive inside hyphenated compounds.
+
+    The tokenizer kept hyphens inside tokens, so unlock-journey slipped past
+    the house kill list that kills "unlock journey".
+    """
+
+    def test_hyphenated_house_tokens_killed_like_spaced(self):
+        self.assertEqual(
+            kill_list_violations("unlock-journey"),
+            ["house token: journey", "house token: unlock"],
+        )
+        self.assertEqual(
+            kill_list_violations("unlock journey"),
+            ["house token: journey", "house token: unlock"],
+        )
+        self.assertTrue(
+            any("house token: unleash" in v for v in kill_list_violations("unleash-journey"))
+        )
+
+    def test_hyphenated_smuggling_killed_for_each_profile(self):
+        for profile in (None, "glass-titles", "inworld-glass"):
+            hits = kill_list_violations("unlock-journey", profile=profile)
+            self.assertIn("house token: journey", hits, profile)
+            self.assertIn("house token: unlock", hits, profile)
+
+    def test_hyphenated_house_token_still_matches_exactly(self):
+        # "level-up" is itself a banned token; splitting must not lose it.
+        self.assertEqual(kill_list_violations("level-up"), ["house token: level-up"])
+        self.assertEqual(kill_list_violations("levelup"), ["house token: levelup"])
+
+    def test_clean_hyphenated_names_pass_untouched(self):
+        for name in ("tok-smith", "slate-harbor", "quartz-fall"):
+            self.assertEqual(kill_list_violations(name), [], name)
+            self.assertEqual(kill_list_violations(name, profile="glass-titles"), [], name)
+            self.assertEqual(kill_list_violations(name, profile="inworld-glass"), [], name)
+            self.assertEqual(dangerous_words_found(name, profile="glass-titles"), [], name)
+
+    def test_hyphenated_dangerous_words_still_warn(self):
+        self.assertEqual(dangerous_words_found("watch-path"), ["watch", "path"])
+        self.assertEqual(dangerous_words_found("watch path"), ["watch", "path"])
+        self.assertEqual(dangerous_words_found("tok-smith"), [])
+
+    def test_prosody_and_syllables_unchanged_on_clean_hyphenated_names(self):
+        # name_syllables already treated hyphens as separators; the kill-list
+        # fix must not move prosody on clean compounds.
+        self.assertEqual(name_syllables("tok-smith"), 2)
+        self.assertEqual(prosody_scores("tok-smith"), {"ST": 5, "EC": 5, "SO": 5, "SY": 0})
+        self.assertEqual(name_syllables("slate-harbor"), 3)
+        self.assertEqual(prosody_scores("slate-harbor"), {"ST": 4, "EC": 4, "SO": 3, "SY": 0})
+        self.assertEqual(name_syllables("quartz-fall"), 3)
+        self.assertEqual(prosody_scores("quartz-fall"), {"ST": 5, "EC": 3, "SO": 4, "SY": 0})
 
 
 class TestDeniability(unittest.TestCase):

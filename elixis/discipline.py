@@ -115,6 +115,11 @@ def kill_list_violations(text: str, profile: Optional[str] = None) -> List[str]:
 
     lowered = text.lower()
     tokens = set(_words(text))
+    # The tokenizer keeps hyphens inside tokens, so hyphen is a compound
+    # joiner, not a word character: unlock-journey must die exactly like
+    # unlock journey. Whole tokens stay in the set so the hyphenated house
+    # token "level-up" still matches itself.
+    tokens.update(part for tok in tuple(tokens) for part in tok.split("-"))
     for tok in HOUSE_TOKENS:
         if tok in tokens:
             violations.append(f"house token: {tok}")
@@ -150,6 +155,9 @@ def dangerous_words_found(text: str, profile: Optional[str] = None) -> List[str]
     conf = OBJECT_PROFILES.get(profile) if profile else None
     lexicon = conf["dangerous_words"] if conf else DANGEROUS_WORDS
     tokens = set(_words(text))
+    # Same compound-joiner rule as kill_list_violations: watch-path warns
+    # just like watch path.
+    tokens.update(part for tok in tuple(tokens) for part in tok.split("-"))
     return [w for w in lexicon if w in tokens]
 
 
