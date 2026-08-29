@@ -33,13 +33,23 @@ def _wiki_summary(title):
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
-            data = json.loads(resp.read())
-            extract = data.get("extract", "")
-            if extract and len(extract) > 20:
-                return extract
-            return ""
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError):
+        # One retry for transient timeouts; permanent 404s fail fast.
+        for _attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+                    data = json.loads(resp.read())
+                extract = data.get("extract", "")
+                if extract and len(extract) > 20:
+                    return extract
+                return ""
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    return ""
+                continue
+            except (urllib.error.URLError, json.JSONDecodeError, OSError):
+                continue
+        return ""
+    except Exception:
         return ""
 
 

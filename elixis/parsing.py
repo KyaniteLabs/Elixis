@@ -77,18 +77,43 @@ def parse_llm_json_array(response: str):
         if isinstance(data, list):
             return data
 
+    # Truncated output (max_tokens cut mid-array): salvage the complete
+    # elements by closing the array after the last parseable object.
+    if start != -1:
+        salvaged = _salvage_truncated_array(json_str[start:])
+        if salvaged is not None:
+            return salvaged
+
     # Some models wrap the requested array in a top-level object despite the
     # prompt. Accept that shape so classification does not drop to fallback.
     obj_start = json_str.find("{")
     obj_end = json_str.rfind("}")
     if obj_start == -1 or obj_end == -1 or obj_end <= obj_start:
         return None
-
     try:
         wrapped = _loads_lenient(json_str[obj_start:obj_end + 1])
     except json.JSONDecodeError:
         return None
     return _first_list_value(wrapped)
+
+
+def _salvage_truncated_array(fragment: str):
+    """Close a truncated JSON array at the last position that parses.
+
+    Tries closing after each '}' from the end backwards; nested objects and
+    trailing garbage fail their parses until a real element boundary is found.
+    Returns the parsed list or None.
+    """
+    for i in range(len(fragment) - 1, 0, -1):
+        if fragment[i] != "}":
+            continue
+        try:
+            data = json.loads(fragment[:i + 1] + "]")
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, list) and data:
+            return data
+    return None
 
 
 def parse_llm_json_object(response: str):
