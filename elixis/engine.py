@@ -351,28 +351,44 @@ class GameEngine:
 
     # ── Phase 5: Naming (optional) ─────────────────────────────────────
 
-    def name(self, source="taxonomy"):
+    def name(self, source="taxonomy", object_profile=None):
         """Generate naming suggestions grounded in the synthesized identity.
 
         Must be called after connect_domains(). Consumes the entity data
-        and pattern graph to produce identity-aligned name candidates.
+        and pattern graph to produce identity-aligned name candidates,
+        adjudicates them through the machine-encoded naming discipline
+        (kill lists, prosody rubric, deniability gate), and emits the
+        plate (silk + name + subtitle) as one unit.
 
         Args:
             source: "taxonomy" (scientific names) or "general" (LLM freeform).
+            object_profile: optional discipline profile (see discipline.py),
+                e.g. "glass-titles" or "inworld-glass".
 
         Returns:
-            Naming report dict with variants, semantics, identity_context.
+            Naming report dict with variants, rejected_variants, plate,
+            semantics, identity_context.
         """
         state = self._state
-        if not state or state.phase not in ("connection", "elaboration"):
+        if not state or state.phase not in ("connection", "elaboration", "resolution"):
             raise RuntimeError("Must connect_domains() before name().")
 
         entity_dicts = [b.to_dict() for b in state.beads]
         graph = state.metadata.get("pattern_graph", {})
 
         from .naming import research_name_from_identity
-        report = research_name_from_identity(entity_dicts, graph, source=source)
+        report = research_name_from_identity(
+            entity_dicts, graph, source=source, object_profile=object_profile
+        )
+
+        plate, note = _build_plate(report, graph, entity_dicts, object_profile)
+        if plate is not None:
+            report["plate"] = plate
+        else:
+            report["plate_note"] = note
+
         state.metadata["naming_report"] = report
+        state.metadata["plate"] = report.get("plate")
         return report
 
     # ── Convenience: full pipeline ────────────────────────────────────
@@ -393,6 +409,62 @@ class GameEngine:
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
+
+def _build_plate(report, graph, entities, object_profile=None):
+    """Assemble the plate (silk + name + subtitle) from an adjudicated report.
+
+    Silk is derived deterministically from the dominant pattern names plus
+    entity themes (2-5 letterspaced words, kill-list clean). The name is the
+    top discipline-passing variant; the subtitle is one marketing-free line
+    from the identity context. Returns (plate, note) where plate is None and
+    note explains why when nothing survives the discipline.
+    """
+    import re as _re
+
+    from .discipline import kill_list_violations, make_plate, validate_plate
+
+    passing = [v for v in report.get("variants", []) if v.get("discipline_pass")]
+    if not passing:
+        return None, "no variant passed the machine-encoded discipline"
+
+    name = passing[0]["name"]
+    partner = passing[1]["name"] if len(passing) > 1 else ""
+
+    identity = report.get("identity_context", {})
+    words = []
+    for p in graph.get("patterns", [])[:2]:
+        words.extend(p.get("name", "").replace("&", " ").split())
+    for theme in identity.get("entity_themes", []):
+        if len(words) >= 5:
+            break
+        if theme.lower() not in [w.lower() for w in words]:
+            words.append(theme)
+    cleaned = []
+    for w in words:
+        w = _re.sub(r"[^A-Za-z0-9]", "", w).upper()
+        if w and w not in cleaned and not kill_list_violations(w, object_profile):
+            cleaned.append(w)
+    silk = " · ".join(cleaned[:5])
+    if len(cleaned) < 2:
+        silk = " · ".join((cleaned + ["IDENTITY"])[:2])
+
+    # Subtitle: one grammatical line from the short emergent topic (the
+    # full theme string reads like a clause and breaks the sentence).
+    topic = graph.get("emergent_topic") or "identity"
+    topic = topic.replace("&", "and")
+    topic = _re.split(r"blended|,|;", topic)[0].strip(" .")
+    words = topic.split()
+    if len(words) > 4:
+        words = words[:4]
+    topic = " ".join(words) or "identity"
+    count = identity.get("entity_count", len(entities))
+    article = "An" if topic[0].lower() in "aeiou" else "A"
+    subtitle = f"{article} {topic.lower()} identity drawn from {count} influences."
+
+    plate = make_plate(silk, name, subtitle, partner)
+    plate["validation"] = validate_plate(plate, object_profile)
+    return plate, None
+
 
 def _infer_domains(entity):
     """Infer knowledge domains from entity type, source, and themes."""

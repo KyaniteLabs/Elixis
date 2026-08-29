@@ -386,22 +386,27 @@ def research_name_from_identity(
     graph: Dict,
     source: str = "taxonomy",
     generate_variants: bool = True,
+    object_profile: str = None,
 ) -> Dict:
     """Generate name suggestions grounded in a synthesized identity.
 
     Consumes the same entity + graph data that feeds into SOUL.md,
     brand voice, and design token generation. Extracts emergent themes,
     dominant patterns, and cross-pattern bridges to produce names that
-    semantically align with the identity.
+    semantically align with the identity. Every variant is adjudicated
+    by the machine-encoded naming discipline (kill lists, prosody rubric,
+    deniability gate) before it can reach a plate.
 
     Args:
         entities: List of enriched entity dicts from the pipeline.
         graph: Pattern graph from build_pattern_graph().
         source: "taxonomy" (scientific names) or "general" (LLM freeform).
         generate_variants: Whether to generate alternative names.
+        object_profile: Optional discipline profile name (see discipline.py).
 
     Returns:
-        Naming report with identity_context, variants, semantics, recommendations.
+        Naming report with identity_context, variants, rejected_variants,
+        semantics, recommendations, discipline summary.
     """
     # ── Extract identity signals from the pipeline ──────────────────
 
@@ -467,6 +472,28 @@ def research_name_from_identity(
             reverse=True,
         )
 
+    # ── Machine-encoded discipline: kill lists, rubric, deniability ──
+
+    from .discipline import apply_discipline, score_sy
+    adjudicated = apply_discipline(variants, object_profile)
+    kept = adjudicated["kept"]
+    rejected = adjudicated["rejected"]
+
+    # Fill pairwise SY on the top two survivors (the spoken "___ and ___" line)
+    if len(kept) >= 2:
+        kept[0]["prosody"]["SY"] = score_sy(kept[0]["name"], kept[1]["name"])
+        kept[1]["prosody"]["SY"] = score_sy(kept[1]["name"], kept[0]["name"])
+        top_avg = (kept[0]["prosody"]["ST"] + kept[0]["prosody"]["EC"]
+                   + kept[0]["prosody"]["SO"] + kept[0]["prosody"]["SY"]) / 4
+        kept[0]["prosody"]["average"] = round(top_avg, 2)
+
+    # Discipline-passing variants first, then the rest by fit
+    kept.sort(
+        key=lambda x: (bool(x.get("discipline_pass")), x.get("identity_fit", 0)),
+        reverse=True,
+    )
+    variants = kept
+
     # ── Semantic analysis on the emergent concept ───────────────────
 
     semantics = analyze_name_semantics(base_name, context)
@@ -502,6 +529,13 @@ def research_name_from_identity(
         "context": context,
         "source": source,
         "variants": variants,
+        "rejected_variants": rejected,
+        "discipline": {
+            "applied": True,
+            "profile": object_profile,
+            "kept": len(kept),
+            "rejected": len(rejected),
+        },
         "semantics": semantics,
         "recommendations": recommendations,
         "identity_context": {

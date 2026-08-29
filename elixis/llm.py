@@ -105,6 +105,14 @@ _availability_cache = {"result": None, "expires": 0}
 _AVAILABILITY_TTL = 10  # seconds
 
 
+def _timeout_s():
+    """HTTP timeout for LLM calls (LLM_TIMEOUT seconds, default 180)."""
+    try:
+        return int(os.environ.get("LLM_TIMEOUT", "180"))
+    except ValueError:
+        return 180
+
+
 def _call_ollama(messages, model=None, max_tokens=4096, think=True):
     """Call Ollama's chat API. Returns a result dict with content + telemetry."""
     from .traces import save_trace
@@ -256,7 +264,7 @@ def _anthropic_headers():
     return headers
 
 
-def _anthropic_payload(messages, model=None, max_tokens=2048, stream=False):
+def _anthropic_payload(messages, model=None, max_tokens=2048, stream=False, think=True):
     """Convert chat-style messages into Anthropic Messages API payload."""
     system_parts = []
     converted = []
@@ -286,52 +294,30 @@ def _anthropic_payload(messages, model=None, max_tokens=2048, stream=False):
         payload["system"] = "\n\n".join(system_parts)
     if stream:
         payload["stream"] = True
+    if not think:
+        # Thinking models (glm-5.3 et al.) burn the whole budget on
+        # reasoning blocks otherwise and return zero text.
+        payload["thinking"] = {"type": "disabled"}
     return payload
 
 
-def _call_anthropic(messages, model=None, max_tokens=2048):
-    """Call Anthropic's Messages API. Returns a result dict with content + telemetry."""
-    url = _anthropic_endpoint("messages")
-    used_model = model or cfg.default_model
-    payload = json.dumps(_anthropic_payload(messages, used_model, max_tokens)).encode()
-    req = urllib.request.Request(url, data=payload, headers=_anthropic_headers())
-    start = time.time()
+def _call_anthropic(messages, model=None, max_tokens=2048, think=True):
+    """Call Anthropic's Messages API with fallback to a secondary server."""
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
-            data = json.loads(resp.read())
-        parts = [
-            block.get("text", "")
-            for block in data.get("content", [])
-            if block.get("type") == "text"
-        ]
-        content = "".join(parts).strip()
-        latency_ms = int((time.time() - start) * 1000)
-        usage = data.get("usage", {})
-        tokens_in = usage.get("input_tokens", 0) or 0
-        tokens_out = usage.get("output_tokens", 0) or 0
-        tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
-        prompt_text = messages[-1].get("content", "") if messages else ""
-
-        from .traces import save_trace
-        save_trace(
-            prompt=prompt_text,
-            response=content,
-            latency_ms=latency_ms,
-            model=used_model,
-            extra={"provider": "anthropic", "tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
-        )
-        return {
-            "content": content,
-            "tokens_in": tokens_in,
-            "tokens_out": tokens_out,
-            "latency_ms": latency_ms,
-            "tokens_per_sec": tps,
-            "model": used_model,
-            "provider": "anthropic",
-        }
+        return _call_anthropic_single(cfg.base_url, messages, model, max_tokens, think)
     except (urllib.error.URLError, OSError, TimeoutError, KeyError, json.JSONDecodeError) as e:
+        fallback_base = cfg.fallback_url
+        if fallback_base:
+            try:
+                result = _call_anthropic_single(fallback_base, messages, model, max_tokens, think)
+                result["fallback"] = True
+                result["primary_error"] = str(e)
+                return result
+            except (urllib.error.URLError, OSError, TimeoutError, KeyError, json.JSONDecodeError):
+                pass
+        used_model = model or cfg.default_model
         import logging
-        logging.getLogger("elixis.llm").warning(f"Anthropic call failed: {e}")
+        logging.getLogger("elixis.llm").warning(f"Anthropic call failed (primary): {e}")
         return {
             "content": "",
             "error": str(e),
@@ -342,6 +328,49 @@ def _call_anthropic(messages, model=None, max_tokens=2048):
             "model": used_model,
             "provider": "anthropic",
         }
+
+
+def _call_anthropic_single(base_url, messages, model=None, max_tokens=2048, think=True):
+    """Call one Anthropic Messages endpoint. Raises on failure so the
+    fallback wrapper can intervene."""
+    url = f"{base_url.rstrip('/')}/v1/messages" if base_url else "https://api.anthropic.com/v1/messages"
+    used_model = model or cfg.default_model
+    payload = json.dumps(_anthropic_payload(messages, used_model, max_tokens, think=think)).encode()
+    headers = _anthropic_headers()
+    req = urllib.request.Request(url, data=payload, headers=headers)
+    start = time.time()
+    with urllib.request.urlopen(req, timeout=_timeout_s()) as resp:
+        data = json.loads(resp.read())
+    parts = [
+        block.get("text", "")
+        for block in data.get("content", [])
+        if block.get("type") == "text"
+    ]
+    content = "".join(parts).strip()
+    latency_ms = int((time.time() - start) * 1000)
+    usage = data.get("usage", {})
+    tokens_in = usage.get("input_tokens", 0) or 0
+    tokens_out = usage.get("output_tokens", 0) or 0
+    tps = round(tokens_out / (latency_ms / 1000), 1) if latency_ms > 0 and tokens_out > 0 else 0
+    prompt_text = messages[-1].get("content", "") if messages else ""
+
+    from .traces import save_trace
+    save_trace(
+        prompt=prompt_text,
+        response=content,
+        latency_ms=latency_ms,
+        model=used_model,
+        extra={"provider": "anthropic", "tokens_in": tokens_in, "tokens_out": tokens_out, "tokens_per_sec": tps},
+    )
+    return {
+        "content": content,
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+        "latency_ms": latency_ms,
+        "tokens_per_sec": tps,
+        "model": used_model,
+        "provider": "anthropic",
+    }
 
 
 def chat(messages, model=None, max_tokens=None, think=True):
@@ -359,7 +388,7 @@ def chat(messages, model=None, max_tokens=None, think=True):
     """
     if cfg.provider == "anthropic":
         kw = {"max_tokens": max_tokens} if max_tokens else {}
-        return _call_anthropic(messages, model, **kw)
+        return _call_anthropic(messages, model, think=think, **kw)
     if cfg.provider == "openai":
         kw = {"max_tokens": max_tokens} if max_tokens else {}
         return _call_openai_compat(messages, model, **kw)

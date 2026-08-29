@@ -33,13 +33,21 @@ def _wiki_summary(title):
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
-            data = json.loads(resp.read())
-            extract = data.get("extract", "")
-            if extract and len(extract) > 20:
-                return extract
-            return ""
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError):
+        # One retry: Wikipedia REST timeouts are frequently transient
+        # (4 of 51 beads lost enrichment in the 2026-08-29 golden run).
+        for _attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+                    data = json.loads(resp.read())
+                extract = data.get("extract", "")
+                if extract and len(extract) > 20:
+                    return extract
+                return ""
+            except (urllib.error.URLError, urllib.error.HTTPError,
+                    json.JSONDecodeError, OSError):
+                continue
+        return ""
+    except Exception:
         return ""
 
 

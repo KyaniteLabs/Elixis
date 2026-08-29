@@ -47,25 +47,36 @@ def _llm_extract_entities(text, telemetry=None):
     from .bead import VALID_THEMES
     themes_list = ", ".join(sorted(VALID_THEMES))
 
-    user = f"""Extract all meaningful references and cues from this text. Include:
-- named people, characters, works, places, movements, and mythological figures
-- aesthetic phrases, values, rituals, tools, constraints, colors, and design motifs
-- short concept phrases that materially shape the identity/brand/design direction
+    user = f"""List every distinct named reference and cue in the text. Include:
+- named people, characters, works, places, movements, mythological figures
+- products, devices, brands, tools, games, shows, and other media
+- aesthetic phrases, values, rituals, constraints, colors, and design motifs
+  that materially shape the identity/brand/design direction
 
-Fix any typos in names.
+Fix obvious typos in names. One entry per reference, no duplicates.
 
-For each entity, return:
+The text may be an attention ledger, watch history, or build log rather than
+prose about people: products, devices, brands, tools, games, shows, and media
+count as entities (type "work"); ideas, practices, and fields are "concept";
+people and characters keep their own types.
+
+Schema per entry:
 - name: canonical name (corrected if misspelled)
 - type: one of: {types_list}
-- source: origin work/media (or "")
-- themes: 3-5 keywords from: {themes_list}
-- traits: 2-4 specific personality phrases (e.g. "paranoid ambition", "cold calculation")
-- related: 2-3 similar characters/figures
+- source: origin work/media/brand (or "")
+- themes: 2-4 keywords, preferring: {themes_list} (a close plain keyword is fine)
+- traits: 1-3 short descriptive phrases
+- related: 1-2 similar things
+
+Example input: "I watched a Fujifilm X-E4 review and then played Zelda."
+Example output: [{{"name": "Fujifilm X-E4", "type": "work", "source": "Fujifilm", "themes": ["creation", "explorer"], "traits": ["compact craftsmanship"], "related": ["X100V"]}}, {{"name": "Zelda", "type": "work", "source": "Nintendo", "themes": ["explorer", "freedom"], "traits": ["adventure"], "related": ["Link"]}}]
+
+Extract the salient references (aim for 10-40 entities for a long text).
+Return an empty array ONLY if the text contains no references at all.
 
 Text: {truncated}{suffix}
 
-Output JSON array only:
-[{{"name": "...", "type": "...", "source": "...", "themes": [...], "traits": [...], "related": [...]}}]"""
+Output the JSON array only, no markdown, no explanation."""
 
     try:
         result = chat(
@@ -74,6 +85,8 @@ Output JSON array only:
                 {"role": "user", "content": user},
             ],
             model=None,
+            max_tokens=3000,
+            think=False,  # classification task; thinking seats burn the budget on reasoning blocks
         )
     except Exception as exc:
         duration_ms = int((time.time() - t0) * 1000)
