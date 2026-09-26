@@ -10,7 +10,7 @@
 
 ### 1. Kyanite Translation Service (Shared Infrastructure)
 
-**Location:** `/Users/simongonzalezdecruz/workspaces/kyanite-translation-service/`
+**Location:** `~/workspaces/kyanite-translation-service/`
 
 **Status:** Fully operational, documented, licensed
 
@@ -41,7 +41,7 @@
 
 ### 2. SoulCraft Core (Python Project)
 
-**Location:** `/Users/simongonzalezdecruz/workspaces/SoulCraft/`
+**Location:** `~/workspaces/SoulCraft/`
 
 **Status:** Core engine functional, translation integration ready
 
