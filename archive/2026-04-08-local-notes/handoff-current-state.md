@@ -10,7 +10,7 @@
 
 ### 1. Kyanite Translation Service (Shared Infrastructure)
 
-**Location:** `/Users/simongonzalezdecruz/workspaces/kyanite-translation-service/`
+**Location:** `~/workspaces/kyanite-translation-service/`
 
 **Status:** Fully operational, documented, licensed
 
@@ -41,7 +41,7 @@
 
 ### 2. pre-Elixis working name Core (Python Project)
 
-**Location:** `/Users/simongonzalezdecruz/workspaces/pre-Elixis working name/`
+**Location:** `~/workspaces/pre-Elixis working name/`
 
 **Status:** Core engine functional, translation integration ready
 
