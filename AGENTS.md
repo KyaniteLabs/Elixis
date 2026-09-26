@@ -48,5 +48,4 @@ Worker discipline: isolated worktree/sandbox, one artifact equals one commit/cha
 
 Success line: “I noticed X, found a better way. The system just got an upgrade.”
 
-Full recipe: `agent-law/empower-orchestrator.md`.
 <!-- EMPOWER_ORCHESTRATOR:END -->
