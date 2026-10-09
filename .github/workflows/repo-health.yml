@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   health-check:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
