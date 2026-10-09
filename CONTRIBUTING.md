@@ -68,4 +68,4 @@ Open a GitHub issue with:
 
 ## License
 
-By contributing, you agree your work is licensed under the [MIT License](LICENSE).
+By contributing, you agree your work is licensed under the [Apache License 2.0](LICENSE).

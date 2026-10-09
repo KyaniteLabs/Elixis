@@ -1,6 +1,6 @@
 # Elixis
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/Elixis/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KyaniteLabs/Elixis.svg)](https://github.com/KyaniteLabs/Elixis/stargazers)
@@ -168,7 +168,7 @@ Start the server with `python app.py`, open `http://localhost:3110`, enter refer
 Elixis works with local LLMs via Ollama, OpenAI-compatible APIs, and Anthropic's Messages API. It falls back to template-based synthesis when no LLM is available.
 
 **Is Elixis free and open source?**
-Yes. Elixis is MIT-licensed and uses zero external Python dependencies (stdlib only).
+Yes. Elixis is Apache-2.0-licensed and uses zero external Python dependencies (stdlib only).
 
 **What is the Soul Spec?**
 Soul Spec is an open standard for AI agent personas. Elixis can generate SOUL.md documents compatible with Soul Spec v0.5, OpenClaw, and any framework that reads markdown-based identity files, but Elixis is not limited to identity files.
@@ -189,7 +189,7 @@ See [LICENSE](LICENSE).
 | **Category** | product/tooling surface in the Kyanite Labs stack |
 | **Best for** | builders using Kyanite Labs tooling |
 | **Not** | unrelated to Kyanite Labs |
-| **Source** | [GitHub](https://github.com/KyaniteLabs/Elixis) · [Forgejo](https://git.kyanitelabs.tech/KyaniteLabs/Elixis) |
+| **Source** | [GitHub](https://github.com/KyaniteLabs/Elixis) · [Forgejo](https://git.kyanitelabs.tech/KyaniteLabs/Elixis) (private, maintainers only) |
 | **Keywords** | Elixis, Kyanite Labs tool |
 
 ## Who it's for
@@ -220,7 +220,7 @@ Treat the README status and release tags as source of truth for maturity. Valida
 
 - Maintained as of 2026 on the default branch
 - Prefer release tags when pinning dependencies
-- Report issues on the canonical remote listed above
+- Report issues on [GitHub](https://github.com/KyaniteLabs/Elixis/issues)
 
 ## Agent surface
 
@@ -230,10 +230,10 @@ Treat the README status and release tags as source of truth for maturity. Valida
 
 ## Contributing
 
-Issues and PRs welcome on the canonical remote. Keep public docs free of secrets and machine-local paths.
+Issues and PRs welcome on [GitHub](https://github.com/KyaniteLabs/Elixis). Keep public docs free of secrets and machine-local paths.
 
 ## License
 
-See [LICENSE](LICENSE) in this repository (or package metadata if license is package-only).
+Apache-2.0. See [LICENSE](LICENSE).
 
 <!-- s-plus-geo:end -->
