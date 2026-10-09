@@ -9,8 +9,8 @@ info:
     naming directions, market positioning, messaging, and design-system guidance.
   version: "1.0.0"
   license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    name: Apache-2.0
+    url: https://opensource.org/licenses/Apache-2.0
   contact:
     url: https://github.com/KyaniteLabs/Elixis
 

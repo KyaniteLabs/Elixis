@@ -58,7 +58,7 @@ every human-judged cell with field ordering intact. See
   war, not flaky hardware** — check `Listening on` timestamps before
   debugging the model. Local ollama on this Mac is retired; do not re-seat.
 - **Remotes go stale after repo renames.** Both `origin` and
-  `upstream-github` pointed at dead `Fugax` paths; "push to create is not
+  `upstream-github` pointed at dead pre-rename paths; "push to create is not
   enabled" was the tell. Fixed to `KyaniteLabs/Elixis` on both hosts.
 - **Merge-then-PR, PR-then-race:** merge immediately after force-push
   fails with "merge commit cannot be cleanly created" even when the PR is
