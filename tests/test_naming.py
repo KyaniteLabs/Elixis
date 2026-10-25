@@ -383,7 +383,7 @@ class TestResearchNameFromIdentity(unittest.TestCase):
     @patch("elixis.naming.generate_name_variants", return_value=[])
     @patch("elixis.naming.analyze_name_semantics", return_value=_default_semantics())
     def test_general_source(self, mock_sem, mock_gen):
-        report = research_name_from_identity(_sample_entities(), _sample_graph(), source="general")
+        research_name_from_identity(_sample_entities(), _sample_graph(), source="general")
         mock_gen.assert_called_once()
 
     @patch("elixis.naming.analyze_name_semantics", return_value=_default_semantics())
