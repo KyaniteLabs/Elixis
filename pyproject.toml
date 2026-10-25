@@ -58,3 +58,23 @@ include = ["elixis*"]
 
 [tool.setuptools.package-data]
 elixis = ["templates/*.html", "templates/*.css", "templates/*.js", "static/*.svg", "data/*.json", "data/*.jsonl"]
+
+[tool.mutmut]
+source_paths = ["elixis"]
+also_copy = [
+    "app.py",
+    "scripts",
+    ".github",
+    "docs",
+    "README.md",
+    "CONTRIBUTING.md",
+    "DEPLOY.md",
+    "Dockerfile",
+    "llms.txt",
+    "llms-full.txt",
+    "openapi.yaml",
+]
+only_mutate = [
+    "*elixis/sentiment.py",
+    "*elixis/expression_dna.py",
+]
