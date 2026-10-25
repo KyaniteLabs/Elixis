@@ -230,8 +230,8 @@ def _taglines(source_name: str, patterns: list[dict[str, Any]]) -> list[str]:
     lead = (patterns[0].get("name") if patterns else "clarity") or "clarity"
     return [
         f"{source_name}: {lead} made usable.",
-        f"Turn the signal into a market.",
-        f"Evidence-led direction for what comes next.",
+        "Turn the signal into a market.",
+        "Evidence-led direction for what comes next.",
     ]
 
 

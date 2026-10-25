@@ -33,7 +33,6 @@ from elixis.logging_config import (
 )
 from elixis.naming import research_name
 from elixis.process_trace import (
-    llm_public_config as _llm_public_config,
     process_trace_from_state as _process_trace_from_state,
 )
 from elixis.quality import validate_output
