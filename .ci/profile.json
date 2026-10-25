@@ -20,7 +20,7 @@
         "-euo",
         "pipefail",
         "-c",
-        "apt-get update -qq && apt-get install -y -qq python3-venv && python3 -m venv /tmp/uv-bootstrap && /tmp/uv-bootstrap/bin/pip install --quiet uv==0.10.2 && /tmp/uv-bootstrap/bin/uv venv --python 3.14 .venv && /tmp/uv-bootstrap/bin/uv pip install --python .venv -r requirements.txt pytest==9.1.1 ruff==0.15.21"
+        "apt-get update -qq && apt-get install -y -qq python3-venv && python3 -m venv /tmp/uv-bootstrap && /tmp/uv-bootstrap/bin/pip install --quiet uv==0.10.2 && /tmp/uv-bootstrap/bin/uv venv --python 3.14.3 .venv && /tmp/uv-bootstrap/bin/uv pip install --python .venv -r requirements.txt pytest==9.1.1 ruff==0.15.21"
       ],
       "timeout_seconds": 900
     },
@@ -32,7 +32,7 @@
         "check",
         "--isolated",
         "--select",
-        "E9,F",
+        "E4,E7,E9,F",
         "app.py",
         "elixis",
         "scripts",
@@ -66,14 +66,14 @@
       ]
     },
     {
-      "name": "Install the exact tested wheel cleanly, run the CLI, boot the server",
+      "name": "Smoke-test the built wheel from a clean venv, then boot the source server (Dockerfile parity)",
       "phase": "acceptance",
       "argv": [
         "bash",
         "-euo",
         "pipefail",
         "-c",
-        "(cd .ci-results/dist && sha256sum -c SHA256SUMS); /tmp/uv-bootstrap/bin/uv venv --python 3.14 /tmp/accept; /tmp/uv-bootstrap/bin/uv pip install --python /tmp/accept .ci-results/dist/*.whl; /tmp/accept/bin/elixis --version; /tmp/accept/bin/elixis --help > /dev/null; .venv/bin/python app.py --port 3110 > /tmp/elixis-server.log 2>&1 & pid=$!; trap 'kill $pid 2>/dev/null' EXIT; for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3110/ && break; sleep 1; done; for path in / /api/health /llms.txt; do code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3110$path); echo \"$path $code\"; test \"$code\" = 200 || { cat /tmp/elixis-server.log; exit 1; }; done"
+        "(cd .ci-results/dist && sha256sum -c SHA256SUMS); accept=$(mktemp -d); /tmp/uv-bootstrap/bin/uv venv --python 3.14.3 \"$accept\"; /tmp/uv-bootstrap/bin/uv pip install --python \"$accept\" .ci-results/dist/*.whl; (cd \"$accept\" && ./bin/elixis --version && ./bin/elixis --help > /dev/null && ./bin/python -I -c 'from elixis import knowledge as k; assert k.archetypes() and k.characters(), \"wheel is missing knowledge data\"' && ./bin/elixis patterns --text 'A quiet glassblower restores old lighthouse lenses.' > /dev/null); log=.ci-results/server.log; .venv/bin/python app.py --port 3110 > \"$log\" 2>&1 & pid=$!; trap 'kill $pid 2>/dev/null || true' EXIT; for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3110/ && break; sleep 1; done; kill -0 \"$pid\" || { echo 'server exited early'; cat \"$log\"; exit 1; }; for path in / /llms.txt /api/health; do code=$(curl -s -o /tmp/body -w '%{http_code}' http://127.0.0.1:3110$path || true); echo \"$path $code\"; test \"$code\" = 200 || { cat \"$log\"; exit 1; }; done; python3 -c 'import json; b=json.load(open(\"/tmp/body\")); assert \"status\" in b, b; print(\"health:\", b[\"status\"])'"
       ],
       "timeout_seconds": 300
     }

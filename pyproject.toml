@@ -57,4 +57,4 @@ Issues = "https://github.com/KyaniteLabs/Elixis/issues"
 include = ["elixis*"]
 
 [tool.setuptools.package-data]
-elixis = ["templates/*.html", "templates/*.css", "templates/*.js", "static/*.svg"]
+elixis = ["templates/*.html", "templates/*.css", "templates/*.js", "static/*.svg", "data/*.json", "data/*.jsonl"]
