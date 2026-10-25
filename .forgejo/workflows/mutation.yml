@@ -5,6 +5,10 @@ name: Mutation
 # runner contention); the run goes red if the mutation score drops below 95%
 # (baseline 97.9%, 2026-10-25), so a weakening of the tests is visible
 # without blocking merges.
+#
+# The container is the org-standard node image (actions/checkout is a Node
+# action and needs node in $PATH, exactly like the shared CI profile);
+# Python 3.14 arrives via the same uv bootstrap the profile uses.
 on:
   schedule:
     - cron: "23 3 * * *"
@@ -27,18 +31,23 @@ jobs:
     runs-on: docker
     timeout-minutes: 30
     container:
-      image: python:3.14-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae
+      image: node:26-bookworm@sha256:5c4012d11d9857c42713ba511fbc19645cac1706bb710d51d42b0d301dff7f88
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
-      - name: Install pinned test and mutation tools
-        run: python3 -m pip install --no-cache-dir pytest==9.1.1 mutmut==3.8.0
+      - name: Install pinned tools on Python 3.14 (uv bootstrap, as in CI)
+        run: |
+          apt-get update -qq && apt-get install -y -qq python3-venv
+          python3 -m venv /tmp/uv-bootstrap
+          /tmp/uv-bootstrap/bin/pip install --quiet uv==0.10.2
+          /tmp/uv-bootstrap/bin/uv venv --python 3.14.3 .venv
+          /tmp/uv-bootstrap/bin/uv pip install --python .venv pytest==9.1.1 mutmut==3.8.0
       - name: Mutation score of the style core (break below 95%)
         run: |
-          mutmut run
-          mutmut export-cicd-stats
-          python3 - <<'PY'
+          .venv/bin/mutmut run
+          .venv/bin/mutmut export-cicd-stats
+          .venv/bin/python - <<'PY'
           import json
           stats = json.load(open("mutants/mutmut-cicd-stats.json"))
           killed = stats["killed"]
