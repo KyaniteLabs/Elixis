@@ -93,7 +93,7 @@ class TestSpectraExact:
     def test_minimal_sentence_full_profile(self):
         # avg = 1.0 word/sentence; nothing else present.
         # formal: 1/15 -> 2/15 - 1; abstract: 0 -> -1; cautious/analytical: 0;
-        # serious: 0.5; reserved: 1 - 0 -> clamped 1.0;
+        # serious: 0.5; reserved_expressive: clamp(1 - 0 - 0 + 0.5) = clamp(1.5) = 1.0;
         # concise_elaborate: (0 + 1/30) - 1/(1 + 1/10).
         result = analyze_text("Okay.")
         s = result["spectra"]
@@ -247,6 +247,13 @@ class TestCompareStylesExact:
     def test_identical_vectors_score_one(self):
         v = dna([0.5, -0.25, 0.75, -0.5, 0.1, -0.1, 0.0])
         assert compare_styles(v, dna([0.5, -0.25, 0.75, -0.5, 0.1, -0.1, 0.0])) == pytest.approx(1.0)
+
+    def test_identical_vectors_clamp_fp_overshoot_exactly(self):
+        # dot/(|a||a|) can round a hair above 1.0 for this vector
+        # (fl(sqrt(S))**2 < S), so the upper clamp must pull it back to
+        # exactly 1.0 — assert with plain equality, not approx.
+        v = dna([1.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0])
+        assert compare_styles(v, dna([1.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0])) == 1.0
 
     def test_known_cosine(self):
         # a = [1,0,1,...], b = [1,1,0,...]: dot 1, |a||b| = sqrt(2)*sqrt(2) = 2
