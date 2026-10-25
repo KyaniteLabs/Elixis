@@ -1,0 +1,60 @@
+name: Mutation
+# Advisory Layer 2 lane: measures whether the tests actually detect injected
+# defects in the style/sentiment core (elixis/sentiment.py and
+# elixis/expression_dna.py). Not a required check (~1 min clean, slower under
+# runner contention); the run goes red if the mutation score drops below 95%
+# (baseline 97.7%, 2026-10-25), so a weakening of the tests is visible
+# without blocking merges.
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  mutation:
+    name: mutation-score
+    runs-on: docker
+    timeout-minutes: 30
+    container:
+      image: python:3.14-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Install pinned test and mutation tools
+        run: python3 -m pip install --no-cache-dir pytest==9.1.1 mutmut==3.8.0
+      - name: Mutation score of the style core (break below 95%)
+        run: |
+          mutmut run
+          mutmut export-cicd-stats
+          python3 - <<'PY'
+          import json
+          stats = json.load(open("mutants/mutmut-cicd-stats.json"))
+          killed = stats["killed"]
+          survived = stats["survived"]
+          timeout = stats["timeout"]
+          decided = killed + survived + timeout
+          score = 100.0 * killed / decided if decided else 0.0
+          print(f"gate evidence: mutation score {score:.1f}% "
+                f"({killed} killed, {survived} survived, {timeout} timeout)")
+          assert score >= 95.0, f"mutation score {score:.1f}% is below the 95% floor"
+          PY
+      - name: Retain the mutation stats
+        if: ${{ always() }}
+        uses: https://code.forgejo.org/forgejo/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+        with:
+          name: mutation-stats
+          path: mutants/mutmut-cicd-stats.json
+          if-no-files-found: warn
+          retention-days: 30
