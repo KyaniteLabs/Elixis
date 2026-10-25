@@ -14,8 +14,8 @@ This project follows the intent of [Keep a Changelog](https://keepachangelog.com
 
 _Tag `v1.0.0` points at `a7cdd4c` (2026-09-25), a text-only cleanup of one archived
 note on top of `89d5eff` (2026-05-02). The tagged code is otherwise the 2026-05-02
-tree. It shipped under the earlier package name `soulcraft` 1.0.0, MIT-licensed.
-The package was renamed after the tag (`63ef5c2`, `186be29`, 2026-05-03) and
+tree. It shipped as 1.0.0 under an earlier working name, MIT-licensed. The
+package was renamed to Elixis after the tag (`63ef5c2`, `186be29`, 2026-05-03) and
 relicensed to Apache-2.0 (`79d17b4`, `ac753cc`)._
 
 ### Added
