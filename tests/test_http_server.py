@@ -607,7 +607,7 @@ class TestGamePayloads(unittest.TestCase):
             "classify_model": "glm-5.3",
         }
         with (
-            patch("app.GameEngine", FakeEngine),
+            patch("elixis.service.GameEngine", FakeEngine),
             patch("app.save_run"),
             patch("elixis.process_trace.llm_public_config", return_value=model_config),
         ):
@@ -709,7 +709,7 @@ class TestGamePayloads(unittest.TestCase):
             "classify_model": "glm-5.3",
         }
         with (
-            patch("app.GameEngine", FakeEngine),
+            patch("elixis.service.GameEngine", FakeEngine),
             patch("app.save_run"),
             patch("elixis.process_trace.llm_public_config", return_value=model_config),
         ):

@@ -15,6 +15,10 @@ This project follows the intent of [Keep a Changelog](https://keepachangelog.com
 
 - Offline entity extraction now reads a comma-separated list of short names ("Athena, Batman, Miyamoto Musashi") as separate entities. The first name used to swallow the rest as its source, and one-word names such as "Batman" were dropped. A single comma still means "Name, Source".
 
+### Changed
+
+- **Internal: one service module behind every surface.** The new `elixis/service.py` (`prepare_text`, `synthesize` returning a `SynthesisRun`, `patterns`, `name_from_identity`) owns input validation, engine orchestration and result shaping. The CLI, MCP server and HTTP pipelines now call it instead of each re-wiring `GameEngine`. Output is unchanged across all three surfaces.
+
 ## [1.0.0] - 2026-09-25
 
 _Tag `v1.0.0` points at `a7cdd4c` (2026-09-25), a text-only cleanup of one archived

@@ -88,7 +88,7 @@ class TestMain:
         assert result == 2
         assert "invalid int value" in capsys.readouterr().err
 
-    @patch("elixis.engine.GameEngine")
+    @patch("elixis.service.GameEngine")
     def test_run_command_outputs_json_summary(self, mock_engine_cls, capsys):
         from elixis.__main__ import main
 
@@ -148,8 +148,8 @@ class TestMain:
         assert result == 0
         assert json.loads(capsys.readouterr().out)[0]["canonical"] == "Athena"
 
-    @patch("elixis.patterns.build_pattern_graph", return_value={"patterns": [{"name": "Wisdom"}]})
-    @patch("elixis.entities.extract_entities", return_value=[{"canonical": "Athena"}])
+    @patch("elixis.service.build_pattern_graph", return_value={"patterns": [{"name": "Wisdom"}]})
+    @patch("elixis.service.extract_entities", return_value=[{"canonical": "Athena"}])
     def test_patterns_command_outputs_pattern_graph(self, _mock_extract, _mock_graph, capsys):
         from elixis.__main__ import main
 
