@@ -11,6 +11,10 @@ This project follows the intent of [Keep a Changelog](https://keepachangelog.com
 - README has a `bash readme-test` block (version and offline `extract`) that CI runs on every change through the shared profile's Layer 3 step.
 - Started the project changelog so product, CLI, API, and synthesis-engine changes have a durable release history.
 
+### Fixed
+
+- Offline entity extraction now reads a comma-separated list of short names ("Athena, Batman, Miyamoto Musashi") as separate entities. The first name used to swallow the rest as its source, and one-word names such as "Batman" were dropped. A single comma still means "Name, Source".
+
 ## [1.0.0] - 2026-09-25
 
 _Tag `v1.0.0` points at `a7cdd4c` (2026-09-25), a text-only cleanup of one archived

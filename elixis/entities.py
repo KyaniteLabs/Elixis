@@ -390,6 +390,20 @@ def _parse_line_entity(line):
     }
 
 
+def _split_comma_list(line):
+    """Split a comma-separated list of short names into one line per name.
+
+    A single comma reads as "Name, Source" ("Bach, Classical Music"). Two or
+    more commas with every part a short name ("Athena, Batman, Miyamoto
+    Musashi") is a list; without this split the first item swallowed the rest
+    as its source and one-word names were then lost.
+    """
+    parts = [part.strip() for part in line.split(",")]
+    if len(parts) >= 3 and all(part and len(part.split()) <= 4 for part in parts):
+        return parts
+    return [line]
+
+
 def _heuristic_extract(text):
     """Fallback: line-by-line + period-split + capitalized phrase extraction."""
     entities = []
@@ -405,7 +419,9 @@ def _heuristic_extract(text):
             expanded.extend(parts)
         else:
             expanded.append(line)
-    lines = expanded
+    lines = []
+    for line in expanded:
+        lines.extend(_split_comma_list(line))
 
     for line in lines:
         entity = _parse_line_entity(line)
