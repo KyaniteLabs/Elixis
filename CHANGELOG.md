@@ -8,6 +8,7 @@ This project follows the intent of [Keep a Changelog](https://keepachangelog.com
 
 ### Added
 
+- README has a `bash readme-test` block (version and offline `extract`) that CI runs on every change through the shared profile's Layer 3 step.
 - Started the project changelog so product, CLI, API, and synthesis-engine changes have a durable release history.
 
 ## [1.0.0] - 2026-09-25
