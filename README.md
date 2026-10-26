@@ -104,6 +104,15 @@ python -m elixis corpus inspect <run_id>
 python -m elixis mcp
 ```
 
+These run offline with no model configured. CI runs this block from the repository's virtualenv on every change, and each `# expect:` line must appear in the output:
+
+```bash readme-test
+python -m elixis --version
+# expect: elixis
+python -m elixis extract --text "Miyamoto Musashi"
+# expect: "canonical": "Miyamoto Musashi"
+```
+
 ## Source Corpus and Market Kits
 
 Elixis can point at a GitHub repository or local folder and build a **Source Corpus**: a curated, auditable evidence bundle selected because it improves output quality. The corpus is not a raw dump of every readable file. Each Corpus Signal is scored for relevance, distinctiveness, authority, lens utility, provenance, freshness, and noise risk.
