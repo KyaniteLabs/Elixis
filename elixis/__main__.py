@@ -10,6 +10,10 @@ from typing import Any
 
 from . import __version__
 
+# Mirrors service.LENSES (the lens registry). Kept literal so `--help` and
+# `--version` do not import the lens generators; a test pins the two together.
+CLI_LENSES = ("identity", "brand", "design")
+
 
 # Ensure the parent directory is on the path so `app.py` can be found when the
 # package is run directly from a checkout.
@@ -31,7 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="run synthesis through an output lens")
     _add_text_input_args(run)
-    run.add_argument("--lens", choices=("identity", "brand", "design"), default="identity")
+    run.add_argument("--lens", choices=CLI_LENSES, default="identity")
     run.add_argument("--json", action="store_true", help="emit JSON summary instead of markdown output")
 
     extract = subparsers.add_parser("extract", help="extract structured entities from text")

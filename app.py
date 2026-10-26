@@ -36,7 +36,7 @@ from elixis.process_trace import (
     process_trace_from_state as _process_trace_from_state,
 )
 from elixis.quality import validate_output
-from elixis.service import synthesize
+from elixis.service import LENSES, synthesize
 from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
 from elixis.translate import (
     translate_text,
@@ -62,7 +62,7 @@ ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
-VALID_LENSES = {"identity", "brand", "design"}
+VALID_LENSES = set(LENSES)
 
 logger = get_logger("elixis.server")
 

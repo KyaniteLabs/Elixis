@@ -20,7 +20,7 @@ import traceback
 from . import service
 from .entities import extract_entities
 from .naming import research_name
-from .service import InvalidInput, prepare_text
+from .service import LENSES, InvalidInput, prepare_text
 from .translate import translate_text
 
 _SERVER_NAME = "elixis"
@@ -63,7 +63,7 @@ _TOOLS = [
                 "lens": {
                     "type": "string",
                     "description": "Output lens to resolve through. Default: identity.",
-                    "enum": ["identity", "brand", "design"],
+                    "enum": list(LENSES),
                 },
             },
             "required": ["brain_dump"],
@@ -276,9 +276,9 @@ def _tool_create_soul(args):
 def _tool_run_game(args):
     brain_dump = args.get("brain_dump", "")
     lens = args.get("lens", "identity")
-    if lens not in {"identity", "brand", "design"}:
+    if lens not in LENSES:
         return {
-            "content": [{"type": "text", "text": "Validation error: lens must be one of identity, brand, design"}],
+            "content": [{"type": "text", "text": f"Validation error: lens must be one of {', '.join(LENSES)}"}],
             "isError": True,
         }
 

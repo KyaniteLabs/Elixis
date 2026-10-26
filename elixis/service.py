@@ -13,12 +13,16 @@ from typing import Any
 
 from .engine import GameEngine
 from .entities import extract_entities
+from .lenses import LENS_REGISTRY
 from .patterns import build_pattern_graph
 from .process_trace import process_trace_from_state
 from .thread import serialize_threads
 from .validation import validate_brain_dump
 
-LENSES = ("identity", "brand", "design")
+# The lens registry is the source of truth for which lenses exist.
+LENSES = tuple(LENS_REGISTRY)
+
+__all__ = ["LENSES", "InvalidInput", "SynthesisRun", "name_from_identity", "patterns", "prepare_text", "synthesize"]
 
 
 class InvalidInput(ValueError):
@@ -39,6 +43,8 @@ class SynthesisRun:
 
     lens: str
     output: str
+    # Raw engine state, for adapters that need fields the properties below do
+    # not cover. Prefer the properties; widen them rather than reaching in.
     state: Any
 
     @property

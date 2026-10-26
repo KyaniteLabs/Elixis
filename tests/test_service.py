@@ -52,3 +52,28 @@ def test_patterns_builds_a_graph_from_prepared_text():
 def test_name_from_identity_returns_a_naming_report():
     report = service.name_from_identity(service.prepare_text(TEXT))
     assert "variants" in report
+
+
+def test_every_surface_accepts_exactly_the_registered_lenses():
+    import app
+    from elixis.__main__ import CLI_LENSES
+    from elixis.lenses import LENS_REGISTRY
+
+    assert service.LENSES == tuple(LENS_REGISTRY)
+    assert CLI_LENSES == service.LENSES
+    assert app.VALID_LENSES == set(service.LENSES)
+
+
+def test_api_request_validation_accepts_exactly_the_registered_lenses():
+    from elixis.validation import validate_api_request
+
+    for lens in service.LENSES:
+        assert validate_api_request({"brain_dump": "Athena and Batman", "lens": lens}, "/api/game")[0]
+    assert validate_api_request({"brain_dump": "Athena and Batman", "lens": "poster"}, "/api/game") == (False, "Invalid lens")
+
+
+def test_mcp_run_game_schema_offers_the_registered_lenses():
+    from elixis import mcp_server
+
+    schemas = [tool["inputSchema"] for tool in mcp_server._TOOLS if tool["name"] == "run_game"]
+    assert schemas and schemas[0]["properties"]["lens"]["enum"] == list(service.LENSES)
