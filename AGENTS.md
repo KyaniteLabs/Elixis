@@ -1,3 +1,8 @@
+## Required repository context
+
+Before working any card on this repository, read `PRODUCT.md` and `ARCHITECTURE.md`.
+Preserve the product/source distinction and the verification limits recorded there.
+
 ## Agent skills
 
 ### Public Elixis skill

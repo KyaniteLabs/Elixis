@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "repo": "github.com/KyaniteLabs/Elixis",
+  "paths": [
+    {
+      "pattern": "PRODUCT.md",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "elixis/**",
+      "layer": "synthesis-runtime",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "tests/**",
+      "layer": "verification",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "scripts/**",
+      "layer": "operations",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "traefik/**",
+      "layer": "edge-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".github/**",
+      "layer": "github-automation",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".forgejo/**",
+      "layer": "mirror-automation",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "qa/**",
+      "layer": "architecture-and-foundations",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "docs/**",
+      "layer": "public-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "agent-docs/**",
+      "layer": "agent-operations",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "archive/**",
+      "layer": "historical-content",
+      "owner": "product"
+    },
+    {
+      "pattern": "branding/**",
+      "layer": "brand-assets",
+      "owner": "product"
+    },
+    {
+      "pattern": "skills/**",
+      "layer": "public-agent-skill",
+      "owner": "product"
+    },
+    {
+      "pattern": ".checkyourself.yml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".coderabbit.yaml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".cursorrules",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".dockerignore",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".env.example",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".fl4write.yaml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".gitignore",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": ".windsurfrules",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "AGENTS.md",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "CHANGELOG.md",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "CLAUDE.md",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "CONTEXT.md",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "CONTRIBUTING.md",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "DEPLOY.md",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "Dockerfile",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "LICENSE",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "README.md",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "app.py",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "docker-compose.yml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "llms-full.txt",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "llms.txt",
+      "layer": "product-documentation",
+      "owner": "product"
+    },
+    {
+      "pattern": "openapi.yaml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "pyproject.toml",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "renovate.json",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "requirements.txt",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "ARCHITECTURE.md",
+      "layer": "application-and-configuration",
+      "owner": "engineering"
+    },
+    {
+      "pattern": "elixis/templates/**",
+      "layer": "user-facing-copy-and-interface",
+      "owner": "product"
+    }
+  ]
+}
