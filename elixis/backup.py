@@ -8,10 +8,72 @@ import re
 import shutil
 import tarfile
 from datetime import datetime, timezone, timedelta
+from enum import StrEnum
 from pathlib import Path
 from typing import List, Optional, Dict
 
 _SAFE_NAME_RE = re.compile(r'^[a-zA-Z0-9_-]+$')
+
+
+class BackupStatus(StrEnum):
+    """Outcome of one ``create_backup()`` run (``backup_info["status"]``).
+
+    Values are the exact strings returned to callers (and to the
+    ``/api/backup`` HTTP response); ``BackupStatus`` is a ``str`` subclass so
+    ``info["status"] == "success"`` keeps working.
+
+    Legal transitions::
+
+        IN_PROGRESS ──finish──► SUCCESS
+             │──────skip────► SKIPPED   (no data directory)
+             └──────fail────► FAILED    (archive removed from disk)
+
+    IN_PROGRESS is internal and never returned; the three outcomes are
+    terminal. ``FAILED`` always deletes the partial archive so that
+    ``list_backups()`` / ``restore_backup()`` never see a failed backup.
+    """
+
+    IN_PROGRESS = "in_progress"
+    SUCCESS = "success"
+    SKIPPED = "skipped"
+    FAILED = "failed"
+
+
+TERMINAL_BACKUP_STATUSES = frozenset({BackupStatus.SUCCESS, BackupStatus.SKIPPED, BackupStatus.FAILED})
+
+
+class IllegalBackupTransition(RuntimeError):
+    """Raised when a backup outcome is written twice."""
+
+
+def _settle(backup_info: Dict, status: BackupStatus, error: Optional[str] = None) -> Dict:
+    """Move ``backup_info`` from IN_PROGRESS to a terminal ``status``."""
+    if backup_info.get("status") != BackupStatus.IN_PROGRESS:
+        raise IllegalBackupTransition(
+            f"backup already settled as {backup_info.get('status')!r}; cannot move to {status!r}"
+        )
+    if status not in TERMINAL_BACKUP_STATUSES:
+        raise IllegalBackupTransition(f"{status!r} is not a terminal backup status")
+    backup_info["status"] = status
+    backup_info["error"] = error
+    return backup_info
+
+
+def _finish_backup(backup_info: Dict) -> Dict:
+    return _settle(backup_info, BackupStatus.SUCCESS)
+
+
+def _skip_backup(backup_info: Dict, reason: str) -> Dict:
+    return _settle(backup_info, BackupStatus.SKIPPED, reason)
+
+
+def _fail_backup(backup_info: Dict, backup_path: Path, reason: str) -> Dict:
+    """FAILED transition: record the reason and remove any partial archive."""
+    try:
+        backup_path.unlink(missing_ok=True)
+    except OSError:
+        pass
+    return _settle(backup_info, BackupStatus.FAILED, reason)
 
 
 # Backup configuration
@@ -64,15 +126,13 @@ def create_backup() -> Dict:
         "path": str(backup_path),
         "size_bytes": 0,
         "files_backed_up": 0,
-        "status": "success",
+        "status": BackupStatus.IN_PROGRESS,
         "error": None,
     }
 
     try:
         if not data_dir.exists():
-            backup_info["status"] = "skipped"
-            backup_info["error"] = "No data directory found"
-            return backup_info
+            return _skip_backup(backup_info, "No data directory found")
 
         # Create tar.gz archive
         with tarfile.open(backup_path, "w:gz") as tar:
@@ -94,15 +154,15 @@ def create_backup() -> Dict:
         # Check size limit
         size_mb = backup_info["size_bytes"] / (1024 * 1024)
         if size_mb > MAX_BACKUP_SIZE_MB:
-            backup_path.unlink()
-            backup_info["status"] = "failed"
-            backup_info["error"] = f"Backup too large ({size_mb:.1f}MB > {MAX_BACKUP_SIZE_MB}MB)"
+            return _fail_backup(
+                backup_info, backup_path,
+                f"Backup too large ({size_mb:.1f}MB > {MAX_BACKUP_SIZE_MB}MB)",
+            )
 
     except Exception as e:
-        backup_info["status"] = "failed"
-        backup_info["error"] = str(e)
+        return _fail_backup(backup_info, backup_path, str(e))
 
-    return backup_info
+    return _finish_backup(backup_info)
 
 
 def list_backups() -> List[Dict]:
@@ -199,7 +259,7 @@ def restore_backup(backup_name: str, force: bool = False) -> Dict:
             # Create safety backup of current data unless forced
             if data_dir.exists() and not force:
                 safety_backup = create_backup()
-                if safety_backup["status"] != "success":
+                if safety_backup["status"] != BackupStatus.SUCCESS:
                     result["error"] = "Failed to create safety backup"
                     return result
                 result["safety_backup"] = safety_backup["name"]

@@ -2,11 +2,126 @@
 
 Manages game state through four phases:
   declaration → elaboration → connection → resolution
+The lifecycle is the explicit :class:`Phase` machine below; every phase
+write goes through :func:`transition`.
 """
 
 import time
+from enum import StrEnum
+
 from .bead import Bead
 from .thread import Thread
+
+
+class Phase(StrEnum):
+    """Lifecycle of one synthesis game.
+
+    Values are the exact strings stored in ``GameState.to_dict()["phase"]``;
+    ``Phase`` is a ``str`` subclass, so ``state.phase == "declaration"`` and
+    ``json.dumps`` keep working unchanged.
+
+    Legal transitions (one named move each, see ``TRANSITIONS``)::
+
+        move       from                        to
+        ---------  --------------------------  -----------
+        declare    INIT                        DECLARATION
+        elaborate  INIT | DECLARATION          ELABORATION
+        connect    DECLARATION | ELABORATION   CONNECTION
+        resolve    ELABORATION | CONNECTION    RESOLUTION (terminal)
+
+        happy path: INIT → DECLARATION → ELABORATION → CONNECTION → RESOLUTION
+
+    ``new_game`` may be called from any phase and always lands in INIT.
+    ``name()`` reads ELABORATION/CONNECTION/RESOLUTION and moves nothing.
+    RESOLUTION is terminal: start a new game to run again.
+    """
+
+    INIT = "init"
+    DECLARATION = "declaration"
+    ELABORATION = "elaboration"
+    CONNECTION = "connection"
+    RESOLUTION = "resolution"
+
+
+class Move(StrEnum):
+    """Named transitions of the :class:`Phase` machine."""
+
+    DECLARE = "declare"
+    ELABORATE = "elaborate"
+    CONNECT = "connect"
+    RESOLVE = "resolve"
+
+
+# move -> (legal source phases, target phase, refusal message)
+TRANSITIONS = {
+    Move.DECLARE: (
+        frozenset({Phase.INIT}),
+        Phase.DECLARATION,
+        "declare_themes() already ran for this game; pass raw_input or call new_game() to start over.",
+    ),
+    Move.ELABORATE: (
+        frozenset({Phase.INIT, Phase.DECLARATION}),
+        Phase.ELABORATION,
+        "Must declare_themes() before elaborate().",
+    ),
+    Move.CONNECT: (
+        frozenset({Phase.DECLARATION, Phase.ELABORATION}),
+        Phase.CONNECTION,
+        "Must elaborate() before connect_domains().",
+    ),
+    Move.RESOLVE: (
+        frozenset({Phase.ELABORATION, Phase.CONNECTION}),
+        Phase.RESOLUTION,
+        "Must connect_domains() before resolve().",
+    ),
+}
+
+# Phases in which name() may read the synthesized identity.
+NAMEABLE_PHASES = frozenset({Phase.ELABORATION, Phase.CONNECTION, Phase.RESOLUTION})
+
+
+class IllegalTransition(RuntimeError):
+    """Raised when a move is attempted from a phase that does not allow it."""
+
+
+def parse_phase(value):
+    """Read a stored phase tolerantly.
+
+    Known strings map to their :class:`Phase`; a missing value is INIT.
+    Unknown legacy strings are kept verbatim (so a round-trip never rewrites
+    stored data) — no move accepts them, so the engine refuses to advance.
+    """
+    if value is None:
+        return Phase.INIT
+    try:
+        return Phase(value)
+    except ValueError:
+        return value
+
+
+def can_transition(phase, move):
+    """True when ``move`` is legal from ``phase``."""
+    return phase in TRANSITIONS[Move(move)][0]
+
+
+def transition(state, move):
+    """Apply ``move`` to ``state`` (the only writer of ``state.phase``).
+
+    Raises :class:`IllegalTransition` (a ``RuntimeError``) when the move is
+    not legal from the current phase.
+    """
+    sources, target, message = TRANSITIONS[Move(move)]
+    if state is None or state.phase not in sources:
+        raise IllegalTransition(message)
+    state.phase = target
+    return state
+
+
+def _require(state, move):
+    """Refuse up front (before doing any work) if ``move`` is illegal now."""
+    sources, _target, message = TRANSITIONS[Move(move)]
+    if state is None or state.phase not in sources:
+        raise IllegalTransition(message)
 
 
 class GameState:
@@ -17,8 +132,8 @@ class GameState:
         "tensions", "raw_input", "timings", "metadata",
     )
 
-    def __init__(self, raw_input="", phase="init"):
-        self.phase = phase
+    def __init__(self, raw_input="", phase=Phase.INIT):
+        self.phase = parse_phase(phase)
         self.beads = []
         self.threads = []
         self.scores = {}
@@ -42,7 +157,7 @@ class GameState:
 
     @classmethod
     def from_dict(cls, data):
-        state = cls(raw_input=data.get("raw_input", ""), phase=data.get("phase", "init"))
+        state = cls(raw_input=data.get("raw_input", ""), phase=data.get("phase"))
         state.beads = [Bead.from_dict(b) for b in data.get("beads", [])]
         state.threads = [Thread.from_dict(t) for t in data.get("threads", [])]
         state.scores = data.get("scores", {})
@@ -136,7 +251,7 @@ class GameEngine:
 
     def new_game(self, raw_input):
         """Start a new game with raw text input."""
-        self._state = GameState(raw_input=raw_input, phase="init")
+        self._state = GameState(raw_input=raw_input, phase=Phase.INIT)
         return self._state
 
     # ── Phase 1: Declaration ──────────────────────────────────────────
@@ -152,6 +267,7 @@ class GameEngine:
         state = self._state
         if not state:
             raise RuntimeError("No game in progress. Call new_game() first.")
+        _require(state, Move.DECLARE)
 
         start = time.time()
         extract_entities = self._get_extract_entities()
@@ -190,7 +306,7 @@ class GameEngine:
             beads.append(bead)
 
         state.beads = deduplicate_beads(beads)
-        state.phase = "declaration"
+        transition(state, Move.DECLARE)
         state.timings["declaration_ms"] = int((time.time() - start) * 1000)
         state.provenance["bead_count"] = len(state.beads)
         return state
@@ -204,8 +320,7 @@ class GameEngine:
         character knowledge base.
         """
         state = self._state
-        if not state or state.phase not in ("init", "declaration"):
-            raise RuntimeError("Must declare_themes() before elaborate().")
+        _require(state, Move.ELABORATE)
 
         start = time.time()
         enrich_entities = self._get_enrich_entities()
@@ -230,7 +345,7 @@ class GameEngine:
                         for arch_id, score in known["archetype_scores"].items():
                             state.scores[f"{bead.canonical}::{arch_id}"] = score
 
-        state.phase = "elaboration"
+        transition(state, Move.ELABORATE)
         state.timings["elaboration_ms"] = int((time.time() - start) * 1000)
         return state
 
@@ -243,8 +358,7 @@ class GameEngine:
         motivation mapping. Creates Threads between beads.
         """
         state = self._state
-        if not state or state.phase not in ("declaration", "elaboration"):
-            raise RuntimeError("Must elaborate() before connect_domains().")
+        _require(state, Move.CONNECT)
 
         start = time.time()
         build_pattern_graph = self._get_build_pattern_graph()
@@ -287,7 +401,7 @@ class GameEngine:
         graph["threads"] = thread_dicts
         graph["thread_count"] = len(thread_dicts)
         graph["cross_domain_thread_count"] = sum(1 for thread in threads if thread.is_cross_domain())
-        state.phase = "connection"
+        transition(state, Move.CONNECT)
         state.timings["connection_ms"] = int((time.time() - start) * 1000)
 
         if graph.get("consensus_score", 0) < 0.3 and len(state.beads) >= 3:
@@ -312,8 +426,7 @@ class GameEngine:
             Generated output document (e.g., SOUL.md for identity lens).
         """
         state = self._state
-        if not state or state.phase not in ("elaboration", "connection"):
-            raise RuntimeError("Must connect_domains() before resolve().")
+        _require(state, Move.RESOLVE)
 
         start = time.time()
         graph = state.metadata.get("pattern_graph", {})
@@ -325,25 +438,37 @@ class GameEngine:
         generator = LENS_REGISTRY[lens]
         output = generator(entity_dicts, graph)
 
-        state.phase = "resolution"
+        self._finish_resolution(state, output, lens, start)
+        return output
+
+    @staticmethod
+    def _finish_resolution(state, output, lens, start):
+        """Single writer for the RESOLVE move and the output it records."""
+        transition(state, Move.RESOLVE)
         state.timings["resolution_ms"] = int((time.time() - start) * 1000)
         state.metadata["output"] = output
         state.metadata["lens"] = lens
-        return output
 
     def resolve_stream(self, lens="identity", stage_timings=None):
         """Stream output through the chosen lens. Yields SSE-compatible events."""
         state = self._state
-        if not state or state.phase not in ("elaboration", "connection"):
-            raise RuntimeError("Must connect_domains() before resolve().")
+        _require(state, Move.RESOLVE)
 
+        start = time.time()
         graph = state.metadata.get("pattern_graph", {})
         entity_dicts = [b.to_dict() for b in state.beads]
         timings = stage_timings or dict(state.timings)
 
         if lens == "identity":
             from .lenses.identity import generate_identity_stream
-            yield from generate_identity_stream(entity_dicts, graph, timings)
+            tokens = []
+            for event in generate_identity_stream(entity_dicts, graph, timings):
+                if isinstance(event, dict) and event.get("type") == "soulmd_token":
+                    tokens.append(event.get("content", ""))
+                yield event
+            # Only a fully consumed stream resolves the game; a consumer that
+            # stops early (timeout, disconnect) leaves it in CONNECTION.
+            self._finish_resolution(state, "".join(tokens), lens, start)
         else:
             output = self.resolve(lens)
             yield {"type": "soulmd_token", "content": output}
@@ -370,8 +495,8 @@ class GameEngine:
             semantics, identity_context.
         """
         state = self._state
-        if not state or state.phase not in ("connection", "elaboration", "resolution"):
-            raise RuntimeError("Must connect_domains() before name().")
+        if not state or state.phase not in NAMEABLE_PHASES:
+            raise IllegalTransition("Must connect_domains() before name().")
 
         entity_dicts = [b.to_dict() for b in state.beads]
         graph = state.metadata.get("pattern_graph", {})
