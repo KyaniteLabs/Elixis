@@ -17,9 +17,7 @@ jobs:
         run: |
           pip install --break-system-packages ruff 2>/dev/null
           ruff check . || true
-      - name: Test
+      - name: Test (failures block)
         run: |
-          if [ -f pytest.ini ] || [ -f setup.cfg ] || [ -d tests ]; then
-            pip install --break-system-packages pytest 2>/dev/null
-            pytest || true
-          fi
+          pip install --break-system-packages pytest
+          LLM_PROVIDER=ollama LLM_BASE_URL=http://127.0.0.1:9 python3 -m pytest tests/ -v
