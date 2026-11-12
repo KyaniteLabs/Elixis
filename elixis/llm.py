@@ -13,9 +13,51 @@ Configurable via environment variables:
 
 import json
 import os
+import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
+
+
+def _under_test_runner():
+    """True when this process is pytest, unittest, or was marked ELIXIS_TEST."""
+    if os.environ.get("ELIXIS_TEST") == "1" or os.environ.get("PYTEST_CURRENT_TEST"):
+        return True
+    main_file = getattr(sys.modules.get("__main__"), "__file__", "") or ""
+    main_file = main_file.replace("\\", "/")
+    return main_file.endswith(("/unittest/__main__.py", "/pytest/__main__.py"))
+
+
+def _pin_test_seat():
+    """Force the closed-port seat before any call can read a developer .env URL.
+
+    `tests/conftest.py` covers pytest and `tests/__init__.py` covers
+    `python -m unittest`. `unittest discover -s tests` loads neither, so the
+    client pins again as soon as it is imported from a test runner.
+    """
+    if not _under_test_runner():
+        return
+    os.environ["ELIXIS_TEST"] = "1"
+    os.environ["LLM_PROVIDER"] = "ollama"
+    os.environ["LLM_BASE_URL"] = "http://127.0.0.1:9"  # closed port: instant refusal
+    os.environ.setdefault("LLM_MODEL", "stub-model")
+
+
+def _is_closed_test_seat(url):
+    parsed = urllib.parse.urlparse(url or "")
+    return parsed.hostname == "127.0.0.1" and parsed.port == 9
+
+
+def _urlopen(req, timeout):
+    """Open an LLM request, refusing live seats while a test runner is active."""
+    url = getattr(req, "full_url", "") or ""
+    if _under_test_runner() and not _is_closed_test_seat(url):
+        raise RuntimeError("refusing live LLM call during tests")
+    return urllib.request.urlopen(req, timeout=timeout)
+
+
+_pin_test_seat()
 
 
 class _Config:
@@ -129,7 +171,7 @@ def _call_ollama(messages, model=None, max_tokens=4096, think=True):
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
     start = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _urlopen(req, timeout=180) as resp:
             data = json.loads(resp.read())
             content = data.get("message", {}).get("content", "").strip()
             latency_ms = int((time.time() - start) * 1000)
@@ -176,7 +218,7 @@ def _call_openai_compat_single(base_url, messages, model=None, max_tokens=2048):
     }
     req = urllib.request.Request(url, data=payload, headers=headers)
     start = time.time()
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    with _urlopen(req, timeout=180) as resp:
         data = json.loads(resp.read())
         msg = data["choices"][0]["message"]
         # Qwen models may put content in reasoning_content when thinking
@@ -339,7 +381,7 @@ def _call_anthropic_single(base_url, messages, model=None, max_tokens=2048, thin
     headers = _anthropic_headers()
     req = urllib.request.Request(url, data=payload, headers=headers)
     start = time.time()
-    with urllib.request.urlopen(req, timeout=_timeout_s()) as resp:
+    with _urlopen(req, timeout=_timeout_s()) as resp:
         data = json.loads(resp.read())
     parts = [
         block.get("text", "")
@@ -409,18 +451,18 @@ def is_available():
         if cfg.provider == "ollama":
             url = f"{cfg.base_url}/api/tags"
             req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with _urlopen(req, timeout=3) as resp:
                 result = resp.status == 200
         elif cfg.provider == "anthropic":
             req = urllib.request.Request(_anthropic_endpoint("models"), headers=_anthropic_headers())
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with _urlopen(req, timeout=3) as resp:
                 result = resp.status == 200
         else:
             # OpenAI-compatible: hit /models or /v1/models
             url = f"{cfg.base_url}/models"
             headers = {"Authorization": f"Bearer {cfg.api_key}"} if cfg.api_key else {}
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=3) as resp:
+            with _urlopen(req, timeout=3) as resp:
                 result = resp.status == 200
     except Exception:
         result = False
@@ -470,7 +512,7 @@ def _chat_stream_openai(messages, model=None):
     full_response = []
 
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _urlopen(req, timeout=180) as resp:
             for raw_line in resp:
                 line = raw_line.decode("utf-8", errors="replace").strip()
                 if not line or not line.startswith("data: "):
@@ -539,7 +581,7 @@ def _chat_stream_anthropic(messages, model=None):
     usage = {"input_tokens": 0, "output_tokens": 0}
 
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _urlopen(req, timeout=180) as resp:
             for raw_line in resp:
                 line = raw_line.decode("utf-8", errors="replace").strip()
                 if not line or not line.startswith("data: "):
@@ -615,7 +657,7 @@ def _chat_stream_ollama(messages, model=None):
     thinking_buffer = []
 
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _urlopen(req, timeout=180) as resp:
             for raw_line in resp:
                 line = raw_line.decode("utf-8", errors="replace").strip()
                 if not line:
