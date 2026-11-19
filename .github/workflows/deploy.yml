@@ -1,0 +1,157 @@
+name: Deploy
+
+# Production deploy. Deliberately separate from ci.yml: this workflow must
+# never run for pull_request / pull_request_target, because its deploy job
+# runs on the self-hosted NUC runner, which can reach production.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    if: github.ref == 'refs/heads/main'
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -v
+
+  publish-image:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: publish-image
+    # Belt and braces: the triggers above already limit this to main.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+    runs-on: [self-hosted, nuc]
+    environment: production
+    timeout-minutes: 20
+    continue-on-error: true # Deploy failures are non-blocking until Tailscale OAuth secrets are configured.
+    permissions:
+      contents: read
+      packages: read
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST || '100.92.68.103' }}
+      VPS_USER: root
+      GHCR_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Deploy to VPS
+        run: |
+          IMAGE_REF="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
+          IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
+
+          deploy_env="$(mktemp)"
+          trap 'rm -f "${deploy_env}"' EXIT
+          {
+            printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
+          } > "${deploy_env}"
+
+          # Copy compose file to VPS using local key (self-hosted runner has ssh config)
+          scp -o StrictHostKeyChecking=no \
+            docker-compose.yml root@${VPS_HOST}:/docker/elixis/
+          scp -o StrictHostKeyChecking=no \
+            "${deploy_env}" root@${VPS_HOST}:/tmp/elixis-deploy-env
+
+          printf '%s' "${GHCR_TOKEN}" | ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} \
+            "docker login ${REGISTRY} -u '${GITHUB_ACTOR}' --password-stdin"
+
+          # Deploy via SSH
+          ssh -o StrictHostKeyChecking=no \
+            root@${VPS_HOST} 'bash -se' << 'EOF'
+            set -euo pipefail
+            trap 'rm -f /tmp/elixis-deploy-env' EXIT
+            cd /docker/elixis
+            source /tmp/elixis-deploy-env
+            touch .env
+            if grep -q '^ELIXIS_IMAGE=' .env; then
+              tmp_env="$(mktemp)"
+              sed "s|^ELIXIS_IMAGE=.*|ELIXIS_IMAGE=${ELIXIS_IMAGE}|" .env > "${tmp_env}"
+              cat "${tmp_env}" > .env
+              rm -f "${tmp_env}"
+            else
+              printf '\nELIXIS_IMAGE=%s\n' "${ELIXIS_IMAGE}" >> .env
+            fi
+            docker compose pull elixis
+            docker compose up -d --no-build --remove-orphans
+            actual_image="$(docker inspect elixis --format '{{.Config.Image}}')"
+            if [ "${actual_image}" != "${ELIXIS_IMAGE}" ]; then
+              echo "::error::elixis is running ${actual_image}, expected ${ELIXIS_IMAGE}"
+              exit 1
+            fi
+            docker system prune -f
+          EOF
