@@ -1,8 +1,9 @@
 """Tests for LLM client."""
 
-import unittest
-import sys
 import os
+import subprocess
+import sys
+import unittest
 import urllib.error
 from unittest.mock import patch
 
@@ -214,6 +215,46 @@ class TestAnthropicFallback(unittest.TestCase):
         self.assertEqual(result["content"], "")
         self.assertIn("error", result)
         self.assertEqual(result["provider"], "anthropic")
+
+
+class TestUnittestHermeticity(unittest.TestCase):
+    """A unittest process must not keep a live LLM base URL."""
+
+    def test_unittest_invocation_cannot_reach_live_base_url(self):
+        """Discovery via unittest replaces an injected live base URL with the closed port."""
+        if os.environ.get("ELIXIS_HERMETIC_CHILD") == "1":
+            self.assertEqual(llm.cfg.base_url, "http://127.0.0.1:9")
+            return
+
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env = {
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": os.environ.get("HOME", ""),
+            "LANG": os.environ.get("LANG", "C.UTF-8"),
+            "ELIXIS_HERMETIC_CHILD": "1",
+            # Reserved name that must not survive package import. Not a routable seat.
+            "LLM_BASE_URL": "http://live-seat.invalid/v1",
+            "LLM_FALLBACK_URL": "http://live-fallback.invalid/v1",
+            "LLM_PROVIDER": "openai",
+            "LLM_API_KEY": "not-a-real-key",
+        }
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "tests.test_llm.TestUnittestHermeticity.test_unittest_invocation_cannot_reach_live_base_url",
+            ],
+            cwd=root,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        detail = (completed.stderr or "") + (completed.stdout or "")
+        self.assertEqual(completed.returncode, 0, detail)
 
 
 if __name__ == "__main__":
