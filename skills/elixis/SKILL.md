@@ -62,6 +62,16 @@ elixis mcp
 }
 ```
 
+### Use from Hermes
+
+The repo root is a portable Hermes plugin (Agent Plugins v1). Install it with:
+
+```bash
+hermes plugins install https://github.com/KyaniteLabs/Elixis --ref <40-character-commit-sha> --enable
+```
+
+or `hermes plugins install elixis --enable` once the catalog entry is merged upstream. This starts the same `python -m elixis.mcp_server` over stdio and registers the nine tools: `create_soul`, `run_game`, `extract_entities`, `analyze_patterns`, `translate_text`, `research_name`, `name_from_identity`, `ingest_source`, `create_market_kit`. Requires Python 3.12+ on `PATH`; nothing is pip-installed. Without a reachable LLM, seven of the nine tools succeed in degraded mode (keyword-only patterns, empty name variants).
+
 ## Guardrails
 
 - Do not treat an entire repository as raw prompt text. Build a Source Corpus first.

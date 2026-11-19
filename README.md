@@ -232,6 +232,26 @@ Treat the README status and release tags as source of truth for maturity. Valida
 - Prefer machine-readable briefs (`llms.txt`) when the repo ships one
 - MCP or skill entrypoints are documented in-repo when applicable
 
+## Use from Hermes
+
+The repo root is a portable Hermes plugin (Agent Plugins v1): `plugin.json` + `mcp.json` launch `python3 -m elixis.mcp_server` over stdio from the installed plugin directory. Nothing is pip-installed — the package is standard-library only and needs Python 3.12+ on `PATH`.
+
+From a pinned commit (how the Hermes plugin catalog installs once an upstream entry is merged):
+
+```bash
+hermes plugins install https://github.com/KyaniteLabs/Elixis --ref <40-character-commit-sha> --enable
+```
+
+Straight from the catalog, once the `elixis` entry lands upstream:
+
+```bash
+hermes plugins install elixis --enable
+```
+
+The plugin registers one MCP server, `elixis`, exposing exactly nine tools: `create_soul`, `run_game`, `extract_entities`, `analyze_patterns`, `translate_text`, `research_name`, `name_from_identity`, `ingest_source`, `create_market_kit`. Portable packages install disabled; `--enable` (or `hermes plugins enable elixis`) turns the server on, and the tools become available after `mcp.reload` or the next session.
+
+Degraded mode: with no reachable LLM (`LLM_BASE_URL`, default `http://localhost:11434`), seven of the nine tools still return success with keyword-only patterns and empty name variants. That is the documented fallback, not a product defect. Local state and logs are written under `.elixis/` inside the plugin directory.
+
 ## Contributing
 
 Issues and PRs welcome on [GitHub](https://github.com/KyaniteLabs/Elixis). Keep public docs free of secrets and machine-local paths.
