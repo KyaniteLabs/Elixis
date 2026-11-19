@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "elixis",
+  "version": "1.0.0",
+  "description": "Naming and identity direction from source material, through a local MCP server. Extract entities and patterns from a Source Corpus, research and synthesize name candidates, translate expression DNA, and assemble Market Kits. Nine tools over stdio - create_soul, run_game, extract_entities, analyze_patterns, translate_text, research_name, name_from_identity, ingest_source, create_market_kit - served by `python3 -m elixis.mcp_server` from the plugin root. Python 3.12+, standard library only, nothing to pip install. Optional LLM enrichment via LLM_BASE_URL / LLM_API_KEY / LLM_MODEL (defaults to local Ollama at http://localhost:11434); without a reachable LLM seven of the nine tools still succeed with keyword-only patterns and empty name variants - degraded mode, not a defect. Disclosure - makes network calls only to the configured LLM endpoint; keeps local state and logs under .elixis/ inside its plugin directory; reads no other credentials; the bundled elixis skill documents the CLI and HTTP surfaces.",
+  "author": {
+    "name": "KyaniteLabs",
+    "url": "https://github.com/KyaniteLabs"
+  },
+  "homepage": "https://github.com/KyaniteLabs/Elixis",
+  "repository": "https://github.com/KyaniteLabs/Elixis",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elixis",
+    "naming",
+    "identity",
+    "brand",
+    "market-research",
+    "entities",
+    "patterns",
+    "mcp"
+  ]
+}
