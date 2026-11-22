@@ -95,16 +95,16 @@ jobs:
   deploy:
     needs: build
     runs-on: [self-hosted, nuc]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.ENABLE_VPS_DEPLOY == 'true'
     environment: production
     continue-on-error: true # Deploy failures are non-blocking until Tailscale OAuth secrets are configured.
     permissions:
       contents: read
       packages: read
     env:
-      VPS_HOST: ${{ secrets.VPS_HOST || '100.92.68.103' }}
-      VPS_USER: root
+      VPS_HOST: ${{ secrets.VPS_HOST }}
       GHCR_TOKEN: ${{ github.token }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
 
     steps:
       - name: Checkout
@@ -117,27 +117,34 @@ jobs:
           IMAGE_REF="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
           IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
 
+          : "${VPS_HOST:?secrets.VPS_HOST is not set}"
+          : "${VPS_SSH_KNOWN_HOSTS:?secrets.VPS_SSH_KNOWN_HOSTS is not set}"
+
           deploy_env="$(mktemp)"
-          trap 'rm -f "${deploy_env}"' EXIT
+          known_hosts="$(mktemp)"
+          remote_script="$(mktemp)"
+          trap 'rm -f "${deploy_env}" "${known_hosts}" "${remote_script}"' EXIT
           {
             printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
+            printf 'export REGISTRY=%q\n' "${REGISTRY}"
+            printf 'export GITHUB_ACTOR=%q\n' "${GITHUB_ACTOR}"
           } > "${deploy_env}"
+          printf '%s\n' "${VPS_SSH_KNOWN_HOSTS}" > "${known_hosts}"
+
+          # Host keys are pinned to secrets.VPS_SSH_KNOWN_HOSTS and verified
+          # strictly; an unknown host key fails the deploy instead of being
+          # silently accepted.
+          SSH_OPTS=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=${known_hosts}")
 
           # Copy compose file to VPS using local key (self-hosted runner has ssh config)
-          scp -o StrictHostKeyChecking=no \
-            docker-compose.yml root@${VPS_HOST}:/docker/elixis/
-          scp -o StrictHostKeyChecking=no \
-            "${deploy_env}" root@${VPS_HOST}:/tmp/elixis-deploy-env
+          scp "${SSH_OPTS[@]}" docker-compose.yml "root@${VPS_HOST}:/docker/elixis/"
+          scp "${SSH_OPTS[@]}" "${deploy_env}" "root@${VPS_HOST}:/tmp/elixis-deploy-env"
 
-          printf '%s' "${GHCR_TOKEN}" | ssh -o StrictHostKeyChecking=no \
-            root@${VPS_HOST} \
-            "docker login ${REGISTRY} -u '${GITHUB_ACTOR}' --password-stdin"
-
-          # Deploy via SSH
-          ssh -o StrictHostKeyChecking=no \
-            root@${VPS_HOST} 'bash -se' << 'EOF'
+          cat > "${remote_script}" << 'EOF'
             set -euo pipefail
-            trap 'rm -f /tmp/elixis-deploy-env' EXIT
+            REGISTRY=""
+            docker_config=""
+            trap 'if [ -n "${REGISTRY}" ]; then docker logout "${REGISTRY}" >/dev/null 2>&1 || true; fi; rm -rf "${docker_config}" /tmp/elixis-deploy-env' EXIT
             cd /docker/elixis
             source /tmp/elixis-deploy-env
             touch .env
@@ -149,6 +156,12 @@ jobs:
             else
               printf '\nELIXIS_IMAGE=%s\n' "${ELIXIS_IMAGE}" >> .env
             fi
+            # Registry credentials stay in an ephemeral DOCKER_CONFIG that the
+            # EXIT trap removes, so nothing is persisted for the shared VPS.
+            docker_config="$(mktemp -d)"
+            export DOCKER_CONFIG="${docker_config}"
+            printf '%s' "${GHCR_TOKEN}" | docker login "${REGISTRY}" -u "${GITHUB_ACTOR}" --password-stdin
+            unset GHCR_TOKEN
             docker compose pull elixis
             docker compose up -d --no-build --remove-orphans
             actual_image="$(docker inspect elixis --format '{{.Config.Image}}')"
@@ -156,5 +169,11 @@ jobs:
               echo "::error::elixis is running ${actual_image}, expected ${ELIXIS_IMAGE}"
               exit 1
             fi
-            docker system prune -f
+            # Deliberately no global prune: this shared VPS hosts sibling
+            # containers and images that a global prune must never remove.
           EOF
+
+          # GHCR_TOKEN rides the first line of stdin, so it is never written
+          # to a file on either host and never appears in a process listing.
+          printf '%s\n' "${GHCR_TOKEN}" | cat - "${remote_script}" \
+            | ssh "${SSH_OPTS[@]}" "root@${VPS_HOST}" 'read -r GHCR_TOKEN && export GHCR_TOKEN && bash -se'
