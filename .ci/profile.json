@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "test_globs": [
+    "tests/test_*.py"
+  ],
+  "dependency_files": [
+    "requirements.txt",
+    "pyproject.toml",
+    ".ci/profile.json"
+  ],
+  "junit_reports": [
+    ".ci-results/tests.xml"
+  ],
+  "steps": [
+    {
+      "name": "Install production Python 3.14, runtime deps and pinned test tools",
+      "phase": "install",
+      "argv": [
+        "bash",
+        "-euo",
+        "pipefail",
+        "-c",
+        "apt-get update -qq && apt-get install -y -qq python3-venv && python3 -m venv /tmp/uv-bootstrap && /tmp/uv-bootstrap/bin/pip install --quiet uv==0.10.2 && /tmp/uv-bootstrap/bin/uv venv --python 3.14.3 .venv && /tmp/uv-bootstrap/bin/uv pip install --python .venv -r requirements.txt pytest==9.1.1 ruff==0.15.21"
+      ],
+      "timeout_seconds": 900
+    },
+    {
+      "name": "Lint for correctness errors",
+      "phase": "verify",
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "--isolated",
+        "--select",
+        "E4,E7,E9,F",
+        "app.py",
+        "elixis",
+        "scripts",
+        "tests"
+      ]
+    },
+    {
+      "name": "Build the wheel once and record its digest",
+      "phase": "build",
+      "argv": [
+        "bash",
+        "-euo",
+        "pipefail",
+        "-c",
+        "/tmp/uv-bootstrap/bin/uv build --wheel --out-dir .ci-results/dist . && (cd .ci-results/dist && sha256sum *.whl | tee SHA256SUMS)"
+      ]
+    },
+    {
+      "name": "Run all tests",
+      "phase": "test",
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "tests",
+        "-q",
+        "--tb=short",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=.ci-results/tests.xml"
+      ]
+    },
+    {
+      "name": "Smoke-test the built wheel from a clean venv, then boot the source server (Dockerfile parity)",
+      "phase": "acceptance",
+      "argv": [
+        "bash",
+        "-euo",
+        "pipefail",
+        "-c",
+        "(cd .ci-results/dist && sha256sum -c SHA256SUMS); accept=$(mktemp -d); /tmp/uv-bootstrap/bin/uv venv --python 3.14.3 \"$accept\"; /tmp/uv-bootstrap/bin/uv pip install --python \"$accept\" .ci-results/dist/*.whl; (cd \"$accept\" && ./bin/elixis --version && ./bin/elixis --help > /dev/null && ./bin/python -I -c 'from elixis import knowledge as k; assert k.archetypes() and k.characters(), \"wheel is missing knowledge data\"' && env -u LLM_PROVIDER -u LLM_FALLBACK_URL LLM_BASE_URL=http://127.0.0.1:9 ./bin/elixis patterns --text 'A quiet glassblower restores old lighthouse lenses.' > /dev/null); log=.ci-results/server.log; .venv/bin/python app.py --port 3110 > \"$log\" 2>&1 & pid=$!; trap 'kill $pid 2>/dev/null || true' EXIT; for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3110/ && break; sleep 1; done; kill -0 \"$pid\" || { echo 'server exited early'; cat \"$log\"; exit 1; }; for path in / /llms.txt /api/health; do code=$(curl -s -o .ci-results/http-body.json -w '%{http_code}' http://127.0.0.1:3110$path || true); echo \"$path $code\"; test \"$code\" = 200 || { cat \"$log\"; exit 1; }; done; python3 -c 'import json; b=json.load(open(\".ci-results/http-body.json\")); assert b[\"status\"] in (\"ok\", \"degraded\") and b[\"disk\"] == \"ok\", b; print(\"health:\", b)'"
+      ],
+      "timeout_seconds": 300
+    }
+  ]
+}

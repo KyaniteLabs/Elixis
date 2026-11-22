@@ -395,3 +395,22 @@ class TestExtractEntities:
         extract_entities("I like Mozart", telemetry=tele)
         assert tele["source"] == "llm"
         assert tele["duration_ms"] == 50
+
+
+class TestCommaList:
+    def test_comma_list_yields_every_name(self):
+        from elixis.entities import _heuristic_extract
+        names = [e["canonical"] for e in _heuristic_extract("Athena, Batman, Miyamoto Musashi")]
+        assert names == ["Athena", "Batman", "Miyamoto Musashi"]
+        assert all(not e.get("source") for e in _heuristic_extract("Athena, Batman, Miyamoto Musashi"))
+
+    def test_single_comma_is_still_name_and_source(self):
+        from elixis.entities import _heuristic_extract
+        (entity,) = _heuristic_extract("Bach, Classical Music")
+        assert (entity["canonical"], entity["source"]) == ("Bach", "Classical Music")
+
+    def test_long_comma_clauses_are_not_a_list(self):
+        from elixis.entities import _split_comma_list
+        line = "A quiet glassblower who restores lenses, works at night, and loves the sea"
+        assert _split_comma_list(line) == [line]
+

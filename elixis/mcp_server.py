@@ -17,13 +17,11 @@ import json
 import sys
 import traceback
 
+from . import service
 from .entities import extract_entities
 from .naming import research_name
-from .patterns import build_pattern_graph
-from .process_trace import process_trace_from_state
-from .thread import serialize_threads
+from .service import LENSES, InvalidInput, prepare_text
 from .translate import translate_text
-from .validation import validate_brain_dump
 
 _SERVER_NAME = "elixis"
 _SERVER_VERSION = "1.0.0"
@@ -65,7 +63,7 @@ _TOOLS = [
                 "lens": {
                     "type": "string",
                     "description": "Output lens to resolve through. Default: identity.",
-                    "enum": ["identity", "brand", "design"],
+                    "enum": list(LENSES),
                 },
             },
             "required": ["brain_dump"],
@@ -255,77 +253,47 @@ def _handle_tools_call(params):
         }
 
 
-def _tool_create_soul(args):
-    brain_dump = args.get("brain_dump", "")
-    is_valid, error, meta = validate_brain_dump(brain_dump)
-    if not is_valid:
-        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
-    brain_dump = meta.get("sanitized_text", brain_dump)
+def _validation_error(error):
+    return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
 
-    from .engine import GameEngine
-    engine = GameEngine()
-    soulmd = engine.run_full(brain_dump, lens="identity")
-    state = engine.state
-    graph = state.metadata.get("pattern_graph", {})
-    threads = graph.get("threads") or serialize_threads(state.threads)
-    result = {
-        "entity_count": len(state.beads),
-        "thread_count": graph.get("thread_count", len(state.threads)),
-        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
-        "threads": threads[:8],
-        "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
-        "emergent_topic": graph.get("emergent_topic"),
-        "emergent_theme": graph.get("emergent_theme"),
-        "consensus_score": graph.get("consensus_score"),
-        "process_trace": process_trace_from_state(state, lens="identity"),
-        "soulmd": soulmd,
-    }
+
+def _json_text(result):
     return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+
+
+def _tool_create_soul(args):
+    try:
+        brain_dump = prepare_text(args.get("brain_dump", ""))
+    except InvalidInput as error:
+        return _validation_error(error)
+    # The SOUL.md tool reports the identity summary without lens bookkeeping.
+    result = service.synthesize(brain_dump, lens="identity").summary()
+    del result["lens"], result["tension_count"]
+    result["soulmd"] = result.pop("output")
+    return _json_text(result)
 
 
 def _tool_run_game(args):
     brain_dump = args.get("brain_dump", "")
     lens = args.get("lens", "identity")
-    if lens not in {"identity", "brand", "design"}:
+    if lens not in LENSES:
         return {
-            "content": [{"type": "text", "text": "Validation error: lens must be one of identity, brand, design"}],
+            "content": [{"type": "text", "text": f"Validation error: lens must be one of {', '.join(LENSES)}"}],
             "isError": True,
         }
 
-    is_valid, error, meta = validate_brain_dump(brain_dump)
-    if not is_valid:
-        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
-    brain_dump = meta.get("sanitized_text", brain_dump)
-
-    from .engine import GameEngine
-    engine = GameEngine()
-    output = engine.run_full(brain_dump, lens=lens)
-    state = engine.state
-    graph = state.metadata.get("pattern_graph", {})
-    threads = graph.get("threads") or serialize_threads(state.threads)
-    result = {
-        "lens": lens,
-        "entity_count": len(state.beads),
-        "thread_count": graph.get("thread_count", len(state.threads)),
-        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
-        "threads": threads[:8],
-        "tension_count": len(state.tensions),
-        "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
-        "emergent_topic": graph.get("emergent_topic"),
-        "emergent_theme": graph.get("emergent_theme"),
-        "consensus_score": graph.get("consensus_score"),
-        "process_trace": process_trace_from_state(state, lens=lens),
-        "output": output,
-    }
-    return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+    try:
+        brain_dump = prepare_text(brain_dump)
+    except InvalidInput as error:
+        return _validation_error(error)
+    return _json_text(service.synthesize(brain_dump, lens=lens).summary())
 
 
 def _tool_extract_entities(args):
-    text = args.get("text", "")
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
-        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
-    text = meta.get("sanitized_text", text)
+    try:
+        text = prepare_text(args.get("text", ""))
+    except InvalidInput as error:
+        return _validation_error(error)
     entities = extract_entities(text)
     out = []
     for e in entities[:15]:
@@ -334,17 +302,15 @@ def _tool_extract_entities(args):
             "type": e.get("type", ""),
             "themes": e.get("themes", []),
         })
-    return {"content": [{"type": "text", "text": json.dumps(out, indent=2)}]}
+    return _json_text(out)
 
 
 def _tool_analyze_patterns(args):
-    text = args.get("text", "")
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
-        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
-    text = meta.get("sanitized_text", text)
-    entities = extract_entities(text)
-    graph = build_pattern_graph(entities, text)
+    try:
+        text = prepare_text(args.get("text", ""))
+    except InvalidInput as error:
+        return _validation_error(error)
+    graph = service.patterns(text)
     result = {
         "patterns": [
             {"name": p["name"], "probability": round(p["probability"], 3)}
@@ -354,7 +320,7 @@ def _tool_analyze_patterns(args):
         "emergent_theme": graph.get("emergent_theme"),
         "consensus_score": graph.get("consensus_score"),
     }
-    return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+    return _json_text(result)
 
 
 def _tool_translate(args):
@@ -394,17 +360,11 @@ def _tool_research_name(args):
 def _tool_name_from_identity(args):
     brain_dump = args.get("brain_dump", "")
     source = args.get("source", "taxonomy")
-    is_valid, error, meta = validate_brain_dump(brain_dump)
-    if not is_valid:
-        return {"content": [{"type": "text", "text": f"Validation error: {error}"}], "isError": True}
-    brain_dump = meta.get("sanitized_text", brain_dump)
-
-    from .engine import GameEngine
-    engine = GameEngine()
-    engine.declare_themes(brain_dump)
-    engine.elaborate()
-    engine.connect_domains()
-    report = engine.name(source=source)
+    try:
+        brain_dump = prepare_text(brain_dump)
+    except InvalidInput as error:
+        return _validation_error(error)
+    report = service.name_from_identity(brain_dump, source=source)
 
     summary = {
         "emergent_theme": report.get("identity_context", {}).get("emergent_theme"),

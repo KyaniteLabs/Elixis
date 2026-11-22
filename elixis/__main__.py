@@ -10,6 +10,10 @@ from typing import Any
 
 from . import __version__
 
+# Mirrors service.LENSES (the lens registry). Kept literal so `--help` and
+# `--version` do not import the lens generators; a test pins the two together.
+CLI_LENSES = ("identity", "brand", "design")
+
 
 # Ensure the parent directory is on the path so `app.py` can be found when the
 # package is run directly from a checkout.
@@ -31,7 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="run synthesis through an output lens")
     _add_text_input_args(run)
-    run.add_argument("--lens", choices=("identity", "brand", "design"), default="identity")
+    run.add_argument("--lens", choices=CLI_LENSES, default="identity")
     run.add_argument("--json", action="store_true", help="emit JSON summary instead of markdown output")
 
     extract = subparsers.add_parser("extract", help="extract structured entities from text")
@@ -108,69 +112,48 @@ def _run_server(port: int) -> Any:
         sys.argv = old_argv
 
 
-def _cmd_run(args: argparse.Namespace) -> int:
-    from .engine import GameEngine
-    from .process_trace import process_trace_from_state
-    from .thread import serialize_threads
-    from .validation import validate_brain_dump
+def _prepared(text: str) -> str | None:
+    """Validated text, or None after reporting the error on stderr."""
+    from .service import InvalidInput, prepare_text
 
-    text = _read_text(args)
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
+    try:
+        return prepare_text(text)
+    except InvalidInput as error:
         sys.stderr.write(f"error: {error}\n")
-        return 2
+        return None
 
-    engine = GameEngine()
-    output = engine.run_full(meta.get("sanitized_text", text), lens=args.lens)
+
+def _cmd_run(args: argparse.Namespace) -> int:
+    from .service import synthesize
+
+    text = _prepared(_read_text(args))
+    if text is None:
+        return 2
+    run = synthesize(text, lens=args.lens)
     if args.json:
-        state = engine.state
-        graph = state.metadata.get("pattern_graph", {})
-        threads = graph.get("threads") or serialize_threads(state.threads)
-        _print_json({
-            "lens": args.lens,
-            "entity_count": len(state.beads),
-            "thread_count": graph.get("thread_count", len(state.threads)),
-            "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
-            "threads": threads[:8],
-            "tension_count": len(state.tensions),
-            "top_patterns": [p.get("name") for p in graph.get("patterns", [])[:3]],
-            "emergent_topic": graph.get("emergent_topic"),
-            "emergent_theme": graph.get("emergent_theme"),
-            "consensus_score": graph.get("consensus_score"),
-            "process_trace": process_trace_from_state(state, lens=args.lens),
-            "output": output,
-        })
+        _print_json(run.summary())
     else:
-        print(output)
+        print(run.output)
     return 0
 
 
 def _cmd_extract(args: argparse.Namespace) -> int:
     from .entities import extract_entities
-    from .validation import validate_brain_dump
 
-    text = _read_text(args)
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
-        sys.stderr.write(f"error: {error}\n")
+    text = _prepared(_read_text(args))
+    if text is None:
         return 2
-    _print_json(extract_entities(meta.get("sanitized_text", text)))
+    _print_json(extract_entities(text))
     return 0
 
 
 def _cmd_patterns(args: argparse.Namespace) -> int:
-    from .entities import extract_entities
-    from .patterns import build_pattern_graph
-    from .validation import validate_brain_dump
+    from .service import patterns
 
-    text = _read_text(args)
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
-        sys.stderr.write(f"error: {error}\n")
+    text = _prepared(_read_text(args))
+    if text is None:
         return 2
-    text = meta.get("sanitized_text", text)
-    entities = extract_entities(text)
-    _print_json(build_pattern_graph(entities, text))
+    _print_json(patterns(text))
     return 0
 
 
@@ -186,20 +169,12 @@ def _cmd_name(args: argparse.Namespace) -> int:
         ))
         return 0
 
-    from .engine import GameEngine
-    from .validation import validate_brain_dump
+    from .service import name_from_identity
 
-    text = args.text if args.text is not None else open(args.file, encoding="utf-8").read()
-    is_valid, error, meta = validate_brain_dump(text)
-    if not is_valid:
-        sys.stderr.write(f"error: {error}\n")
+    text = _prepared(args.text if args.text is not None else open(args.file, encoding="utf-8").read())
+    if text is None:
         return 2
-
-    engine = GameEngine()
-    engine.declare_themes(meta.get("sanitized_text", text))
-    engine.elaborate()
-    engine.connect_domains()
-    _print_json(engine.name(source=args.source))
+    _print_json(name_from_identity(text, source=args.source))
     return 0
 
 

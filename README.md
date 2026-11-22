@@ -1,7 +1,7 @@
 # Elixis
 
 <p align="center">
-  <img src="branding/elixis-512.png" alt="Elixis icon" width="128">
+  <img src="branding/elixis-512.png" alt="Elixis icon: a labradorite chamber holding a citrine perceptron" width="160">
 </p>
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
@@ -106,6 +106,15 @@ python -m elixis ingest --path . --kit --artifact markdown
 python -m elixis ingest --github https://github.com/KyaniteLabs/Elixis --kit --artifact html
 python -m elixis corpus inspect <run_id>
 python -m elixis mcp
+```
+
+These run offline with no model configured. CI runs this block from the repository's virtualenv on every change, and each `# expect:` line must appear in the output:
+
+```bash readme-test
+python -m elixis --version
+# expect: elixis
+python -m elixis extract --text "Miyamoto Musashi"
+# expect: "canonical": "Miyamoto Musashi"
 ```
 
 ## Source Corpus and Market Kits

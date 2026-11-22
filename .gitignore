@@ -30,3 +30,8 @@ portfolio-*.md
 .DS_Store
 Thumbs.db
 .gstack/
+.ci-results/
+.venv/
+
+# Mutation testing (mutmut)
+mutants/

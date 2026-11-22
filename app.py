@@ -33,12 +33,11 @@ from elixis.logging_config import (
 )
 from elixis.naming import research_name
 from elixis.process_trace import (
-    llm_public_config as _llm_public_config,
     process_trace_from_state as _process_trace_from_state,
 )
 from elixis.quality import validate_output
+from elixis.service import LENSES, synthesize
 from elixis.traces import save_run, log_request, get_diagnostics, get_recent_runs
-from elixis.thread import serialize_threads
 from elixis.translate import (
     translate_text,
     translate_soulmd,
@@ -63,7 +62,7 @@ ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 MAX_CONCURRENT_PIPELINES = int(os.environ.get("MAX_CONCURRENT_PIPELINES", "4"))
 SSE_WRITE_TIMEOUT = int(os.environ.get("SSE_WRITE_TIMEOUT", "120"))
 MAX_BODY_SIZE = int(os.environ.get("MAX_BODY_SIZE", str(2 * 1024 * 1024)))  # 2MB default
-VALID_LENSES = {"identity", "brand", "design"}
+VALID_LENSES = set(LENSES)
 
 logger = get_logger("elixis.server")
 
@@ -120,30 +119,23 @@ def run_pipeline(brain_dump):
     if not brain_dump or len(brain_dump.strip()) < 3:
         return {"error": "Brain dump is empty or too short"}
 
-    engine = GameEngine()
     try:
-        output = engine.run_full(brain_dump, lens="identity")
+        run = synthesize(brain_dump, lens="identity")
     except RuntimeError as e:
         return {"error": str(e)}
 
-    state = engine.state
-    graph = state.metadata.get("pattern_graph", {})
-
-    save_run(brain_dump,
-             [b.to_dict() for b in state.beads],
-             graph, output,
-             stage_timings=state.timings,
-             lens="identity")
+    save_run(brain_dump, run.entities, run.graph, run.output,
+             stage_timings=run.timings, lens="identity")
 
     return {
-        "stage1_entities": [b.to_dict() for b in state.beads],
-        "stage2_graph": graph,
-        "threads": graph.get("threads") or serialize_threads(state.threads),
-        "output": output,
-        "stage3_output": output,
-        "stage3_soulmd": output,
-        "timings": state.timings,
-        "process_trace": _process_trace_from_state(state, lens="identity"),
+        "stage1_entities": run.entities,
+        "stage2_graph": run.graph,
+        "threads": run.threads,
+        "output": run.output,
+        "stage3_output": run.output,
+        "stage3_soulmd": run.output,
+        "timings": run.timings,
+        "process_trace": run.process_trace(),
     }
 
 
@@ -155,33 +147,27 @@ def run_game_pipeline(brain_dump, lens="identity"):
     if lens not in VALID_LENSES:
         return {"error": f"Invalid lens '{lens}'. Must be one of: {', '.join(sorted(VALID_LENSES))}"}
 
-    engine = GameEngine()
     try:
-        output = engine.run_full(brain_dump, lens=lens)
+        run = synthesize(brain_dump, lens=lens)
     except RuntimeError as e:
         return {"error": str(e)}
 
-    state = engine.state
-    graph = state.metadata.get("pattern_graph", {})
-    save_run(brain_dump,
-             [b.to_dict() for b in state.beads],
-             graph, output,
-             stage_timings=state.timings,
-             lens=lens)
+    save_run(brain_dump, run.entities, run.graph, run.output,
+             stage_timings=run.timings, lens=lens)
     return {
         "lens": lens,
-        "stage1_entities": [b.to_dict() for b in state.beads],
-        "stage2_graph": graph,
-        "output": output,
-        "stage3_output": output,
-        "stage3_soulmd": output if lens == "identity" else None,
-        "threads": graph.get("threads") or serialize_threads(state.threads),
-        "thread_count": graph.get("thread_count", len(state.threads)),
-        "cross_domain_thread_count": graph.get("cross_domain_thread_count", 0),
-        "tensions": state.tensions,
-        "timings": state.timings,
-        "quality": validate_output(output, lens=lens),
-        "process_trace": _process_trace_from_state(state, lens=lens),
+        "stage1_entities": run.entities,
+        "stage2_graph": run.graph,
+        "output": run.output,
+        "stage3_output": run.output,
+        "stage3_soulmd": run.output if lens == "identity" else None,
+        "threads": run.threads,
+        "thread_count": run.thread_count,
+        "cross_domain_thread_count": run.cross_domain_thread_count,
+        "tensions": run.tensions,
+        "timings": run.timings,
+        "quality": validate_output(run.output, lens=lens),
+        "process_trace": run.process_trace(),
     }
 
 
