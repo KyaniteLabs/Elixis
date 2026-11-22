@@ -9,7 +9,7 @@
                     [Optional OpenAI-compatible fallback]  ← configured only when explicitly set
 ```
 
-- **VPS**: `srv1542844.hstgr.cloud` (Ubuntu 24.04, Docker + Traefik)
+- **VPS**: `<vps-host>` (Ubuntu 24.04, Docker + Traefik)
 - **Domain**: `elixis.kyanitelabs.tech` (Let's Encrypt via Traefik)
 - **LLM primary**: `llama-local` on VPS (Qwen3.5-0.8B via llama.cpp)
 - **LLM fallback**: disabled by default; set `LLM_FALLBACK_URL` explicitly only for OpenAI-compatible fallback routing
@@ -19,7 +19,7 @@
 ### From local machine
 
 ```bash
-VPS_HOST=100.92.68.103 ADMIN_API_KEY="$(openssl rand -hex 32)" ./scripts/deploy.sh
+VPS_HOST=<tailscale-vps-ip> ADMIN_API_KEY="$(openssl rand -hex 32)" ./scripts/deploy.sh
 ```
 
 Builds the image locally, transfers it to the VPS over Tailscale, and restarts the container.
@@ -52,7 +52,7 @@ Push to `main` triggers auto-deployment via GitHub Actions. CI builds and pushes
 The deploy job is explicitly opt-in and fail-closed. It only runs for `push` events on `main`/`master` when the `ENABLE_VPS_DEPLOY` repository variable is `true`; with the variable unset the job is skipped and no fallback address is used.
 
 Required production secrets: `VPS_HOST`, `VPS_SSH_KNOWN_HOSTS` (pinned SSH host keys; verification is strict, so an unknown host key fails the deploy), `ADMIN_API_KEY` (on the VPS).
-`VPS_HOST` must be the Tailscale address or MagicDNS name, not the public VPS hostname (see the configuration table below for the current target).
+`VPS_HOST` must be the Tailscale address or MagicDNS name, not the public VPS hostname (never commit live hostnames or IPs).
 
 A green deploy means the workflow reached the VPS over its tailnet address and verified the running container image. Registry credentials used for `docker compose pull` live in an ephemeral `DOCKER_CONFIG` directory on the VPS that the deploy script removes when it exits, and no global `docker system prune` runs there, so sibling containers and images on the shared VPS are never touched by a deploy.
 
@@ -63,7 +63,7 @@ A green deploy means the workflow reached the VPS over its tailnet address and v
 curl https://elixis.kyanitelabs.tech/api/health
 
 # View logs
-ssh root@srv1542844.hstgr.cloud "docker compose -f /docker/elixis/docker-compose.yml logs -f elixis"
+ssh root@<vps-host> "docker compose -f /docker/elixis/docker-compose.yml logs -f elixis"
 
 # Diagnostics
 curl -H "Authorization: Bearer $ADMIN_API_KEY" https://elixis.kyanitelabs.tech/api/diagnostics
@@ -83,7 +83,7 @@ All config is in `docker-compose.yml` environment variables:
 | `ELIXIS_DATA_DIR` | `/app/.elixis` | Persistent run, trace, and cache data directory |
 | `ELIXIS_BACKUP_DIR` | `/app/.elixis/backups` | Backup archive directory inside the persistent Docker volume |
 | `CORS_ORIGIN` | `https://elixis.kyanitelabs.tech` | Allowed origin |
-| `VPS_HOST` | `100.92.68.103` | Tailscale deploy target |
+| `VPS_HOST` | `<tailscale-vps-ip>` | Tailscale deploy target |
 | `TAILSCALE_AUTHKEY` | secret | Optional reusable ephemeral tagged auth key for GitHub Actions deploy |
 | `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET` | secret | Optional Tailscale OAuth client deploy credentials |
 | `TS_OAUTH_CLIENT_ID` / `TS_AUDIENCE` | secret | Preferred Tailscale federated identity deploy credentials |
