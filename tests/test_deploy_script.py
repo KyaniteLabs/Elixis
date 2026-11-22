@@ -1,7 +1,7 @@
 """Deployment script safety contracts."""
 
+import re
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,20 +24,40 @@ def test_ci_deploy_uses_self_hosted_runner():
     # No Tailscale action needed - runner is already in tailnet
     assert "tailscale/github-action@v4" not in workflow
 
-    # Direct SSH to VPS (hardcoded fallback to Tailscale IP)
-    assert "100.92.68.103" in workflow
-    assert "VPS_USER: root" in workflow
-
     # No id-token permission needed without Tailscale
     assert "id-token" not in workflow
 
-    # Deploy directly via SSH
-    assert "ssh -o StrictHostKeyChecking=no" in workflow
+    # Deploy is explicitly opt-in and fail-closed: push event on a release
+    # branch AND the ENABLE_VPS_DEPLOY repository variable must be "true";
+    # an unset variable skips the job instead of deploying.
+    assert "github.event_name == 'push'" in workflow
+    assert "vars.ENABLE_VPS_DEPLOY == 'true'" in workflow
+
+    # No hardcoded fallback VPS address: secrets.VPS_HOST is required.
+    assert re.search(r"100\.\d+\.\d+\.\d+", workflow) is None
+    assert "secrets.VPS_HOST ||" not in workflow
+
+    # Host keys are pinned to secrets.VPS_SSH_KNOWN_HOSTS and verified
+    # strictly; an unknown host key fails the deploy.
+    assert "StrictHostKeyChecking=yes" in workflow
+    assert "StrictHostKeyChecking=no" not in workflow
+    assert "UserKnownHostsFile" in workflow
+
+    # Registry credentials are ephemeral on the VPS: DOCKER_CONFIG is a
+    # temp dir removed by the EXIT trap, so nothing is persisted there.
+    assert "DOCKER_CONFIG" in workflow
+
+    # No global prune on the shared VPS: sibling containers/images are out
+    # of this deploy's blast radius.
+    assert "docker system prune" not in workflow
+
+    # Deploy directly via SSH as root
     assert "root@${VPS_HOST}" in workflow
 
 
 def test_deploy_docs_describe_vps_target():
     docs = (REPO_ROOT / "DEPLOY.md").read_text(encoding="utf-8")
 
-    assert "VPS_HOST=100.92.68.103" in docs
+    assert "VPS_HOST=<tailscale-vps-ip>" in docs
+    assert re.search(r"100\.\d+\.\d+\.\d+", docs) is None
     assert "Tailscale address" in docs
