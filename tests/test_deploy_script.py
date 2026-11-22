@@ -1,3 +1,4 @@
+import re
 """Deployment script safety contracts."""
 
 from pathlib import Path
@@ -34,7 +35,7 @@ def test_ci_deploy_uses_self_hosted_runner():
     assert "vars.ENABLE_VPS_DEPLOY == 'true'" in workflow
 
     # No hardcoded fallback VPS address: secrets.VPS_HOST is required.
-    assert "100.92.68.103" not in workflow
+    assert re.search(r"100\.\d+\.\d+\.\d+", workflow) is None
     assert "secrets.VPS_HOST ||" not in workflow
 
     # Host keys are pinned to secrets.VPS_SSH_KNOWN_HOSTS and verified
@@ -58,5 +59,6 @@ def test_ci_deploy_uses_self_hosted_runner():
 def test_deploy_docs_describe_vps_target():
     docs = (REPO_ROOT / "DEPLOY.md").read_text(encoding="utf-8")
 
-    assert "VPS_HOST=100.92.68.103" in docs
+    assert "VPS_HOST=<tailscale-vps-ip>" in docs
+    assert re.search(r"100\.\d+\.\d+\.\d+", docs) is None
     assert "Tailscale address" in docs
