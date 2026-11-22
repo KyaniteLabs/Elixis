@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import elixis  # loads .env seat
+import elixis  # noqa: F401 — import side effect loads the .env seat
 from elixis import llm
 from elixis.engine import GameEngine
 from elixis.receipts import corpus_to_seed, ingest_file

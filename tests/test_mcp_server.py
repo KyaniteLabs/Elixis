@@ -66,7 +66,7 @@ class TestMcpServer(unittest.TestCase):
         self.assertTrue(result["isError"])
         self.assertIn("lens must be one of", result["content"][0]["text"])
 
-    @patch("elixis.engine.GameEngine", _FakeGameEngine)
+    @patch("elixis.service.GameEngine", _FakeGameEngine)
     def test_run_game_returns_lens_output_summary(self):
         result = mcp_server._tool_run_game({
             "brain_dump": "Athena and Batman as design references",
@@ -85,7 +85,7 @@ class TestMcpServer(unittest.TestCase):
         self.assertIn("pattern_matching", payload["process_trace"])
         self.assertIn("# Brand Output", payload["output"])
 
-    @patch("elixis.engine.GameEngine", _FakeGameEngine)
+    @patch("elixis.service.GameEngine", _FakeGameEngine)
     def test_create_soul_uses_full_engine_connection_output(self):
         result = mcp_server._tool_create_soul({
             "brain_dump": "Athena and Batman as identity references",
