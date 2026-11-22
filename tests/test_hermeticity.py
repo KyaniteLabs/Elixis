@@ -63,6 +63,7 @@ class TestUnittestRunnerHermeticity(unittest.TestCase):
             capture_output=True,
             text=True,
             timeout=120,
+            check=False,
         )
         self.assertEqual(
             proc.returncode, 0, f"probe failed:\n{proc.stdout}\n{proc.stderr}"
