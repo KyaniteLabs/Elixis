@@ -47,6 +47,55 @@ jobs:
         run: |
           echo "Tests completed successfully"
 
+  # Moved from Forgejo CI (ci-profile, .ci/profile.json) when GitHub became the
+  # only CI (GIT-CI-STRATEGY-20261123): correctness lint, the wheel built once and
+  # smoke-tested from a clean venv, and a boot of the source server.
+  package:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - name: Install production Python 3.14, runtime deps and pinned test tools
+        run: |
+          uv venv --python 3.14 .venv
+          uv pip install --python .venv -r requirements.txt pytest==9.1.1 ruff==0.15.21
+      - name: Lint for correctness errors
+        run: .venv/bin/ruff check --isolated --select E4,E7,E9,F app.py elixis scripts tests
+      - name: Build the wheel once and record its digest
+        run: |
+          uv build --wheel --out-dir .ci-results/dist .
+          (cd .ci-results/dist && sha256sum *.whl | tee SHA256SUMS)
+      - name: Run all tests on Python 3.14
+        run: .venv/bin/python -m pytest tests -q --tb=short -p no:cacheprovider
+      - name: Smoke-test the built wheel, then boot the source server
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd .ci-results/dist && sha256sum -c SHA256SUMS)
+          accept=$(mktemp -d)
+          uv venv --python 3.14 "$accept"
+          uv pip install --python "$accept" .ci-results/dist/*.whl
+          (cd "$accept" && ./bin/elixis --version && ./bin/elixis --help > /dev/null \
+            && ./bin/python -I -c 'from elixis import knowledge as k; assert k.archetypes() and k.characters(), "wheel is missing knowledge data"' \
+            && env -u LLM_PROVIDER -u LLM_FALLBACK_URL LLM_BASE_URL=http://127.0.0.1:9 ./bin/elixis patterns --text 'A quiet glassblower restores old lighthouse lenses.' > /dev/null)
+          log=.ci-results/server.log
+          .venv/bin/python app.py --port 3110 > "$log" 2>&1 &
+          pid=$!
+          trap 'kill $pid 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3110/ && break; sleep 1; done
+          kill -0 "$pid" || { echo 'server exited early'; cat "$log"; exit 1; }
+          for path in / /llms.txt /api/health; do
+            code=$(curl -s -o .ci-results/http-body.json -w '%{http_code}' "http://127.0.0.1:3110$path" || true)
+            echo "$path $code"
+            test "$code" = 200 || { cat "$log"; exit 1; }
+          done
+          python3 -c 'import json; b=json.load(open(".ci-results/http-body.json")); assert b["status"] in ("ok", "degraded") and b["disk"] == "ok", b; print("health:", b)'
+
   build:
     needs: test
     runs-on: blacksmith-2vcpu-ubuntu-2404
@@ -91,89 +140,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  deploy:
-    needs: build
-    runs-on: [self-hosted, nuc]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.ENABLE_VPS_DEPLOY == 'true'
-    environment: production
-    continue-on-error: true # Deploy failures are non-blocking until Tailscale OAuth secrets are configured.
-    permissions:
-      contents: read
-      packages: read
-    env:
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      GHCR_TOKEN: ${{ github.token }}
-      VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Deploy to VPS
-        run: |
-          IMAGE_REF="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
-          IMAGE_REF="$(echo "${IMAGE_REF}" | tr '[:upper:]' '[:lower:]')"
-
-          : "${VPS_HOST:?secrets.VPS_HOST is not set}"
-          : "${VPS_SSH_KNOWN_HOSTS:?secrets.VPS_SSH_KNOWN_HOSTS is not set}"
-
-          deploy_env="$(mktemp)"
-          known_hosts="$(mktemp)"
-          remote_script="$(mktemp)"
-          trap 'rm -f "${deploy_env}" "${known_hosts}" "${remote_script}"' EXIT
-          {
-            printf 'export ELIXIS_IMAGE=%q\n' "${IMAGE_REF}"
-            printf 'export REGISTRY=%q\n' "${REGISTRY}"
-            printf 'export GITHUB_ACTOR=%q\n' "${GITHUB_ACTOR}"
-          } > "${deploy_env}"
-          printf '%s\n' "${VPS_SSH_KNOWN_HOSTS}" > "${known_hosts}"
-
-          # Host keys are pinned to secrets.VPS_SSH_KNOWN_HOSTS and verified
-          # strictly; an unknown host key fails the deploy instead of being
-          # silently accepted.
-          SSH_OPTS=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=${known_hosts}")
-
-          # Copy compose file to VPS using local key (self-hosted runner has ssh config)
-          scp "${SSH_OPTS[@]}" docker-compose.yml "root@${VPS_HOST}:/docker/elixis/"
-          scp "${SSH_OPTS[@]}" "${deploy_env}" "root@${VPS_HOST}:/tmp/elixis-deploy-env"
-
-          cat > "${remote_script}" << 'EOF'
-            set -euo pipefail
-            REGISTRY=""
-            docker_config=""
-            trap 'if [ -n "${REGISTRY}" ]; then docker logout "${REGISTRY}" >/dev/null 2>&1 || true; fi; rm -rf "${docker_config}" /tmp/elixis-deploy-env' EXIT
-            cd /docker/elixis
-            source /tmp/elixis-deploy-env
-            touch .env
-            if grep -q '^ELIXIS_IMAGE=' .env; then
-              tmp_env="$(mktemp)"
-              sed "s|^ELIXIS_IMAGE=.*|ELIXIS_IMAGE=${ELIXIS_IMAGE}|" .env > "${tmp_env}"
-              cat "${tmp_env}" > .env
-              rm -f "${tmp_env}"
-            else
-              printf '\nELIXIS_IMAGE=%s\n' "${ELIXIS_IMAGE}" >> .env
-            fi
-            # Registry credentials stay in an ephemeral DOCKER_CONFIG that the
-            # EXIT trap removes, so nothing is persisted for the shared VPS.
-            docker_config="$(mktemp -d)"
-            export DOCKER_CONFIG="${docker_config}"
-            printf '%s' "${GHCR_TOKEN}" | docker login "${REGISTRY}" -u "${GITHUB_ACTOR}" --password-stdin
-            unset GHCR_TOKEN
-            docker compose pull elixis
-            docker compose up -d --no-build --remove-orphans
-            actual_image="$(docker inspect elixis --format '{{.Config.Image}}')"
-            if [ "${actual_image}" != "${ELIXIS_IMAGE}" ]; then
-              echo "::error::elixis is running ${actual_image}, expected ${ELIXIS_IMAGE}"
-              exit 1
-            fi
-            # Deliberately no global prune: this shared VPS hosts sibling
-            # containers and images that a global prune must never remove.
-          EOF
-
-          # GHCR_TOKEN rides the first line of stdin, so it is never written
-          # to a file on either host and never appears in a process listing.
-          printf '%s\n' "${GHCR_TOKEN}" | cat - "${remote_script}" \
-            | ssh "${SSH_OPTS[@]}" "root@${VPS_HOST}" 'read -r GHCR_TOKEN && export GHCR_TOKEN && bash -se'

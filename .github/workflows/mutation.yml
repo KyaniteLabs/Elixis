@@ -1,0 +1,55 @@
+name: Mutation
+
+# Advisory: mutation score of the style core, red below 95%. Moved from Forgejo
+# CI (GIT-CI-STRATEGY-20261123): weekly, on a GitHub-hosted runner (free for
+# public repos). Not a required check.
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  mutation:
+    name: mutation-score
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - name: Install pinned tools on Python 3.14
+        run: |
+          uv venv --python 3.14 .venv
+          uv pip install --python .venv pytest==9.1.1 mutmut==3.8.0
+      - name: Mutation score of the style core (break below 95%)
+        shell: bash
+        run: |
+          .venv/bin/mutmut run
+          .venv/bin/mutmut export-cicd-stats
+          .venv/bin/python - <<'PY'
+          import json
+          stats = json.load(open("mutants/mutmut-cicd-stats.json"))
+          killed, survived, timeout = stats["killed"], stats["survived"], stats["timeout"]
+          decided = killed + survived + timeout
+          score = 100.0 * killed / decided if decided else 0.0
+          print(f"gate evidence: mutation score {score:.1f}% ({killed} killed, {survived} survived, {timeout} timeout)")
+          assert score >= 95.0, f"mutation score {score:.1f}% is below the 95% floor"
+          PY
+      - name: Retain the mutation stats
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mutation-stats
+          path: mutants/mutmut-cicd-stats.json
+          if-no-files-found: warn
+          retention-days: 30
